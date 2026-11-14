@@ -3,6 +3,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Orbit } from 'lucide-react'
 
 import { LoginForm } from '@/components/login-form'
+import { ShootingStars } from '@/components/ShootingStars'
 import { BlackHoleHeroSection } from '@/components/ui/blackhole-hero-section'
 import { useSession } from '@/store/session'
 
@@ -25,7 +26,7 @@ function useNarrow(query = '(max-width: 767px)') {
  * Wide screens: the form on the left under a veil, the hole to the right.
  * Phones: the form on top, the hole low in the frame, veil from the top, and
  * fewer ray steps because a phone pays for every one.
- * The disc is drawn in NASA colours: white at the rim, cyan, then NASA blue.
+ * The disc keeps the component's own warm palette: white-hot rim, orange, ember.
  */
 export function Login() {
   const narrow = useNarrow()
@@ -57,12 +58,11 @@ export function Login() {
         glow={narrow ? 0.85 : 1}
         steps={narrow ? 200 : 300}
         resolution={narrow ? 0.6 : 0.7}
-        hotColor="#FFFFFF"
-        midColor="#02BFE7"
-        coolColor="#0B3D91"
-        starBrightness={0.35}
+        starBrightness={0.7}
         spinSpeed={0.09}
       />
+
+      <ShootingStars className="z-[1]" every={0.7} />
 
       <main className="relative z-10 flex min-h-svh flex-col items-center justify-start gap-6 p-6 pt-12 pb-40 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)] md:items-start md:justify-center md:p-10 lg:pl-24">
         <div className="flex w-full max-w-sm flex-col gap-6">

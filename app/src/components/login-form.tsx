@@ -50,7 +50,8 @@ export function LoginForm({
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
           <CardDescription>
-            Sign in to see your own health on this mission
+            Sign in with the mission email on your crew badge to see your
+            own health
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -95,6 +96,9 @@ export function LoginForm({
                   </button>
                 </div>
                 <Input id="password" type="password" autoComplete="current-password" />
+                {notice && (
+                  <FieldDescription role="status">{notice}</FieldDescription>
+                )}
               </Field>
               <Field>
                 <Button type="submit">Sign in</Button>
