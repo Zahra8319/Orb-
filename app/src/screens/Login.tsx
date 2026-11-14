@@ -3,6 +3,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Orbit } from 'lucide-react'
 
 import { LoginForm } from '@/components/login-form'
+import { ShootingStars } from '@/components/ShootingStars'
 import { BlackHoleHeroSection } from '@/components/ui/blackhole-hero-section'
 import { useSession } from '@/store/session'
 
@@ -60,6 +61,8 @@ export function Login() {
         starBrightness={0.35}
         spinSpeed={0.09}
       />
+
+      <ShootingStars className="z-[1]" />
 
       <main className="relative z-10 flex min-h-svh flex-col items-center justify-start gap-6 p-6 pt-12 pb-40 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)] md:items-start md:justify-center md:p-10 lg:pl-24">
         <div className="flex w-full max-w-sm flex-col gap-6">
