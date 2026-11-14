@@ -61,6 +61,7 @@ export function Login() {
         midColor="#02BFE7"
         coolColor="#0B3D91"
         starBrightness={0.35}
+        spinSpeed={0.09}
       />
 
       <main className="relative z-10 flex min-h-svh flex-col items-center justify-start gap-6 p-6 pt-12 pb-40 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)] md:items-start md:justify-center md:p-10 lg:pl-24">
