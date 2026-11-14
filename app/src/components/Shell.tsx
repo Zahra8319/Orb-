@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 import { CREW } from '../sim/crew'
 import { MISSION_DAYS, commsDelaySec, dayOf, formatClock, formatDelay, minuteOfDay } from '../sim/mission'
 import { useAlerts, useSimClock, useSleepShift } from '../store/hooks'
+import { useSession } from '../store/session'
 import { useStore } from '../store/store'
 import { DemoDrawer } from './DemoDrawer'
 
@@ -24,6 +25,7 @@ export function Shell() {
   const alerts = useAlerts()
   const sleepShift = useSleepShift()
   const [drawer, setDrawer] = useState(false)
+  const signOut = useSession((s) => s.signOut)
 
   useEffect(() => {
     document.documentElement.dataset.theme = sleepShift ? 'sleep' : 'day'
@@ -100,6 +102,9 @@ export function Shell() {
             </Link>
             <button className="btn btn-quiet btn-small" onClick={() => setDrawer(true)} aria-expanded={drawer}>
               Demo controls
+            </button>
+            <button className="btn btn-quiet btn-small" onClick={signOut}>
+              Sign out
             </button>
           </span>
         </footer>
