@@ -1,0 +1,124 @@
+/* Tailwind + shadcn for Orb.
+ *
+ * The app's own stylesheet (app.css) is placed in the `orb` layer, below Tailwind's
+ * utilities. Without that, its unlayered resets (button { color: inherit } and so on)
+ * would beat every Tailwind class. Tailwind's global preflight is left out so the
+ * existing screens render exactly as before; `.orb-ui` gives shadcn components the
+ * small reset they rely on, scoped to where they are used. */
+@layer theme, base, orb, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import 'tw-animate-css';
+@import './app.css' layer(orb);
+
+@custom-variant dark (&:is(.dark *));
+
+/* shadcn colour roles, mapped onto the NASA palette in tokens.css. */
+:root {
+  --radius: 0.75rem;
+  --ui-background: var(--bg);
+  --ui-foreground: var(--ink);
+  --ui-card: var(--white);
+  --ui-card-foreground: var(--ink);
+  --ui-popover: var(--white);
+  --ui-popover-foreground: var(--ink);
+  --ui-primary: var(--nasa-blue);
+  --ui-primary-foreground: var(--white);
+  --ui-secondary: var(--surface);
+  --ui-secondary-foreground: var(--ink);
+  --ui-muted: var(--surface);
+  --ui-muted-foreground: var(--ink-soft);
+  --ui-accent: var(--surface);
+  --ui-accent-foreground: var(--ink);
+  --ui-destructive: var(--nasa-red);
+  --ui-border: var(--rule);
+  --ui-input: var(--rule);
+  --ui-ring: var(--focus);
+}
+
+/* Night side: deep blue glass over space. Used by the sign-in screen. */
+.orb-night {
+  /* Translucent, so outline buttons and inputs read as glass on the card. */
+  --ui-background: rgb(255 255 255 / 0.04);
+  --ui-foreground: #ffffff;
+  --ui-card: rgb(6 31 74 / 0.58);
+  --ui-card-foreground: #ffffff;
+  --ui-popover: var(--nasa-deep);
+  --ui-popover-foreground: #ffffff;
+  --ui-primary: #ffffff;
+  --ui-primary-foreground: var(--nasa-deep);
+  --ui-secondary: rgb(255 255 255 / 0.08);
+  --ui-secondary-foreground: #ffffff;
+  --ui-muted: rgb(255 255 255 / 0.06);
+  --ui-muted-foreground: #a9b6cf;
+  --ui-accent: rgb(255 255 255 / 0.1);
+  --ui-accent-foreground: #ffffff;
+  /* Form errors use NASA gold: red is kept for urgent health alerts. */
+  --ui-destructive: var(--nasa-gold);
+  --ui-border: rgb(201 212 232 / 0.18);
+  --ui-input: rgb(201 212 232 / 0.26);
+  --ui-ring: var(--nasa-cyan);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: var(--font);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--ui-background);
+  --color-foreground: var(--ui-foreground);
+  --color-card: var(--ui-card);
+  --color-card-foreground: var(--ui-card-foreground);
+  --color-popover: var(--ui-popover);
+  --color-popover-foreground: var(--ui-popover-foreground);
+  --color-primary: var(--ui-primary);
+  --color-primary-foreground: var(--ui-primary-foreground);
+  --color-secondary: var(--ui-secondary);
+  --color-secondary-foreground: var(--ui-secondary-foreground);
+  --color-muted: var(--ui-muted);
+  --color-muted-foreground: var(--ui-muted-foreground);
+  --color-accent: var(--ui-accent);
+  --color-accent-foreground: var(--ui-accent-foreground);
+  --color-destructive: var(--ui-destructive);
+  --color-border: var(--ui-border);
+  --color-input: var(--ui-input);
+  --color-ring: var(--ui-ring);
+  --color-nasa-blue: #0b3d91;
+  --color-nasa-deep: #061f4a;
+  --color-nasa-cyan: #02bfe7;
+  --color-nasa-grey: #79797c;
+}
+
+/* The slice of Tailwind preflight shadcn components need, scoped to .orb-ui. */
+@layer base {
+  .orb-ui *,
+  .orb-ui ::before,
+  .orb-ui ::after {
+    border: 0 solid;
+    border-color: var(--color-border);
+  }
+  .orb-ui button,
+  .orb-ui input {
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+  }
+  .orb-ui button:not(:disabled) {
+    cursor: pointer;
+  }
+  .orb-ui img,
+  .orb-ui svg,
+  .orb-ui canvas {
+    display: block;
+  }
+  .orb-ui :focus-visible {
+    outline: none;
+  }
+  .orb-ui input::placeholder {
+    color: var(--color-muted-foreground);
+    opacity: 1;
+  }
+}
