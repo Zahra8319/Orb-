@@ -3,7 +3,7 @@ import type { Crew } from '../sim/crew'
 import { MIN_PER_DAY, formatClock } from '../sim/mission'
 import { activityAt } from '../sim/model'
 import type { Scenarios } from '../sim/scenarios'
-import { dayBlocks } from './dayBlocks'
+import { dayBlocks, type Block } from './dayBlocks'
 
 interface Props {
   crew: Crew
@@ -32,6 +32,9 @@ function arcPath(track: { inner: number; outer: number }, from: number, to: numb
 }
 
 const STATE = { sleep: 'Asleep', cardio: 'Cardio session', resistance: 'Resistance session', awake: 'Awake' } as const
+
+/** Hover text for a block, for example "Sleep, 00:00 to 05:34". */
+const span = (name: string, b: Block) => `${name}, ${formatClock(b.from)} to ${formatClock(b.to)}`
 
 /** The 24-hour day drawn as a clock: sleep, exercise and bright light, filling in as the day goes. */
 export function DayRing({ crew, t, scenarios }: Props) {
@@ -84,18 +87,21 @@ export function DayRing({ crew, t, scenarios }: Props) {
 
         {light.map((b, i) => (
           <g key={`l${i}`}>
+            <title>{span('Bright light', b)}</title>
             <path d={arcPath(TRACKS.light, b.from, b.to)} fill="var(--planned)" />
             <path d={arcPath(TRACKS.light, b.from, b.done)} fill="var(--light-done)" />
           </g>
         ))}
         {exercise.map((b, i) => (
           <g key={`e${i}`}>
+            <title>{span(i === 0 ? 'Cardio' : 'Resistance exercise', b)}</title>
             <path d={arcPath(TRACKS.exercise, b.from, b.to)} fill="var(--planned)" />
             <path d={arcPath(TRACKS.exercise, b.from, b.done)} fill="var(--live)" />
           </g>
         ))}
         {sleep.map((b, i) => (
           <g key={`s${i}`}>
+            <title>{span('Sleep', b)}</title>
             <path d={arcPath(TRACKS.sleep, b.from, b.to)} fill="var(--planned)" />
             <path d={arcPath(TRACKS.sleep, b.from, b.done)} fill="var(--series-1)" />
           </g>

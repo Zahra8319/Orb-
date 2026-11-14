@@ -90,7 +90,7 @@ export function ShipEarth() {
         </div>
       </Section>
 
-      <Section title="Carbon dioxide, last 6 hours" note="Headaches and slower thinking are reported above about 4 mmHg.">
+      <Section title="Carbon dioxide, last 6 hours" note="NASA's standard keeps the one-hour average at or under 3 mmHg. Crews have reported headaches above that.">
         <LineChart
           label="Cabin carbon dioxide over the last 6 hours"
           series={[{ name: 'CO2', points: co2 }]}

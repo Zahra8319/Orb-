@@ -73,6 +73,33 @@ const SOURCES: { feature: string; why: string; title: string; url: string }[] = 
   },
 ]
 
+const NUMBERS: { value: string; why: string; title: string; url: string }[] = [
+  {
+    value: 'Dose rate in transit: about 1.8 mSv a day',
+    why: 'Average galactic cosmic ray dose equivalent measured by the radiation detector on the Curiosity rover during its cruise to Mars.',
+    title: 'Southwest Research Institute: radiation exposure associated with a trip to Mars',
+    url: 'https://www.swri.org/press-release/swri-led-team-calculates-radiation-exposure-associated-trip-mars',
+  },
+  {
+    value: 'Career radiation limit: 600 mSv',
+    why: 'NASA’s standard sets a career effective dose limit of 600 mSv for all astronauts.',
+    title: 'NASA: Radiation Protection technical brief',
+    url: 'https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf',
+  },
+  {
+    value: 'Bone loss without countermeasures: 1 to 1.5% a month',
+    why: 'Astronauts can lose up to 1.5% of bone mass each month in space.',
+    title: 'Canadian Space Agency: The TBone studies',
+    url: 'https://www.asc-csa.gc.ca/eng/sciences/tbone.asp',
+  },
+  {
+    value: 'Cabin CO2 target: 3 mmHg',
+    why: 'NASA’s spaceflight standard limits the one-hour average CO2 level to 3 mmHg, after crews reported headaches at higher levels.',
+    title: 'NASA Technical Reports Server: CO2 on the space station',
+    url: 'https://ntrs.nasa.gov/citations/20150021777',
+  },
+]
+
 export function Sources() {
   return (
     <>
@@ -100,10 +127,21 @@ export function Sources() {
       </section>
       <section className="section">
         <h2 className="section-title">Numbers the simulation uses</h2>
-        <p className="section-note">
-          Dose rate in transit of about 1.8 mSv a day, from the radiation detector on NASA&rsquo;s Curiosity rover during its cruise to Mars.
-          A career limit of 600 mSv, NASA&rsquo;s current standard. Bone loss of roughly 1 to 1.5% a month without exercise. A cabin CO2
-          target of 3 mmHg. These are illustrative and should be checked against the primary sources before any real use.
+        <ul className="sources section-body">
+          {NUMBERS.map((n) => (
+            <li key={n.url}>
+              <b>{n.value}</b>
+              <div>
+                <p>{n.why}</p>
+                <a className="link" href={n.url} target="_blank" rel="noreferrer">
+                  {n.title}
+                </a>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="section-note" style={{ marginTop: 16 }}>
+          The simulation uses these as round figures to make a believable demo. It is not a model of any real mission.
         </p>
       </section>
     </>

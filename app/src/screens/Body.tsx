@@ -1,10 +1,12 @@
 import { BarChart } from '../charts/BarChart'
 import { LineChart } from '../charts/LineChart'
-import { Section } from '../components/bits'
-import { formatClock } from '../sim/mission'
-import { bodySeries, dayRecord, exerciseSoFar, eyeCheckDue, nextEyeCheck } from '../sim/model'
+import { Readout, Section } from '../components/bits'
+import { formatClock, minuteOfDay } from '../sim/mission'
+import { bodySeries, dayRecord, exerciseSoFar, eyeCheckDue, nextEyeCheck, vitalsAt } from '../sim/model'
 import { useCrew, useSnapshot } from '../store/hooks'
 import { dayKey, useStore } from '../store/store'
+
+const ACTIVITY_NOTE = { sleep: 'asleep', cardio: 'during cardio', resistance: 'during resistance', awake: 'at rest' } as const
 
 export function Body() {
   const crew = useCrew()
@@ -30,6 +32,11 @@ export function Body() {
   const heart = Array.from({ length: 30 }, (_, i) => {
     const d = Math.max(1, day - 29 + i)
     return { x: d, y: dayRecord(crew, d, scenarios).restingHr }
+  })
+
+  const liveHeart = Array.from({ length: 31 }, (_, i) => {
+    const at = t - (30 - i)
+    return { x: at, y: vitalsAt(crew, at, scenarios).heartRate }
   })
 
   const dueToday = eyeCheckDue(crew, day)
@@ -103,8 +110,34 @@ export function Body() {
         />
       </Section>
 
+      <Section title="Heart rate now" note="The last 30 minutes, one reading a minute.">
+        <div className="split split-narrow">
+          <div className="readouts">
+            <Readout
+              big
+              label="Heart rate"
+              value={snap.vitals.heartRate}
+              unit="beats/min"
+              note={snap.vitals.irregular ? 'Irregular rhythm' : ACTIVITY_NOTE[snap.vitals.activity]}
+              level={snap.vitals.irregular ? 'urgent' : null}
+            />
+          </div>
+          <LineChart
+            label="Heart rate over the last 30 minutes"
+            series={[{ name: 'Heart rate', points: liveHeart }]}
+            xFormat={(x) => formatClock(minuteOfDay(x))}
+            yFormat={(y) => `${Math.round(y)}`}
+            xHeader="Ship time"
+            yDomain={[40, Math.max(120, ...liveHeart.map((p) => p.y)) + 10]}
+            xTicks={[t - 30, t - 20, t - 10, t]}
+            refs={[{ y: 110, label: 'Act above 110 at rest', tone: 'watch' }]}
+            height={220}
+          />
+        </div>
+      </Section>
+
       <div className="split">
-        <Section title="Heart" note="Resting heart rate each morning for the last 30 days.">
+        <Section title="Resting heart rate" note="Each morning for the last 30 days.">
           <LineChart
             label="Resting heart rate each morning over the last 30 days"
             series={[{ name: 'Resting heart rate', points: heart }]}

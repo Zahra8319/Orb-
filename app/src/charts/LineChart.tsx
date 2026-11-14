@@ -133,7 +133,7 @@ export function LineChart({
             {refs.map((r) => (
               <g key={r.label} transform={`translate(0,${y(r.y)})`}>
                 <line x1={0} x2={innerW} stroke={REF_COLOR[r.tone ?? 'neutral']} strokeWidth={1.5} strokeDasharray="1 4" strokeLinecap="round" />
-                <text x={4} y={-5}>
+                <text className="ref-label" x={4} y={-5}>
                   {r.label}
                 </text>
               </g>

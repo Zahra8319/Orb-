@@ -1092,3 +1092,56 @@ main {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.split-narrow {
+  grid-template-columns: 1fr 2fr;
+}
+
+.alert-band .btn-band-quiet {
+  background: transparent;
+  border-color: currentColor;
+  color: inherit;
+}
+
+.alert-band .btn-band-quiet:hover {
+  background: rgb(255 255 255 / 0.18);
+  filter: none;
+}
+
+@media (max-width: 900px) {
+  .split-narrow {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Reference-line labels get a halo in the page colour so they stay readable over data. */
+.chart .ref-label {
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+
+/* White on NASA red is 3.6:1, which only passes for large bold text, so everything on the band is large and bold. */
+.alert-band-action {
+  font-weight: 700;
+}
+
+.alert-band .btn-band-quiet {
+  border-color: transparent;
+  padding-inline: var(--s-2);
+  font-size: 1.1875rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Keep small text links at least 24px tall so they are easy to hit. */
+.table-toggle summary,
+.footer .link {
+  padding-block: 5px;
+}
+
+.footer .link {
+  display: inline-block;
+}

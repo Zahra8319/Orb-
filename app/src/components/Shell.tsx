@@ -70,7 +70,7 @@ export function Shell() {
                 {sheltered ? 'I have left the shelter' : 'I am in the shelter'}
               </button>
             )}
-            <Link className="btn" to={top.to}>
+            <Link className="btn btn-band-quiet" to={top.to}>
               See the readings
             </Link>
           </div>

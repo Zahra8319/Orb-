@@ -78,7 +78,7 @@ export function BarChart({ label, bars, yMax, yFormat, xHeader, yHeader, refLine
             {refLine && (
               <g transform={`translate(0,${y(refLine.y)})`} pointerEvents="none">
                 <line x1={0} x2={innerW} stroke="var(--ink)" strokeWidth={1.5} strokeDasharray="1 4" strokeLinecap="round" />
-                <text x={innerW} y={-5} textAnchor="end">
+                <text className="ref-label" x={innerW} y={-5} textAnchor="end">
                   {refLine.label}
                 </text>
               </g>

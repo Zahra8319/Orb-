@@ -106,7 +106,7 @@ const rules: Rule[] = [
         id: 'co2',
         level: 'act',
         title: `Cabin CO2 is ${value} mmHg and rising`,
-        action: 'Swap the scrubber cartridge and turn the cabin fans to high. Expect headaches above 4 mmHg.',
+        action: 'Swap the scrubber cartridge and turn the cabin fans to high. Tell the crew if you get a headache.',
         to: '/ship',
       }
     }
