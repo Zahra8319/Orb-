@@ -18,15 +18,20 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { CREW } from "@/sim/crew"
-import { crewEmail, findCrewByEmail } from "@/store/session"
+import {
+  SURGEON_EMAIL,
+  accountForEmail,
+  crewEmail,
+  type Account,
+} from "@/store/session"
 
-/** shadcn login-03, adapted to Orb: crew sign in with their mission email. */
+/** shadcn login-03, adapted to Orb: crew and the flight surgeon sign in with their mission email. */
 export function LoginForm({
   className,
   onSignIn,
   ...props
 }: Omit<React.ComponentProps<"div">, "onSubmit"> & {
-  onSignIn: (crewId: string) => void
+  onSignIn: (account: Account) => void
 }) {
   const [email, setEmail] = useState("")
   const [error, setError] = useState("")
@@ -34,14 +39,19 @@ export function LoginForm({
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const crew = findCrewByEmail(email)
-    if (!crew) {
+    const account = accountForEmail(email)
+    if (!account) {
       setError(
-        `No crew member uses that email. Try ${crewEmail(CREW[0])}.`
+        `No one on this mission uses that email. Try ${crewEmail(CREW[0])}.`
       )
       return
     }
-    onSignIn(crew.id)
+    onSignIn(account)
+  }
+
+  const pick = (value: string) => {
+    setEmail(value)
+    setError("")
   }
 
   return (
@@ -104,7 +114,7 @@ export function LoginForm({
       </Card>
       <details className="group px-6 text-center text-sm text-muted-foreground">
         <summary className="cursor-pointer list-none underline underline-offset-4 hover:text-foreground [&::-webkit-details-marker]:hidden">
-          Demo crew emails
+          Demo emails
         </summary>
         <ul className="mt-3 flex flex-col gap-1">
           {CREW.map((c) => (
@@ -112,16 +122,23 @@ export function LoginForm({
               <button
                 type="button"
                 className="hover:text-foreground"
-                onClick={() => {
-                  setEmail(crewEmail(c))
-                  setError("")
-                }}
+                onClick={() => pick(crewEmail(c))}
               >
                 {crewEmail(c)}{" "}
                 <span className="text-muted-foreground/70">({c.role})</span>
               </button>
             </li>
           ))}
+          <li className="mt-2 border-t border-white/10 pt-2">
+            <button
+              type="button"
+              className="hover:text-foreground"
+              onClick={() => pick(SURGEON_EMAIL)}
+            >
+              {SURGEON_EMAIL}{" "}
+              <span className="text-muted-foreground/70">(Mission Control)</span>
+            </button>
+          </li>
         </ul>
       </details>
       <FieldDescription className="px-6 text-center">

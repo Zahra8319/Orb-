@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { CREW } from '../sim/crew'
 import { MISSION_DAYS, commsDelaySec, dayOf, formatClock, formatDelay, minuteOfDay } from '../sim/mission'
-import { useAlerts, useSimClock, useSleepShift } from '../store/hooks'
+import { useAlerts, useCrew, useSimClock, useSleepShift } from '../store/hooks'
 import { useSession } from '../store/session'
 import { useStore } from '../store/store'
 import { DemoDrawer } from './DemoDrawer'
@@ -26,6 +26,10 @@ export function Shell() {
   const sleepShift = useSleepShift()
   const [drawer, setDrawer] = useState(false)
   const signOut = useSession((s) => s.signOut)
+  const role = useSession((s) => s.role)
+  const viewAs = useSession((s) => s.viewAs)
+  const crew = useCrew()
+  const navigate = useNavigate()
 
   useEffect(() => {
     document.documentElement.dataset.theme = sleepShift ? 'sleep' : 'day'
@@ -35,6 +39,24 @@ export function Shell() {
 
   return (
     <>
+      {role === 'flight-surgeon' && (
+        <div className="viewas-band" role="status">
+          <div className="page viewas-band-inner">
+            <span>
+              You are seeing <strong>{crew.name}</strong>&rsquo;s Orb, exactly as they see it on board.
+            </span>
+            <button
+              className="btn btn-small"
+              onClick={() => {
+                viewAs(null)
+                navigate('/admin')
+              }}
+            >
+              Back to Mission Control
+            </button>
+          </div>
+        </div>
+      )}
       <header className="topbar">
         <div className="page topbar-inner">
           <Link className="wordmark" to="/" aria-label="Orb, go to Today">

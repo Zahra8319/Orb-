@@ -30,7 +30,7 @@ function useNarrow(query = '(max-width: 767px)') {
  */
 export function Login() {
   const narrow = useNarrow()
-  const signedIn = useSession((s) => s.crewId)
+  const role = useSession((s) => s.role)
   const signIn = useSession((s) => s.signIn)
   const navigate = useNavigate()
   const from = (useLocation().state as { from?: string } | null)?.from ?? '/'
@@ -43,7 +43,8 @@ export function Login() {
     }
   }, [])
 
-  if (signedIn) return <Navigate to={from} replace />
+  if (role === 'flight-surgeon') return <Navigate to="/admin" replace />
+  if (role === 'crew') return <Navigate to={from} replace />
 
   // One camera for the black hole and the meteors it bends, so they line up.
   const camera: HoleCamera = {
@@ -84,9 +85,9 @@ export function Login() {
             Orb
           </a>
           <LoginForm
-            onSignIn={(crewId) => {
-              signIn(crewId)
-              navigate(from, { replace: true })
+            onSignIn={(account) => {
+              signIn(account)
+              navigate(account.role === 'flight-surgeon' ? '/admin' : from, { replace: true })
             }}
           />
         </div>
