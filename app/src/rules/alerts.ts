@@ -7,6 +7,8 @@ import type { Snapshot } from '../sim/model'
 
 export type Level = 'watch' | 'act' | 'urgent'
 
+export const LEVEL_WORD: Record<Level, string> = { watch: 'Watch', act: 'Act today', urgent: 'Urgent' }
+
 export interface Alert {
   id: string
   level: Level

@@ -1,0 +1,88 @@
+/* Orb design tokens. Colours are the NASA palette: NASA blue, NASA red, white, grey,
+   plus the deep blue and cyan from NASA's web design system. Red is reserved for urgent alerts. */
+
+:root {
+  /* NASA palette */
+  --nasa-blue: #0b3d91;
+  --nasa-red: #fc3d21;
+  --nasa-deep: #061f4a;
+  --nasa-grey: #79797c;
+  --nasa-cyan: #02bfe7;
+  --nasa-gold: #ff9d1e;
+  --white: #ffffff;
+
+  /* Day shift (default) */
+  --bg: var(--white);
+  --surface: #f1f5fb;
+  --ink: var(--nasa-deep);
+  --ink-soft: #55585f;
+  --rule: #d3dbe9;
+  --rule-strong: var(--nasa-deep);
+  --primary: var(--nasa-blue);
+  --on-primary: var(--white);
+  --series-1: var(--nasa-blue);
+  --series-2: var(--nasa-grey);
+  --live: var(--nasa-cyan);
+  --planned: #d5e0f3;
+  --light-track: #e4ebf7;
+  --light-done: #8fb0f2;
+  --watch: var(--nasa-gold);
+  --urgent: var(--nasa-red);
+  --focus: var(--nasa-blue);
+
+  /* Type: one family, Archivo, using its width axis */
+  --font: 'Archivo Variable', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --wide: 118%;
+  --normal: 100%;
+  --narrow: 84%;
+
+  --t-xs: 0.8125rem;
+  --t-sm: 0.9375rem;
+  --t-base: 1.0625rem;
+  --t-md: 1.3125rem;
+  --t-lg: 1.6875rem;
+  --t-xl: 2.25rem;
+  --t-2xl: 3.375rem;
+  --t-3xl: 4.75rem;
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 72px;
+
+  --page: 1180px;
+  --gutter: 32px;
+  color-scheme: light;
+}
+
+/* Sleep shift: deep blue and dimmed, switched on before bed. */
+:root[data-theme='sleep'] {
+  --bg: var(--nasa-deep);
+  --surface: #0a2a5e;
+  --ink: #c9d4e8;
+  --ink-soft: #93a2bf;
+  --rule: #1d3c73;
+  --rule-strong: #93a2bf;
+  --primary: #8fb0f2;
+  --on-primary: var(--nasa-deep);
+  --series-1: #8fb0f2;
+  --series-2: #b9c0cc;
+  --planned: #17376f;
+  --light-track: #12305f;
+  --light-done: #dfe7f5;
+  --focus: var(--nasa-cyan);
+  color-scheme: dark;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --gutter: 16px;
+    --t-2xl: 2.5rem;
+    --t-3xl: 3.25rem;
+    --t-xl: 1.875rem;
+  }
+}
