@@ -62,30 +62,6 @@
   color-scheme: dark;
 }
 
-/* White card on the night screen. Matches the white-hot rim of the black hole;
-   slightly translucent so the disc glows through its edges. */
-.orb-paper {
-  --ui-background: #ffffff;
-  --ui-foreground: var(--nasa-deep);
-  --ui-card: rgb(255 255 255 / 0.93);
-  --ui-card-foreground: var(--nasa-deep);
-  --ui-primary: var(--nasa-blue);
-  --ui-primary-foreground: #ffffff;
-  --ui-secondary: #f1f5fb;
-  --ui-secondary-foreground: var(--nasa-deep);
-  --ui-muted: #f1f5fb;
-  --ui-muted-foreground: #55585f;
-  --ui-accent: #e4ebf7;
-  --ui-accent-foreground: var(--nasa-deep);
-  /* Dark amber: NASA gold is too faint on white, and red is for urgent alerts. */
-  --ui-destructive: #9a5200;
-  --ui-border: #d3dbe9;
-  --ui-input: #c3cde0;
-  --ui-ring: var(--nasa-blue);
-  color-scheme: light;
-  text-shadow: none;
-}
-
 @theme inline {
   --font-sans: var(--font);
   --radius-sm: calc(var(--radius) - 4px);
