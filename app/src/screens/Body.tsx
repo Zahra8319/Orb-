@@ -1,8 +1,8 @@
 import { BarChart } from '../charts/BarChart'
 import { LineChart } from '../charts/LineChart'
 import { Readout, Section } from '../components/bits'
-import { formatClock, minuteOfDay } from '../sim/mission'
-import { bodySeries, dayRecord, exerciseSoFar, eyeCheckDue, nextEyeCheck, vitalsAt } from '../sim/model'
+import { formatClock, minuteOfDay, MISSION_DAYS } from '../sim/mission'
+import { bodySeries, dayRecord, exerciseSoFar, eyeCheckDue, nextEyeCheck, vitalsAt, projectedBodySeries, projectBodyAtMissionEnd, projectedNoExerciseSeries, averageAdherence } from '../sim/model'
 import { useCrew, useSnapshot } from '../store/hooks'
 import { dayKey, useStore } from '../store/store'
 
@@ -20,8 +20,13 @@ export function Body() {
   const done = exerciseSoFar(crew, t, scenarios)
 
   const body = bodySeries(crew, day, scenarios)
+  const projected = projectedBodySeries(crew, day, scenarios)
+  const projectedNoExercise = projectedNoExerciseSeries(crew, day)
   const last = body[body.length - 1]
+  const projection = projectBodyAtMissionEnd(crew, day, scenarios)
+  const adherence = averageAdherence(crew, day, scenarios)
   const noExerciseBone = body.map((p) => ({ x: p.day, y: (-1.25 / 30) * p.day }))
+  const noExerciseProjected = projectedNoExercise.map((p) => ({ x: p.day, y: p.bone }))
 
   const exerciseBars = Array.from({ length: 14 }, (_, i) => {
     const d = day - 14 + i
@@ -96,18 +101,54 @@ export function Body() {
         note={`Estimated from your exercise record. Hip bone density is down ${Math.abs(last.bone).toFixed(1)}% and leg strength ${Math.abs(last.muscle).toFixed(1)}%. With no exercise, bone loss would be about ${Math.abs(noExerciseBone[noExerciseBone.length - 1].y).toFixed(1)}%.`}
       >
         <LineChart
-          label="Estimated change in bone density and leg strength since launch, compared with bone loss without exercise"
+          label="Estimated change in bone density and leg strength since launch, with projection to mission end"
           series={[
-            { name: 'Hip bone density', points: body.map((p) => ({ x: p.day, y: p.bone })) },
-            { name: 'Leg strength', points: body.map((p) => ({ x: p.day, y: p.muscle })), style: 'dashed' },
-            { name: 'Bone, no exercise', points: noExerciseBone, style: 'dotted', tone: 2 },
+            { name: 'Hip bone density (actual)', points: body.map((p) => ({ x: p.day, y: p.bone })) },
+            { name: 'Leg strength (actual)', points: body.map((p) => ({ x: p.day, y: p.muscle })), style: 'dashed' },
+            { name: 'Hip bone density (projected)', points: projected.slice(day).map((p) => ({ x: p.day, y: p.bone })), style: 'dotted', tone: 1 },
+            { name: 'Leg strength (projected)', points: projected.slice(day).map((p) => ({ x: p.day, y: p.muscle })), style: 'dotted', tone: 1 },
+            { name: 'Bone, no exercise (actual)', points: noExerciseBone, style: 'dotted', tone: 2 },
+            { name: 'Bone, no exercise (projected)', points: noExerciseProjected, style: 'dotted', tone: 2 },
           ]}
           xFormat={(x) => `Day ${Math.round(x)}`}
           yFormat={(y) => `${y.toFixed(1)}%`}
           xHeader="Mission day"
           directLabels
           height={280}
+          refs={[
+            { y: 0, label: 'Baseline', tone: 'neutral' },
+            { y: projection.bone, label: `Projected: ${Math.abs(projection.bone).toFixed(1)}%`, tone: 'watch' },
+            { y: projection.muscle, label: `Projected muscle: ${Math.abs(projection.muscle).toFixed(1)}%`, tone: 'watch' },
+          ]}
         />
+      </Section>
+
+      <Section
+        title="Projection at mission end (Day 210)"
+        note={`Current exercise adherence: ${(adherence * 100).toFixed(0)}%. Projected hip bone loss: ${Math.abs(projection.bone).toFixed(1)}%, leg strength loss: ${Math.abs(projection.muscle).toFixed(1)}%.`}
+      >
+        <div className="projection-cards">
+          <div className="projection-card">
+            <div className="projection-label">Hip bone density</div>
+            <div className="projection-value">{Math.abs(projection.bone).toFixed(1)}% loss</div>
+            <div className="projection-detail">At current adherence (${(adherence * 100).toFixed(0)}%), projected loss by Day 210.</div>
+          </div>
+          <div className="projection-card">
+            <div className="projection-label">Leg strength</div>
+            <div className="projection-value">{Math.abs(projection.muscle).toFixed(1)}% loss</div>
+            <div className="projection-detail">At current adherence (${(adherence * 100).toFixed(0)}%), projected loss by Day 210.</div>
+          </div>
+          <div className="projection-card">
+            <div className="projection-label">No-exercise scenario</div>
+            <div className="projection-value">{Math.abs((-1.25 / 30) * MISSION_DAYS).toFixed(1)}% loss</div>
+            <div className="projection-detail">If no exercise performed at all.</div>
+          </div>
+          <div className="projection-card">
+            <div className="projection-label">Target (with full exercise)</div>
+            <div className="projection-value">{Math.abs((1.25 - 0.9) / 30 * MISSION_DAYS).toFixed(1)}% loss</div>
+            <div className="projection-detail">If 100% exercise adherence maintained.</div>
+          </div>
+        </div>
       </Section>
 
       <Section title="Heart rate now" note="The last 30 minutes, one reading a minute.">

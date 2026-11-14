@@ -96,14 +96,14 @@ const round1 = (v: number) => Math.round(v * 10) / 10
 /* ---------- sleep ---------- */
 
 function inShortSleep(day: number, sc: Scenarios): boolean {
-  if (sc.shortSleep === null) return false
-  const trigger = dayOf(sc.shortSleep)
+  if (sc['short-sleep'] === null) return false
+  const trigger = dayOf(sc['short-sleep'] as number)
   return day > trigger - SHORT_SLEEP_NIGHTS && day <= trigger
 }
 
 function inMissedExercise(day: number, sc: Scenarios): boolean {
-  if (sc.missedExercise === null) return false
-  const trigger = dayOf(sc.missedExercise)
+  if (sc['missed-exercise'] === null) return false
+  const trigger = dayOf(sc['missed-exercise'] as number)
   return day >= trigger - MISSED_EXERCISE_DAYS && day < trigger
 }
 
@@ -133,7 +133,7 @@ function debtOver(crew: Crew, day: number, nights: number, sc: Scenarios): numbe
 
 const dayCache = new Map<string, DayRecord>()
 const scKey = (sc: Scenarios) =>
-  `${sc.shortSleep === null ? '-' : dayOf(sc.shortSleep)}|${sc.missedExercise === null ? '-' : dayOf(sc.missedExercise)}`
+  `${sc['short-sleep'] === null ? '-' : dayOf(sc['short-sleep'] as number)}|${sc['missed-exercise'] === null ? '-' : dayOf(sc['missed-exercise'] as number)}`
 
 export function dayRecord(crew: Crew, day: number, sc: Scenarios): DayRecord {
   const key = `${crew.id}:${day}:${scKey(sc)}`
@@ -273,7 +273,7 @@ export function vitalsAt(crew: Crew, t: number, sc: Scenarios): Vitals {
     breathing = 14.5 + smoothNoise(s + 22, t, 5) * 1.5
   }
 
-  const irregular = sc.irregularHeart !== null && t >= sc.irregularHeart
+  const irregular = sc['irregular-heart'] !== null && t >= (sc['irregular-heart'] as number)
   if (irregular) {
     // Erratic beat-to-beat jumps, re-rolled every nine seconds.
     heartRate += 14 + (hash01(s + 23, t / 0.15) * 2 - 1) * 26
@@ -299,8 +299,8 @@ export function cabinAt(t: number, sc: Scenarios): Cabin {
   const m = minuteOfDay(t)
   const shipDay = m >= 6 * 60 && m < 22 * 60
   let co2 = 2.4 + smoothNoise(901, t, 45) * 0.35 + smoothNoise(902, t, 6) * 0.1
-  if (sc.co2Rise !== null && t >= sc.co2Rise) {
-    co2 = Math.min(7.6, co2 + ((t - sc.co2Rise) / 60) * CO2_RISE_PER_HOUR)
+  if (sc['co2-rise'] !== null && t >= (sc['co2-rise'] as number)) {
+    co2 = Math.min(7.6, co2 + ((t - (sc['co2-rise'] as number)) / 60) * CO2_RISE_PER_HOUR)
   }
   return {
     co2: round1(co2),
@@ -315,8 +315,8 @@ export function cabinAt(t: number, sc: Scenarios): Cabin {
 /* ---------- radiation ---------- */
 
 function stormMultiplier(t: number, sc: Scenarios): number {
-  if (sc.solarStorm === null) return 0
-  const h = (t - sc.solarStorm) / 60
+  if (sc['solar-storm'] === null) return 0
+  const h = (t - (sc['solar-storm'] as number)) / 60
   if (h < 0 || h > STORM_HOURS) return 0
   const rise = Math.min(1, h / STORM_RISE_H)
   const decay = Math.exp(-Math.max(0, h - STORM_RISE_H) / STORM_DECAY_H)
@@ -339,9 +339,9 @@ export function doseRateAt(t: number, sc: Scenarios): number {
 
 /** Hours until the current storm is expected to fall back under the alert level. 0 when no storm. */
 export function stormHoursLeft(t: number, sc: Scenarios): number {
-  if (sc.solarStorm === null) return 0
-  const end = sc.solarStorm + STORM_HOURS * 60
-  return t >= sc.solarStorm && t < end ? (end - t) / 60 : 0
+  if (sc['solar-storm'] === null) return 0
+  const end = (sc['solar-storm'] as number) + STORM_HOURS * 60
+  return t >= (sc['solar-storm'] as number) && t < end ? (end - t) / 60 : 0
 }
 
 function dayDose(crew: Crew, day: number): number {
@@ -364,9 +364,9 @@ export function missionDose(crew: Crew, t: number, sc: Scenarios): number {
   const day = dayOf(t)
   const background = doseBefore(crew, day) + dayDose(crew, day) * (minuteOfDay(t) / MIN_PER_DAY)
   const storm =
-    sc.solarStorm === null
+    sc['solar-storm'] === null
       ? 0
-      : (DOSE_PER_DAY_MSV / 24) * crew.doseFactor * stormIntegral((t - sc.solarStorm) / 60)
+      : (DOSE_PER_DAY_MSV / 24) * crew.doseFactor * stormIntegral((t - (sc['solar-storm'] as number)) / 60)
   return background + storm
 }
 
@@ -401,6 +401,60 @@ export function bodySeries(crew: Crew, day: number, sc: Scenarios): BodyPoint[] 
   if (bodyCache.size > 40) bodyCache.clear()
   bodyCache.set(key, series)
   return series
+}
+
+/** Average exercise adherence so far (0-1). */
+export function averageAdherence(crew: Crew, day: number, sc: Scenarios): number {
+  let totalAdherence = 0
+  let count = 0
+  for (let d = 1; d <= day; d++) {
+    const r = dayRecord(crew, d, sc)
+    totalAdherence += (r.cardioDone + r.resistanceDone) / (r.cardioPlanned + r.resistancePlanned)
+    count++
+  }
+  return count > 0 ? totalAdherence / count : 1
+}
+
+/** Projected bone/muscle loss at mission end given current adherence. */
+export function projectBodyAtMissionEnd(crew: Crew, day: number, sc: Scenarios): { bone: number; muscle: number } {
+  const body = bodySeries(crew, day, sc)
+  const current = body[body.length - 1]
+  const remainingDays = 210 - day // MISSION_DAYS
+  const adherence = averageAdherence(crew, day, sc)
+  const boneLossPerDay = (1.25 - 0.9 * adherence) / 30
+  const muscleLossPerDay = (1.6 - 1.2 * adherence) / 30
+  return {
+    bone: current.bone - boneLossPerDay * remainingDays,
+    muscle: current.muscle - muscleLossPerDay * remainingDays,
+  }
+}
+
+/** Projected series for charting (historical + projected). */
+export function projectedBodySeries(crew: Crew, day: number, sc: Scenarios): BodyPoint[] {
+  const historical = bodySeries(crew, day, sc)
+  const projected: BodyPoint[] = []
+  let bone = historical[historical.length - 1]?.bone ?? 0
+  let muscle = historical[historical.length - 1]?.muscle ?? 0
+  const adherence = averageAdherence(crew, day, sc)
+  const boneLossPerDay = (1.25 - 0.9 * adherence) / 30
+  const muscleLossPerDay = (1.6 - 1.2 * adherence) / 30
+  for (let d = day + 1; d <= 210; d++) {
+    bone -= boneLossPerDay
+    muscle -= muscleLossPerDay
+    projected.push({ day: d, bone, muscle })
+  }
+  return [...historical, ...projected]
+}
+
+/** Projected no-exercise series for comparison. */
+export function projectedNoExerciseSeries(_crew: Crew, day: number): BodyPoint[] {
+  const projected: BodyPoint[] = []
+  let bone = (-1.25 / 30) * day
+  for (let d = day + 1; d <= 210; d++) {
+    bone -= 1.25 / 30
+    projected.push({ day: d, bone, muscle: 0 })
+  }
+  return projected
 }
 
 /* ---------- snapshot for the alert rules ---------- */

@@ -12,6 +12,10 @@ const NAV = [
   { to: '/sleep', label: 'Sleep and mind' },
   { to: '/radiation', label: 'Radiation' },
   { to: '/ship', label: 'Ship and Earth' },
+  { to: '/consult', label: 'Consult Earth' },
+  { to: '/eva', label: 'EVA Monitor' },
+  { to: '/scenarios', label: 'Scenarios' },
+  { to: '/command', label: 'Command' },
 ]
 
 export function Shell() {

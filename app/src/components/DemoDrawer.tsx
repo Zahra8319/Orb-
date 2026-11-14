@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { SCENARIO_INFO } from '../sim/scenarios'
+import { getAvailableScenarios } from '../sim/scenarios'
 import { SPEEDS, useStore, type ThemeMode } from '../store/store'
 
 const THEMES: { value: ThemeMode; label: string }[] = [
@@ -49,15 +49,15 @@ export function DemoDrawer({ onClose }: { onClose: () => void }) {
 
       <h3>Health events</h3>
       <ul>
-        {SCENARIO_INFO.map((sc) => {
-          const on = scenarios[sc.id] !== null
+        {getAvailableScenarios().map((sc) => {
+          const on = scenarios[sc.id as keyof typeof scenarios] !== null
           return (
             <li key={sc.id} className="scenario">
               <div>
                 <b>{sc.name}</b>
-                <span>{sc.detail}</span>
+                <span>{sc.description}</span>
               </div>
-              <button className="btn btn-quiet btn-small" aria-pressed={on} onClick={() => toggleScenario(sc.id)}>
+              <button className="btn btn-quiet btn-small" aria-pressed={on} onClick={() => toggleScenario(sc.id as any)}>
                 {on ? 'Stop' : 'Start'}
               </button>
             </li>

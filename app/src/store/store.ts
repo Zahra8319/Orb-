@@ -127,7 +127,7 @@ export const useStore = create<State>((set, get) => ({
   toggleScenario: (id) =>
     set((s) => ({
       scenarios: { ...s.scenarios, [id]: s.scenarios[id] === null ? s.t : null },
-      sheltered: id === 'solarStorm' ? false : s.sheltered,
+      sheltered: id === 'solar-storm' ? false : s.sheltered,
     })),
   resetDemo: () => set(initial()),
   setThemeMode: (themeMode) => set({ themeMode }),
