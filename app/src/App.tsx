@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Shell } from './components/Shell'
 import { useSession } from './store/session'
+import { Admin } from './screens/Admin'
 import { Body } from './screens/Body'
 import { Command } from './screens/Command'
 import { Consult } from './screens/Consult'
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="eva" element={<EVA />} />
           <Route path="scenarios" element={<ScenariosScreen />} />
           <Route path="command" element={<Command />} />
+          <Route path="admin" element={<Admin />} />
           <Route path="sources" element={<Sources />} />
           <Route path="*" element={<Today />} />
         </Route>

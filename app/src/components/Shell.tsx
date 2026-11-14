@@ -17,6 +17,7 @@ const NAV = [
   { to: '/eva', label: 'EVA Monitor' },
   { to: '/scenarios', label: 'Scenarios' },
   { to: '/command', label: 'Command' },
+  { to: '/admin', label: 'Admin', adminOnly: true },
 ]
 
 export function Shell() {
@@ -45,11 +46,10 @@ export function Shell() {
             Orb
           </Link>
           <nav className="nav" aria-label="Main">
-            {NAV.map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.to === '/'}>
-                {n.label}
-              </NavLink>
-            ))}
+            {NAV.map((n) => {
+              if (n.adminOnly && crewId !== 'admin') return null
+              return <NavLink key={n.to} to={n.to} end={n.to === '/'}>{n.label}</NavLink>
+            })}
           </nav>
           <label className="crew-pick">
             <span className="visually-hidden">Crew member</span>
