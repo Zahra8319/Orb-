@@ -94,7 +94,7 @@ export function ShootingStars({ every = 1.6, angle = 152, className = '' }: Shoo
       if (untilNext <= 0) {
         spawn()
         // Now and then a second one close behind, as showers do.
-        if (Math.random() < 0.18) setTimeout(spawn, rand(120, 380))
+        if (Math.random() < 0.3) setTimeout(spawn, rand(120, 380))
         untilNext = rand(every * 0.4, every * 1.6)
       }
 
