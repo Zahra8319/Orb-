@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:g="http://base.google.com/ns/1.0" xml:lang="en-us">
+
+<title type="text">Canadian Space Agency - Space Science and Space Technology</title>
+<subtitle>Canadian Space Agency news</subtitle>
+
+<link rel="self" type="application/atom+xml" href="https://www.asc-csa.gc.ca/rss/default_eng.xml"/>
+<link rel="alternate" type="application/atom+xml" href="https://www.asc-csa.gc.ca/rss/default_fra.xml"/>
+<author>
+	<name>Canadian Space Agency</name>
+	<uri>https://www.asc-csa.gc.ca/eng/default.asp</uri>
+</author>
+<updated>2026-11-09T13:17:00-04:00</updated>
+<id>https://www.asc-csa.gc.ca/eng/default.asp</id>
+<logo>https://www.canada.ca/etc/designs/canada/wet-boew/assets/wmms-blk.svg</logo>
+	
+	<entry>	
+		<title>[Video] Second spacewalk for CSA astronaut Joshua Kutryk</title>
+		<link rel="alternate" href="https://www.asc-csa.gc.ca/eng/multimedia/search/video/20251"/>
+		<id>https://www.asc-csa.gc.ca/eng/multimedia/search/video/20251</id>
+		<author>
+			<name>Canadian Space Agency</name>
+			<uri>https://www.asc-csa.gc.ca/eng/default.asp</uri>
+		</author>
+		<summary type="html" xml:lang="en"><![CDATA[<img src="https://www.asc-csa.gc.ca/images/actualites/nouvelles/2026-11-09-deuxieme-sortie-espace-astronaute-asc-joshua-kutryk-id-20251-home.jpg" alt=""><p>On November 5, 2026, Canadian Space Agency astronaut Joshua Kutyrk conducted a second spacewalk outside the International Space Station.</p>]]></summary>
+
+		<updated>2026-11-09T12:17:00-04:00</updated>
+		<published>2026-11-09T12:17:00-04:00</published>
+	</entry>
+	
+	<entry>	
+		<title>[Video] Get to know Canada's robotics operators</title>
+		<link rel="alternate" href="https://www.asc-csa.gc.ca/eng/multimedia/search/video/20242"/>
+		<id>https://www.asc-csa.gc.ca/eng/multimedia/search/video/20242</id>
+		<author>
+			<name>Canadian Space Agency</name>
+			<uri>https://www.asc-csa.gc.ca/eng/default.asp</uri>
+		</author>
+		<summary type="html" xml:lang="en"><![CDATA[<img src="https://www.asc-csa.gc.ca/images/actualites/nouvelles/2026-11-06-video-operateurs-robot-id-20242-home.jpg" alt=""><p>Learn more about the role of Canadian robotics operators during the spacewalks of October 29, and November 5, 2026, conducted by Canadian Space Agency astronaut Joshua Kutryk and NASA astronaut Anil Menon. </p>]]></summary>
+
+		<updated>2026-11-06T13:17:00-04:00</updated>
+		<published>2026-11-06T13:17:00-04:00</published>
+	</entry>
+	
+	<entry>	
+		<title>Second spacewalk for CSA astronaut Joshua Kutryk</title>
+		<link rel="alternate" href="https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-11-05-second-spacewalk-for-csa-astronaut-joshua-kutryk.asp"/>
+		<id>https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-11-05-second-spacewalk-for-csa-astronaut-joshua-kutryk.asp</id>
+		<author>
+			<name>Canadian Space Agency</name>
+			<uri>https://www.asc-csa.gc.ca/eng/default.asp</uri>
+		</author>
+		<summary type="html" xml:lang="en"><![CDATA[<img src="https://www.asc-csa.gc.ca/images/actualites/nouvelles/2026-11-05-deuxieme-sortie-espace-id-20232-home.jpg" alt=""><p>Earlier today, Canadian Space Agency (CSA) astronaut Colonel Joshua Kutryk conducted the second spacewalk of his career alongside NASA astronaut Anil Menon, just seven days after their previous extravehicular activity on October 29. With today's six hours and 59 minutes spacewalk that led to the installation of another solar array, the upgrade campaign launched in 2021 to enhance the Station's power generation capacity is now complete. This technology, first tested less than a decade ago, is now helping power more scientific research aboard the International Space Station and extending its operational capabilities, while also informing solar power systems that could support future missions.</p>]]></summary>
+
+		<updated>2026-11-05T13:17:00-04:00</updated>
+		<published>2026-11-05T13:17:00-04:00</published>
+	</entry>
+	
+	<entry>	
+		<title>Watch live! CSA astronaut Joshua Kutryk's second spacewalk</title>
+		<link rel="alternate" href="https://www.asc-csa.gc.ca/eng/events/2026/2026-11-05-crew-13-second-spacewalk-joshua-kutryk-outside-international-space-station.asp"/>
+		<id>https://www.asc-csa.gc.ca/eng/events/2026/2026-11-05-crew-13-second-spacewalk-joshua-kutryk-outside-international-space-station.asp</id>
+		<author>
+			<name>Canadian Space Agency</name>
+			<uri>https://www.asc-csa.gc.ca/eng/default.asp</uri>
+		</author>
+		<summary type="html" xml:lang="en"><![CDATA[<img src="https://www.asc-csa.gc.ca/images/actualites/nouvelles/2026-11-03-deuxieme-sortie-espace-id-20229-home.jpg" alt=""><p>On November 5, CSA astronaut Joshua Kutryk and NASA astronaut Anil Menon will venture outside the International Space Station to install the eighth and final rollout solar array of an upgrade campaign that began in 2021. This spacewalk comes one week after the pair completed a similar 7-hour-and-11-minute operation on October 29.</p>]]></summary>
+
+		<updated>2026-11-03T13:15:00-04:00</updated>
+		<published>2026-11-03T13:15:00-04:00</published>
+	</entry>
+	
+	<entry>	
+		<title>[Video] CSA astronaut Joshua Kutryk's first spacewalk</title>
+		<link rel="alternate" href="https://www.asc-csa.gc.ca/eng/multimedia/search/video/20211"/>
+		<id>https://www.asc-csa.gc.ca/eng/multimedia/search/video/20211</id>
+		<author>
+			<name>Canadian Space Agency</name>
+			<uri>https://www.asc-csa.gc.ca/eng/default.asp</uri>
+		</author>
+		<summary type="html" xml:lang="en"><![CDATA[<img src="https://www.asc-csa.gc.ca/images/actualites/nouvelles/2026-10-30-video-joshua-kutryk-1ere-sortie-espace-id-20211-home.jpg" alt=""><p>On October 29, 2026, Canadian Space Agency astronaut Joshua Kutryk performed his first spacewalk outside the International Space Station.</p>]]></summary>
+
+		<updated>2026-10-30T13:17:00-04:00</updated>
+		<published>2026-10-30T13:17:00-04:00</published>
+	</entry>
+	
+	
+</feed>
