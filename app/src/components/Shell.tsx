@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { CREW } from '../sim/crew'
 import { MISSION_DAYS, commsDelaySec, dayOf, formatClock, formatDelay, minuteOfDay } from '../sim/mission'
@@ -149,7 +149,10 @@ export function Shell() {
         <main>
           {/* Keyed by route so each screen enters with the same short rise. */}
           <div className="page-enter" key={location.pathname}>
-            <Outlet />
+            {/* Screens that load on demand keep the bar and footer on screen meanwhile. */}
+            <Suspense fallback={null}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
 
