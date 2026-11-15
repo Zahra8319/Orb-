@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Section, Readout } from '../components/bits'
-import { formatClock, MIN_PER_DAY } from '../sim/mission'
+import { dayOf, formatClock, MIN_PER_DAY } from '../sim/mission'
 import { vitalsAt } from '../sim/model'
 import { useCrew } from '../store/hooks'
 import { useStore } from '../store/store'
@@ -32,16 +32,16 @@ interface EVAEvent {
 
 const CHECKLIST: Omit<EVAChecklistItem, 'checked'>[] = [
   { id: 'suit-pressure', label: 'Suit pressure nominal (29.6 kPa / 4.3 psi)', critical: true, category: 'suit' },
-  { id: 'suit-leak', label: 'Leak check: pressure hold &gt; 30 min', critical: true, category: 'suit' },
+  { id: 'suit-leak', label: 'Leak check: pressure hold > 30 min', critical: true, category: 'suit' },
   { id: 'gloves', label: 'Gloves inspected, no damage', critical: false, category: 'suit' },
   { id: 'helmet', label: 'Helmet seal verified, visor clear', critical: true, category: 'suit' },
   { id: 'boots', label: 'Boots locked, tethers attached', critical: true, category: 'suit' },
-  { id: 'o2-primary', label: 'Primary O\u2082 tank &gt; 90%', critical: true, category: 'life-support' },
-  { id: 'o2-secondary', label: 'Secondary O\u2082 tank &gt; 90%', critical: true, category: 'life-support' },
-  { id: 'scrubber', label: 'CO\u2082 scrubber cartridge fresh', critical: true, category: 'life-support' },
-  { id: 'battery', label: 'Battery &gt; 95%, backup &gt; 80%', critical: true, category: 'life-support' },
+  { id: 'o2-primary', label: 'Primary O2 tank > 90%', critical: true, category: 'life-support' },
+  { id: 'o2-secondary', label: 'Secondary O2 tank > 90%', critical: true, category: 'life-support' },
+  { id: 'scrubber', label: 'CO2 scrubber cartridge fresh', critical: true, category: 'life-support' },
+  { id: 'battery', label: 'Battery > 95%, backup > 80%', critical: true, category: 'life-support' },
   { id: 'water', label: 'LCVG water supply connected', critical: false, category: 'life-support' },
-  { id: 'pre-eva-vitals', label: 'Pre-EVA vitals recorded (HR, BP, SpO\u2082, temp)', critical: true, category: 'medical' },
+  { id: 'pre-eva-vitals', label: 'Pre-EVA vitals recorded (HR, BP, SpO2, temp)', critical: true, category: 'medical' },
   { id: 'hydration', label: 'Crew hydrated: 500 mL consumed', critical: false, category: 'medical' },
   { id: 'meds', label: 'No sedating medications in 12 h', critical: false, category: 'medical' },
   { id: 'decompression', label: 'Denitrogenation protocol complete (if required)', critical: true, category: 'medical' },
@@ -77,6 +77,19 @@ export function EVA() {
     const saved = localStorage.getItem('orb-eva-events')
     return saved ? JSON.parse(saved) : []
   })
+  const [notice, setNotice] = useState<string | null>(null)
+  const [postForm, setPostForm] = useState({
+    hr: '',
+    spo2: '',
+    temp: '',
+    musculoskeletal: 'none',
+    dcs: 'none',
+    fatigue: '',
+    sleep: '',
+    notes: '',
+  })
+  const [postError, setPostError] = useState<string | null>(null)
+  const [postLogged, setPostLogged] = useState<{ at: number; hr: string; spo2: string; temp: string; musculoskeletal: string; dcs: string; fatigue: string; sleep: string } | null>(null)
   const [currentMetrics, setCurrentMetrics] = useState<EVAMetrics>({
     metabolicRate: 180,
     suitCO2: 3.2,
@@ -145,17 +158,17 @@ export function EVA() {
             'Buddy check complete',
           ],
           caution: [
-            'Suit CO\u2082 trending up \u2014 monitor',
-            'Metabolic rate elevated \u2014 consider rest',
-            'Battery at 60% \u2014 plan return',
+            'Suit CO2 trending up � monitor',
+            'Metabolic rate elevated � consider rest',
+            'Battery at 60% � plan return',
             'Minor glove abrasion noted',
           ],
           warning: [
-            'SUIT CO\u2082 &gt; 7 mmHg \u2014 RETURN TO AIRLOCK',
-            'CORE TEMP &gt; 38\u00b0C \u2014 HEAT STRESS RISK',
-            'BATTERY &lt; 30% \u2014 INITIATE ABORT',
-            'COMM LOSS \u2014 SWITCH TO BACKUP',
-            'HEART RATE &gt; 160 \u2014 MANDATORY REST',
+            'SUIT CO2 > 7 mmHg � RETURN TO AIRLOCK',
+            'CORE TEMP > 38�C � HEAT STRESS RISK',
+            'BATTERY < 30% � INITIATE ABORT',
+            'COMM LOSS � SWITCH TO BACKUP',
+            'HEART RATE > 160 � MANDATORY REST',
           ],
         }
         const message = messages[type][Math.floor(Math.random() * messages[type].length)]
@@ -167,23 +180,26 @@ export function EVA() {
   }, [evaActive, evaStartTime, t, crew, scenarios])
 
   const handleCheck = useCallback((id: string) => {
+    setNotice(null)
     setChecklist((prev) => prev.map((c) => (c.id === id ? { ...c, checked: !c.checked } : c)))
   }, [])
 
   const startEVA = useCallback(() => {
     const uncheckedCritical = checklist.filter((c) => c.critical && !c.checked)
     if (uncheckedCritical.length > 0) {
-      alert(`Cannot start EVA: ${uncheckedCritical.length} critical checklist items unchecked`)
+      setNotice(`EVA blocked: ${uncheckedCritical.length} critical item${uncheckedCritical.length !== 1 ? 's' : ''} still open.`)
       return
     }
+    setNotice(null)
     setEvaActive(true)
     setEvaStartTime(t)
-    setEvents((prev) => [...prev, { time: t, type: 'info', message: 'EVA START \u2014 Airlock depress complete' }])
+    setEvents((prev) => [...prev, { time: t, type: 'info', message: 'EVA START � Airlock depress complete' }])
   }, [checklist, t])
 
   const endEVA = useCallback(() => {
     setEvaActive(false)
-    setEvents((prev) => [...prev, { time: t, type: 'info', message: 'EVA END \u2014 Airlock repress complete' }])
+    setNotice('EVA ended. Complete the post-EVA assessment below within 30 minutes.')
+    setEvents((prev) => [...prev, { time: t, type: 'info', message: 'EVA END � Airlock repress complete' }])
     setCurrentMetrics({
       metabolicRate: 180,
       suitCO2: 3.2,
@@ -199,7 +215,28 @@ export function EVA() {
   const resetChecklist = useCallback(() => {
     setChecklist(CHECKLIST.map((c) => ({ ...c, checked: false })))
     setEvents([])
+    setNotice(null)
+    setPostLogged(null)
+    setPostError(null)
   }, [])
+
+  const logPostEva = useCallback(() => {
+    if (!postForm.hr.trim() || !postForm.spo2.trim() || !postForm.temp.trim()) {
+      setPostError('Heart rate, SpO₂ and core temperature are required before logging.')
+      return
+    }
+    setPostError(null)
+    setPostLogged({
+      at: t,
+      hr: postForm.hr,
+      spo2: postForm.spo2,
+      temp: postForm.temp,
+      musculoskeletal: postForm.musculoskeletal,
+      dcs: postForm.dcs,
+      fatigue: postForm.fatigue,
+      sleep: postForm.sleep,
+    })
+  }, [postForm, t])
 
   const groupedChecklist = CATEGORY_ORDER.map((cat) => ({
     category: cat,
@@ -229,6 +266,11 @@ export function EVA() {
     return 'nominal'
   }
 
+  const setPostField = (key: keyof typeof postForm, value: string) => {
+    setPostForm((form) => ({ ...form, [key]: value }))
+    setPostError(null)
+  }
+
   return (
     <>
       <header className="page-header">
@@ -239,7 +281,7 @@ export function EVA() {
         </p>
       </header>
 
-      <Section title="Pre-EVA Checklist" note={`${checkedCount}/${checklist.length} complete \u2022 ${criticalChecked}/${criticalCount} critical items`}>
+      <Section title="Pre-EVA Checklist" note={`${checkedCount}/${checklist.length} complete � ${criticalChecked}/${criticalCount} critical items`}>
         <div className="eva-controls">
           <button className={`btn ${evaActive ? 'btn-quiet' : ''}`} onClick={startEVA} disabled={evaActive || !allCriticalChecked}>
             {evaActive ? 'EVA IN PROGRESS' : 'Start EVA'}
@@ -250,6 +292,34 @@ export function EVA() {
           <button className="btn btn-quiet" onClick={resetChecklist} disabled={evaActive}>
             Reset Checklist
           </button>
+        </div>
+
+        {notice && <p className="eva-notice" role="status">{notice}</p>}
+
+        <div className="eva-progress">
+          <div className="eva-progress-head">
+            <span>
+              <strong>{checkedCount}</strong> of {checklist.length} checks complete
+            </span>
+            <span>
+              <strong>{criticalChecked}</strong> of {criticalCount} critical items
+            </span>
+          </div>
+          <div
+            className="eva-progress-track"
+            role="progressbar"
+            aria-label="Pre-EVA checklist completion"
+            aria-valuemin={0}
+            aria-valuemax={checklist.length}
+            aria-valuenow={checkedCount}
+          >
+            <div className="eva-progress-fill" style={{ width: `${(checkedCount / checklist.length) * 100}%` }} />
+          </div>
+          {!allCriticalChecked && !evaActive && (
+            <p className="muted" style={{ marginTop: 8, fontSize: 'var(--t-sm)' }}>
+              Start is locked until every critical item is checked.
+            </p>
+          )}
         </div>
 
         <div className="checklist-grid">
@@ -275,16 +345,29 @@ export function EVA() {
         </div>
       </Section>
 
+      {!evaActive && (
+        <Section title="Live suit and physiology" note="Suit telemetry streams here once an EVA starts.">
+          <div className="eva-standby">
+            <strong>Suit systems idle</strong>
+            <span>
+              Metabolic rate, suit CO₂ and O₂, pressure, core temperature and heart rate will appear here at two-second intervals
+              while the airlock is open.
+            </span>
+          </div>
+        </Section>
+      )}
+
       {evaActive && (
         <>
-          <Section title="Live Suit & Physiology" note={`EVA duration: ${currentMetrics.duration} min \u2022 Fatigue index: ${currentMetrics.fatigueIndex}/100`}>
-            <div className="metrics-grid">
+          <Section title="Live suit and physiology" note={`EVA duration: ${currentMetrics.duration} min � Fatigue index: ${currentMetrics.fatigueIndex}/100`}>
+            <div className="eva-live">Live telemetry</div>
+            <div className="metrics-grid" style={{ marginTop: 12 }}>
               {[
                 { key: 'metabolicRate', label: 'Metabolic Rate', value: currentMetrics.metabolicRate, unit: 'W', status: getMetricStatus('metabolicRate', currentMetrics.metabolicRate) },
-                { key: 'suitCO2', label: 'Suit CO\u2082', value: currentMetrics.suitCO2, unit: 'mmHg', status: getMetricStatus('suitCO2', currentMetrics.suitCO2) },
-                { key: 'suitO2', label: 'Suit O\u2082', value: currentMetrics.suitO2, unit: 'kPa', status: getMetricStatus('suitO2', currentMetrics.suitO2) },
+                { key: 'suitCO2', label: 'Suit CO2', value: currentMetrics.suitCO2, unit: 'mmHg', status: getMetricStatus('suitCO2', currentMetrics.suitCO2) },
+                { key: 'suitO2', label: 'Suit O2', value: currentMetrics.suitO2, unit: 'kPa', status: getMetricStatus('suitO2', currentMetrics.suitO2) },
                 { key: 'suitPressure', label: 'Suit Pressure', value: currentMetrics.suitPressure, unit: 'kPa', status: getMetricStatus('suitPressure', currentMetrics.suitPressure) },
-                { key: 'coreTemp', label: 'Core Temp', value: currentMetrics.coreTemp, unit: '\u00b0C', status: getMetricStatus('coreTemp', currentMetrics.coreTemp) },
+                { key: 'coreTemp', label: 'Core Temp', value: currentMetrics.coreTemp, unit: '�C', status: getMetricStatus('coreTemp', currentMetrics.coreTemp) },
                 { key: 'heartRate', label: 'Heart Rate', value: currentMetrics.heartRate, unit: 'bpm', status: getMetricStatus('heartRate', currentMetrics.heartRate) },
                 { key: 'fatigueIndex', label: 'Fatigue Index', value: currentMetrics.fatigueIndex, unit: '/100', status: getMetricStatus('fatigueIndex', currentMetrics.fatigueIndex) },
               ].map((m) => (
@@ -292,7 +375,7 @@ export function EVA() {
                   key={m.key}
                   big={m.key === 'heartRate' || m.key === 'coreTemp' || m.key === 'suitCO2'}
                   label={m.label}
-                  value={m.value}
+                  value={<span key={String(m.value)} className="metric-flash">{m.value}</span>}
                   unit={m.unit}
                   level={m.status === 'danger' ? 'urgent' : m.status === 'warn' ? 'act' : null}
                   note={m.status === 'danger' ? 'ABORT CRITERION MET' : m.status === 'warn' ? 'Monitor closely' : 'Nominal'}
@@ -304,14 +387,14 @@ export function EVA() {
               <h4>Abort Criteria (NASA STD-3001 Vol 2)</h4>
               <div className="abort-grid">
                 {[
-                  { criterion: 'Suit CO\u2082 &gt; 7.6 mmHg (1% CO\u2082)', value: currentMetrics.suitCO2, threshold: 7.6, unit: 'mmHg', met: currentMetrics.suitCO2 >= 7.6 },
-                  { criterion: 'Core temp &gt; 38.5\u00b0C', value: currentMetrics.coreTemp, threshold: 38.5, unit: '\u00b0C', met: currentMetrics.coreTemp >= 38.5 },
-                  { criterion: 'Heart rate &gt; 170 bpm sustained', value: currentMetrics.heartRate, threshold: 170, unit: 'bpm', met: currentMetrics.heartRate >= 170 },
-                  { criterion: 'Suit pressure &lt; 25 kPa', value: currentMetrics.suitPressure, threshold: 25, unit: 'kPa', met: currentMetrics.suitPressure <= 25 },
-                  { criterion: 'Suit O\u2082 &lt; 18 kPa', value: currentMetrics.suitO2, threshold: 18, unit: 'kPa', met: currentMetrics.suitO2 <= 18 },
-                  { criterion: 'Fatigue index &gt; 85', value: currentMetrics.fatigueIndex, threshold: 85, unit: '/100', met: currentMetrics.fatigueIndex >= 85 },
-                  { criterion: 'Battery &lt; 30%', value: Math.max(0, 100 - currentMetrics.duration * 0.8), threshold: 30, unit: '%', met: (100 - currentMetrics.duration * 0.8) <= 30 },
-                  { criterion: 'Mission elapsed &gt; 8 hours', value: currentMetrics.duration, threshold: 480, unit: 'min', met: currentMetrics.duration >= 480 },
+                  { criterion: 'Suit CO2 > 7.6 mmHg (1% CO2)', value: currentMetrics.suitCO2, threshold: 7.6, unit: 'mmHg', met: currentMetrics.suitCO2 >= 7.6 },
+                  { criterion: 'Core temp > 38.5�C', value: currentMetrics.coreTemp, threshold: 38.5, unit: '�C', met: currentMetrics.coreTemp >= 38.5 },
+                  { criterion: 'Heart rate > 170 bpm sustained', value: currentMetrics.heartRate, threshold: 170, unit: 'bpm', met: currentMetrics.heartRate >= 170 },
+                  { criterion: 'Suit pressure < 25 kPa', value: currentMetrics.suitPressure, threshold: 25, unit: 'kPa', met: currentMetrics.suitPressure <= 25 },
+                  { criterion: 'Suit O2 < 18 kPa', value: currentMetrics.suitO2, threshold: 18, unit: 'kPa', met: currentMetrics.suitO2 <= 18 },
+                  { criterion: 'Fatigue index > 85', value: currentMetrics.fatigueIndex, threshold: 85, unit: '/100', met: currentMetrics.fatigueIndex >= 85 },
+                  { criterion: 'Battery < 30%', value: Math.max(0, 100 - currentMetrics.duration * 0.8), threshold: 30, unit: '%', met: (100 - currentMetrics.duration * 0.8) <= 30 },
+                  { criterion: 'Mission elapsed > 8 hours', value: currentMetrics.duration, threshold: 480, unit: 'min', met: currentMetrics.duration >= 480 },
                 ].map((a) => (
                   <div key={a.criterion} className={`abort-item ${a.met ? 'met' : ''}`}>
                     <span className="abort-criterion">{a.criterion}</span>
@@ -329,7 +412,7 @@ export function EVA() {
             </div>
           </Section>
 
-          <Section title="EVA Events Log" note={`${events.length} events \u2022 Most recent first`}>
+          <Section title="EVA Events Log" note={`${events.length} events � Most recent first`}>
             <div className="events-log">
               {events.length === 0 ? (
                 <p className="muted">No events yet. Events appear automatically during EVA.</p>
@@ -347,25 +430,25 @@ export function EVA() {
         </>
       )}
 
-      <Section title="Post-EVA Medical Surveillance" note="Complete after every EVA. Data feeds DCS risk model and shoulder injury surveillance.">
+      <Section title="Post-EVA medical surveillance" note="Complete after every EVA. Data feeds the DCS risk model and shoulder injury surveillance.">
         <div className="post-eva-form">
-          <h4>Immediate Post-EVA (within 30 min)</h4>
+          <h4>Immediate post-EVA (within 30 min)</h4>
           <div className="post-eva-grid">
             <label>
               <span>Post-EVA heart rate (bpm)</span>
-              <input type="number" min={40} max={200} placeholder="e.g., 92" />
+              <input type="number" min={40} max={200} placeholder="e.g., 92" value={postForm.hr} onChange={(e) => setPostField('hr', e.target.value)} />
             </label>
             <label>
-              <span>Post-EVA SpO\u2082 (%)</span>
-              <input type="number" min={80} max={100} placeholder="e.g., 98" />
+              <span>Post-EVA SpO₂ (%)</span>
+              <input type="number" min={80} max={100} placeholder="e.g., 98" value={postForm.spo2} onChange={(e) => setPostField('spo2', e.target.value)} />
             </label>
             <label>
-              <span>Post-EVA core temp (\u00b0C)</span>
-              <input type="number" step="0.1" min={35} max={40} placeholder="e.g., 37.2" />
+              <span>Post-EVA core temp (°C)</span>
+              <input type="number" step="0.1" min={35} max={40} placeholder="e.g., 37.2" value={postForm.temp} onChange={(e) => setPostField('temp', e.target.value)} />
             </label>
             <label>
               <span>Musculoskeletal symptoms</span>
-              <select>
+              <select value={postForm.musculoskeletal} onChange={(e) => setPostField('musculoskeletal', e.target.value)}>
                 <option value="none">None</option>
                 <option value="shoulder">Shoulder pain/stiffness</option>
                 <option value="back">Back pain</option>
@@ -375,36 +458,55 @@ export function EVA() {
             </label>
             <label>
               <span>DCS symptoms (joint pain, rash, neuro)</span>
-              <select>
+              <select value={postForm.dcs} onChange={(e) => setPostField('dcs', e.target.value)}>
                 <option value="none">None</option>
                 <option value="mild">Mild joint pain (Type I)</option>
                 <option value="moderate">Moderate + neuro (Type II)</option>
-                <option value="severe">Severe \u2014 CALL FLIGHT SURGEON</option>
+                <option value="severe">Severe — call flight surgeon</option>
               </select>
             </label>
             <label>
               <span>Fatigue rating (Borg CR10)</span>
-              <input type="number" min={0} max={10} step="0.5" placeholder="0-10" />
+              <input type="number" min={0} max={10} step="0.5" placeholder="0-10" value={postForm.fatigue} onChange={(e) => setPostField('fatigue', e.target.value)} />
             </label>
           </div>
 
-          <h4 style={{ marginTop: 24 }}>24-Hour Follow-Up</h4>
+          <h4 style={{ marginTop: 24 }}>24-hour follow-up</h4>
           <div className="post-eva-grid">
             <label>
               <span>Sleep quality (1-5)</span>
-              <input type="number" min={1} max={5} step="0.5" placeholder="e.g., 3.5" />
+              <input type="number" min={1} max={5} step="0.5" placeholder="e.g., 3.5" value={postForm.sleep} onChange={(e) => setPostField('sleep', e.target.value)} />
             </label>
             <label>
               <span>Persistent symptoms</span>
-              <textarea rows={2} placeholder="Any ongoing pain, numbness, rash, cognitive changes..." />
+              <textarea rows={2} placeholder="Any ongoing pain, numbness, rash, cognitive changes..." value={postForm.notes} onChange={(e) => setPostField('notes', e.target.value)} />
             </label>
           </div>
 
-          <button className="btn" style={{ marginTop: 16 }}>Log Post-EVA Assessment</button>
+          {postError && <p className="eva-notice" role="alert" style={{ marginTop: 16, marginBottom: 0 }}>{postError}</p>}
+
+          <button className="btn" style={{ marginTop: 16 }} onClick={logPostEva}>
+            Log post-EVA assessment
+          </button>
+
+          {postLogged && (
+            <div className="post-eva-logged" role="status">
+              <strong>Assessment logged.</strong> Day {dayOf(postLogged.at)} at {formatClock(postLogged.at % MIN_PER_DAY)} ship time.
+              <dl>
+                <div><dt>Heart rate</dt><dd>{postLogged.hr} bpm</dd></div>
+                <div><dt>SpO₂</dt><dd>{postLogged.spo2}%</dd></div>
+                <div><dt>Core temp</dt><dd>{postLogged.temp} °C</dd></div>
+                <div><dt>Musculoskeletal</dt><dd>{postLogged.musculoskeletal === 'none' ? 'None reported' : postLogged.musculoskeletal}</dd></div>
+                <div><dt>DCS screen</dt><dd>{postLogged.dcs === 'none' ? 'Negative' : postLogged.dcs}</dd></div>
+                {postLogged.fatigue && <div><dt>Fatigue</dt><dd>{postLogged.fatigue} / 10</dd></div>}
+                {postLogged.sleep && <div><dt>Sleep quality</dt><dd>{postLogged.sleep} / 5</dd></div>}
+              </dl>
+            </div>
+          )}
         </div>
       </Section>
 
-      <Section title="Why This Matters: NASA HRP Risk Mapping" note="Each EVA screen element maps to a documented Human Research Program risk.">
+      <Section title="Why this matters: NASA HRP risk mapping" note="Each EVA screen element maps to a documented Human Research Program risk.">
         <div className="risk-mapping">
           <div className="risk-card">
             <h4>Risk: Decompression Sickness (DCS)</h4>
@@ -418,8 +520,8 @@ export function EVA() {
           </div>
           <div className="risk-card">
             <h4>Risk: Hypobaric Hypoxia</h4>
-            <p>Suit O\u2082 monitoring. CO\u2082 scrubber checklist. Real-time SpO\u2082 would be ideal (future sensor).</p>
-            <span className="risk-evidence">Evidence: Suit at 29.6 kPa = ~30% O\u2082 at sea level equivalent</span>
+            <p>Suit O2 monitoring. CO2 scrubber checklist. Real-time SpO2 would be ideal (future sensor).</p>
+            <span className="risk-evidence">Evidence: Suit at 29.6 kPa = ~30% O2 at sea level equivalent</span>
           </div>
           <div className="risk-card">
             <h4>Risk: Thermal Extremes</h4>
@@ -429,7 +531,7 @@ export function EVA() {
           <div className="risk-card">
             <h4>Risk: Team Performance / Human Error</h4>
             <p>Buddy check. Abort plan review. Fatigue index. Comm checks.</p>
-            <span className="risk-evidence">Evidence: Fatigue &gt; 60 correlates with 3\u00d7 procedural error rate</span>
+            <span className="risk-evidence">Evidence: Fatigue &gt; 60 correlates with 3� procedural error rate</span>
           </div>
         </div>
       </Section>

@@ -49,11 +49,13 @@ export function Body() {
 
   return (
     <>
-      <h1 className="page-title">Body</h1>
-      <p className="page-intro">
-        Without gravity, bones and muscles weaken and the heart works differently. Daily exercise is the main protection, so this page
-        tracks what you have done and what it is saving.
-      </p>
+      <header className="page-header">
+        <h1 className="page-title">Body</h1>
+        <p className="page-intro">
+          Without gravity, bones and muscles weaken and the heart works differently. Daily exercise is the main protection, so this page
+          tracks what you have done and what it is saving.
+        </p>
+      </header>
 
       <Section title="Exercise today">
         <div>
@@ -124,29 +126,33 @@ export function Body() {
       </Section>
 
       <Section
-        title="Projection at mission end (Day 210)"
+        title={`Projection at mission end (Day ${MISSION_DAYS})`}
         note={`Current exercise adherence: ${(adherence * 100).toFixed(0)}%. Projected hip bone loss: ${Math.abs(projection.bone).toFixed(1)}%, leg strength loss: ${Math.abs(projection.muscle).toFixed(1)}%.`}
       >
         <div className="projection-cards">
           <div className="projection-card">
             <div className="projection-label">Hip bone density</div>
             <div className="projection-value">{Math.abs(projection.bone).toFixed(1)}% loss</div>
-            <div className="projection-detail">At current adherence (${(adherence * 100).toFixed(0)}%), projected loss by Day 210.</div>
+            <div className="projection-detail">
+              At current adherence ({(adherence * 100).toFixed(0)}%), projected loss by Day {MISSION_DAYS}.
+            </div>
           </div>
           <div className="projection-card">
             <div className="projection-label">Leg strength</div>
             <div className="projection-value">{Math.abs(projection.muscle).toFixed(1)}% loss</div>
-            <div className="projection-detail">At current adherence (${(adherence * 100).toFixed(0)}%), projected loss by Day 210.</div>
+            <div className="projection-detail">
+              At current adherence ({(adherence * 100).toFixed(0)}%), projected loss by Day {MISSION_DAYS}.
+            </div>
           </div>
           <div className="projection-card">
             <div className="projection-label">No-exercise scenario</div>
             <div className="projection-value">{Math.abs((-1.25 / 30) * MISSION_DAYS).toFixed(1)}% loss</div>
-            <div className="projection-detail">If no exercise performed at all.</div>
+            <div className="projection-detail">If no exercise were performed at all.</div>
           </div>
           <div className="projection-card">
             <div className="projection-label">Target (with full exercise)</div>
-            <div className="projection-value">{Math.abs((1.25 - 0.9) / 30 * MISSION_DAYS).toFixed(1)}% loss</div>
-            <div className="projection-detail">If 100% exercise adherence maintained.</div>
+            <div className="projection-value">{Math.abs(((1.25 - 0.9) / 30) * MISSION_DAYS).toFixed(1)}% loss</div>
+            <div className="projection-detail">If 100% exercise adherence were maintained.</div>
           </div>
         </div>
       </Section>

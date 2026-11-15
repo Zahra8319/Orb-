@@ -54,6 +54,8 @@ export function BarChart({ label, bars, yMax, yFormat, xHeader, yHeader, refLine
               return (
                 <g key={i}>
                   <path
+                    className="chart-bar"
+                    style={{ animationDelay: `${Math.min(i, 14) * 24}ms` }}
                     d={barPath(cx - barW / 2, barW, y(Math.min(b.value, yMax)), innerH)}
                     fill="var(--series-1)"
                     opacity={hover === null || hover === i ? 1 : 0.45}

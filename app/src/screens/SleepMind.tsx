@@ -43,14 +43,17 @@ export function SleepMind() {
   const shift = stats.clockShiftMin
   const clockText =
     Math.abs(shift) < 20 ? 'On schedule' : `${formatHours(Math.abs(shift) / 60)} ${shift > 0 ? 'late' : 'early'}`
+  const debtNights = stats.debt7 / crew.sleepNeed
 
   return (
     <>
-      <h1 className="page-title">Sleep and mind</h1>
-      <p className="page-intro">
-        Months in a small cabin with no sunrise wear on sleep, mood and attention. A few quick daily measures show a slide early, while it
-        is still easy to fix.
-      </p>
+      <header className="page-header">
+        <h1 className="page-title">Sleep and mind</h1>
+        <p className="page-intro">
+          Months in a small cabin with no sunrise wear on sleep, mood and attention. A few quick daily measures show a slide early, while it
+          is still easy to fix.
+        </p>
+      </header>
 
       <Section title="Sleep">
         <div className="split split-wide">
@@ -88,6 +91,28 @@ export function SleepMind() {
             </div>
           </dl>
         </div>
+
+        <div className={`debt-callout ${debtNights >= 2 ? 'act' : debtNights >= 1 ? 'watch' : 'nominal'}`}>
+          <div className="debt-head">
+            <span>Sleep debt, last 7 nights</span>
+            <strong>{formatHours(stats.debt7)}</strong>
+          </div>
+          <div
+            className="debt-track"
+            role="progressbar"
+            aria-label="Seven-night sleep debt"
+            aria-valuemin={0}
+            aria-valuemax={3}
+            aria-valuenow={Math.round(Math.min(3, debtNights) * 10) / 10}
+          >
+            <div className="debt-fill" style={{ width: `${Math.min(100, (debtNights / 3) * 100)}%` }} />
+          </div>
+          <p>
+            {debtNights < 1
+              ? 'Debt is under one night. The routine is holding.'
+              : `About ${debtNights.toFixed(1)} nights of sleep owed. Two nights or more triggers a medical review and a protected sleep period.`}
+          </p>
+        </div>
       </Section>
 
       <div className="split">
@@ -99,6 +124,10 @@ export function SleepMind() {
               </button>
             ))}
           </div>
+          <p className="mood-caption">
+            <span>{todayMood ? `Logged today: ${MOODS[todayMood - 1]}` : 'Not logged yet today'}</span>
+            <span className="mood-scale">1 Low · 5 Great</span>
+          </p>
           <div style={{ marginTop: 28 }}>
             <LineChart
               label="Mood logged on each of the last 14 days, from 1 low to 5 great"

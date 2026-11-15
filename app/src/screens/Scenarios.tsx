@@ -1,8 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Section } from '../components/bits'
 import { useStore } from '../store/store'
 import { getAvailableScenarios, getScenarioById, type MedicalScenario } from '../sim/scenarios'
 import { dayOf } from '../sim/mission'
+
+const SEVERITY_LABEL: Record<string, string> = {
+  critical: 'Critical',
+  major: 'Major',
+  moderate: 'Moderate',
+  minor: 'Minor',
+}
 
 export function ScenariosScreen() {
   const t = useStore((s) => s.t)
@@ -10,8 +17,8 @@ export function ScenariosScreen() {
   const toggleScenario = useStore((s) => s.toggleScenario)
 
   const allScenarios = getAvailableScenarios()
-  const [selectedScenario, setSelectedScenario] = useState<string | null>(null)
-  const [showDetails, setShowDetails] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const detailRef = useRef<HTMLDivElement | null>(null)
 
   const activeScenarios = Object.entries(scenariosState)
     .filter(([, v]) => v !== null)
@@ -29,92 +36,161 @@ export function ScenariosScreen() {
     (s) => scenariosState[s.id as keyof typeof scenariosState] === null
   )
 
-  const handleTrigger = (id: string) => {
-    toggleScenario(id as any)
-    setSelectedScenario(id)
-    setShowDetails(true)
+  const currentScenario = selectedId ? getScenarioById(selectedId) : null
+  const currentIsActive = selectedId
+    ? scenariosState[selectedId as keyof typeof scenariosState] !== null
+    : false
+
+  const openDetails = (id: string) => setSelectedId(id)
+
+  const handleInject = (id: string) => {
+    toggleScenario(id as keyof typeof scenariosState)
+    setSelectedId(id)
   }
 
   const handleResolve = (id: string) => {
-    toggleScenario(id as any)
-    if (selectedScenario === id) {
-      setSelectedScenario(null)
-      setShowDetails(false)
-    }
+    toggleScenario(id as keyof typeof scenariosState)
+    if (selectedId === id) setSelectedId(null)
   }
 
-  const currentScenario = selectedScenario ? getScenarioById(selectedScenario) : null
+  // Bring the detail panel into view when a scenario is opened from the grid.
+  useEffect(() => {
+    if (selectedId) {
+      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [selectedId])
 
   return (
     <>
       <header className="page-header">
-        <h1 className="page-title">Scenario Injector</h1>
+        <h1 className="page-title">Scenario injector</h1>
         <p className="page-intro">
-          Inject clinical and environmental scenarios to test crew responses. Active scenarios modify simulation parameters and trigger alerts.
-          Use for training, evaluation, or demo narratives.
+          Inject clinical and environmental scenarios to test crew responses. Active scenarios change simulation parameters and
+          trigger alerts — use them for training, evaluation, or a demo narrative.
         </p>
       </header>
 
-      <Section title="Active Scenarios" note={`${activeScenarios.length} running`}>
+      <Section title="Active scenarios" note={`${activeScenarios.length} running`}>
         {activeScenarios.length === 0 ? (
-          <p className="muted">No active scenarios. Inject one below to begin.</p>
+          <p className="muted">No active scenarios. Choose one below to inspect it, then inject it.</p>
         ) : (
           <div className="scenario-list">
-            {activeScenarios.map(({ id, scenario, startDay, daysActive }) => (
-              <article key={id} className={`scenario-card active ${scenario?.severity}`}>
-                <div className="scenario-header">
-                  <div>
-                    <h4 className="scenario-title">{scenario?.name}</h4>
-                    <span className="scenario-badge">{scenario?.severity?.toUpperCase()}</span>
+            {activeScenarios.map(({ id, scenario, startDay, daysActive }) => {
+              const duration = scenario?.duration ?? 1
+              const pct = Math.min(100, Math.round((daysActive / duration) * 100))
+              return (
+                <article key={id} className={`scenario-card active ${scenario?.severity}`}>
+                  <div className="scenario-header">
+                    <div>
+                      <h4 className="scenario-title">{scenario?.name}</h4>
+                      <span className={`scenario-badge ${scenario?.severity}`}>
+                        {SEVERITY_LABEL[scenario?.severity ?? ''] ?? scenario?.severity?.toUpperCase()}
+                      </span>
+                    </div>
+                    <button className="btn btn-quiet btn-small" onClick={() => handleResolve(id)}>
+                      Resolve
+                    </button>
                   </div>
-                  <button className="btn btn-quiet btn-small" onClick={() => handleResolve(id)}>
-                    Resolve
+                  <div className="scenario-meta">
+                    <span>Started Day {startDay}</span>
+                    <span>Active {daysActive} day{daysActive !== 1 ? 's' : ''}</span>
+                    <span>Runs {duration} day{duration !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="scenario-active-bar" aria-hidden="true">
+                    <div className="scenario-active-fill" style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="scenario-narrative">{scenario?.narrative}</p>
+                  <button className="btn btn-quiet btn-small" onClick={() => openDetails(id)}>
+                    Open case file
                   </button>
+                </article>
+              )
+            })}
+          </div>
+        )}
+      </Section>
+
+      <Section title="Available scenarios" note="Open a card to review the full case before injecting it.">
+        {inactiveScenarios.length === 0 ? (
+          <p className="muted">Every scenario is running. Resolve one to make it available again.</p>
+        ) : (
+          <div className="scenario-grid">
+            {inactiveScenarios.map((scenario) => (
+              <article
+                key={scenario.id}
+                className={`scenario-card ${scenario.severity}`}
+                role="button"
+                tabIndex={0}
+                aria-label={`View details for ${scenario.name}`}
+                onClick={() => openDetails(scenario.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    openDetails(scenario.id)
+                  }
+                }}
+              >
+                <div className="scenario-header">
+                  <h4 className="scenario-title">{scenario.name}</h4>
+                  <span className={`scenario-badge ${scenario.severity}`}>
+                    {SEVERITY_LABEL[scenario.severity] ?? scenario.severity.toUpperCase()}
+                  </span>
                 </div>
+                <p className="scenario-desc">{scenario.description}</p>
                 <div className="scenario-meta">
-                  <span>Started: Day {startDay}</span>
-                  <span>Active: {daysActive} day{daysActive !== 1 ? 's' : ''}</span>
-                  <span>Duration: {scenario?.duration} day{scenario?.duration !== 1 ? 's' : ''}</span>
+                  <span>{scenario.duration} day{scenario.duration !== 1 ? 's' : ''}</span>
+                  <span>{scenario.category}</span>
                 </div>
-                <p className="scenario-narrative">{scenario?.narrative}</p>
-                <button
-                  className="btn btn-quiet btn-small"
-                  onClick={() => { setSelectedScenario(id); setShowDetails(true); }}
-                >
-                  View Details
-                </button>
+                <div className="scenario-tags">
+                  {scenario.triggersAlerts.map((alertId) => (
+                    <span key={alertId} className="alert-tag">{alertId}</span>
+                  ))}
+                </div>
+                <span className="scenario-open">Open case file →</span>
               </article>
             ))}
           </div>
         )}
       </Section>
 
-      <Section title="Available Scenarios" note="Click to inject. Medical scenarios include full clinical workup, treatment, and Earth-consult guidance.">
-        <div className="scenario-grid">
-          {inactiveScenarios.map((scenario) => (
-            <article key={scenario.id} className={`scenario-card ${scenario.severity}`} onClick={() => handleTrigger(scenario.id)}>
-              <div className="scenario-header">
-                <h4 className="scenario-title">{scenario.name}</h4>
-                <span className="scenario-badge">{scenario.severity.toUpperCase()}</span>
+      {currentScenario && (
+        <Section
+          title={`${currentScenario.name} — case file`}
+          note={
+            currentScenario.category === 'medical'
+              ? 'Full clinical scenario with workup, treatment, and disposition.'
+              : 'Environmental or system scenario with operational guidance.'
+          }
+        >
+          <div
+            className={`scenario-detail ${currentScenario.severity}`}
+            ref={detailRef}
+            tabIndex={-1}
+          >
+            <div className="scenario-detail-head">
+              <div className="scenario-detail-tags">
+                <span className={`scenario-badge ${currentScenario.severity}`}>
+                  {SEVERITY_LABEL[currentScenario.severity] ?? currentScenario.severity.toUpperCase()}
+                </span>
+                <span className="category-badge">{currentScenario.category}</span>
+                {currentIsActive && <span className="scenario-live">Running now</span>}
               </div>
-              <p className="scenario-desc">{scenario.description}</p>
-              <div className="scenario-meta">
-                <span>Duration: {scenario.duration} day{scenario.duration !== 1 ? 's' : ''}</span>
-                <span>Category: {scenario.category}</span>
+              <div className="scenario-detail-actions">
+                {currentIsActive ? (
+                  <button className="btn btn-quiet" onClick={() => handleResolve(currentScenario.id)}>
+                    Resolve scenario
+                  </button>
+                ) : (
+                  <button className="btn" onClick={() => handleInject(currentScenario.id)}>
+                    Inject scenario
+                  </button>
+                )}
+                <button className="btn btn-quiet" onClick={() => setSelectedId(null)}>
+                  Close
+                </button>
               </div>
-              <div className="scenario-tags">
-                {scenario.triggersAlerts.map((alertId) => (
-                  <span key={alertId} className="alert-tag">{alertId}</span>
-                ))}
-              </div>
-            </article>
-          ))}
-        </div>
-      </Section>
+            </div>
 
-      {showDetails && currentScenario && (
-        <Section title={`${currentScenario.name} Details`} note={currentScenario.category === 'medical' ? 'Full clinical scenario with workup, treatment, and disposition.' : 'Environmental/system scenario with operational guidance.'}>
-          <div className="scenario-detail">
             <div className="detail-section">
               <h4>Narrative</h4>
               <p>{currentScenario.narrative}</p>
@@ -131,7 +207,7 @@ export function ScenariosScreen() {
 
             {(currentScenario as MedicalScenario).differential && (
               <div className="detail-section">
-                <h4>Differential Diagnosis</h4>
+                <h4>Differential diagnosis</h4>
                 <ul>
                   {((currentScenario as MedicalScenario).differential || []).map((d, i) => (
                     <li key={i}>{d}</li>
@@ -142,7 +218,7 @@ export function ScenariosScreen() {
 
             {(currentScenario as MedicalScenario).workup && (
               <div className="detail-section">
-                <h4>Recommended Workup</h4>
+                <h4>Recommended workup</h4>
                 <ul>
                   {((currentScenario as MedicalScenario).workup || []).map((w, i) => (
                     <li key={i}>{w}</li>
@@ -159,7 +235,7 @@ export function ScenariosScreen() {
                     <h5>Option {i + 1}</h5>
                     <div className="treatment-cols">
                       <div>
-                        <h6>Autonomous (Crew)</h6>
+                        <h6>Autonomous (crew)</h6>
                         <ul>
                           {(tx.autonomous || []).map((a, j) => (
                             <li key={j}>{a}</li>
@@ -167,7 +243,7 @@ export function ScenariosScreen() {
                         </ul>
                       </div>
                       <div>
-                        <h6>Earth Consult</h6>
+                        <h6>Earth consult</h6>
                         <ul>
                           {(tx.earthConsult || []).map((e, j) => (
                             <li key={j}>{e}</li>
@@ -182,7 +258,7 @@ export function ScenariosScreen() {
 
             {(currentScenario as MedicalScenario).disposition && (
               <div className="detail-section">
-                <h4>Disposition / Outcomes</h4>
+                <h4>Disposition / outcomes</h4>
                 <ul>
                   {((currentScenario as MedicalScenario).disposition || []).map((d, i) => (
                     <li key={i}>{d}</li>
@@ -194,13 +270,11 @@ export function ScenariosScreen() {
             {(currentScenario as MedicalScenario).patientId && (
               <div className="detail-section">
                 <h4>Patient</h4>
-                <p>Crew member: <strong>{(currentScenario as MedicalScenario).patientId}</strong></p>
+                <p>
+                  Crew member: <strong>{(currentScenario as MedicalScenario).patientId}</strong>
+                </p>
               </div>
             )}
-
-            <button className="btn btn-quiet" onClick={() => { setShowDetails(false); setSelectedScenario(null); }}>
-              Close Details
-            </button>
           </div>
         </Section>
       )}

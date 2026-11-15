@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { CREW } from '../sim/crew'
 import { MISSION_DAYS, commsDelaySec, dayOf, formatClock, formatDelay, minuteOfDay } from '../sim/mission'
 import { useAlerts, useSimClock, useSleepShift } from '../store/hooks'
@@ -32,6 +32,7 @@ export function Shell() {
   const sleepShift = useSleepShift()
   const [drawer, setDrawer] = useState(false)
   const signOut = useSession((s) => s.signOut)
+  const location = useLocation()
 
   useEffect(() => {
     document.documentElement.dataset.theme = sleepShift ? 'sleep' : 'day'
@@ -89,7 +90,10 @@ export function Shell() {
         </div>
 
         <main>
-          <Outlet />
+          {/* Keyed by route so each screen enters with the same short rise. */}
+          <div className="page-enter" key={location.pathname}>
+            <Outlet />
+          </div>
         </main>
 
         <footer className="footer">

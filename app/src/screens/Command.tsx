@@ -1,93 +1,122 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Section, Readout } from '../components/bits'
 import { evaluate } from '../rules/alerts'
-import { snapshot } from '../sim/model'
+import { nextEyeCheck, snapshot } from '../sim/model'
 import { CREW } from '../sim/crew'
-import { dayOf } from '../sim/mission'
+import { dayOf, formatClock, minuteOfDay } from '../sim/mission'
 import { useStore } from '../store/store'
+
+const LEVEL_RANK: Record<string, number> = { urgent: 0, act: 1, watch: 2, nominal: 3 }
+
+function statusOf(alerts: ReturnType<typeof evaluate>): string {
+  if (alerts.some((a) => a.level === 'urgent')) return 'urgent'
+  if (alerts.some((a) => a.level === 'act')) return 'act'
+  return alerts.length > 0 ? 'watch' : 'nominal'
+}
 
 export function Command() {
   const t = useStore((s) => s.t)
   const scenarios = useStore((s) => s.scenarios)
   const crewId = useStore((s) => s.crewId)
+  const [openCrew, setOpenCrew] = useState<string | null>(null)
 
-  // Get snapshots for all crew members
+  // Snapshot every crew member, then rank the most urgent first.
   const allSnapshots = useMemo(() => {
-    return CREW.map((crew) => ({
-      crew,
-      snap: snapshot(crew, t, scenarios),
-      alerts: evaluate(snapshot(crew, t, scenarios)),
-    }))
+    return CREW.map((crew) => {
+      const snap = snapshot(crew, t, scenarios)
+      const alerts = evaluate(snap)
+      return { crew, snap, alerts, rank: LEVEL_RANK[statusOf(alerts)] }
+    }).sort((a, b) => a.rank - b.rank || a.crew.name.localeCompare(b.crew.name))
   }, [t, scenarios])
 
   const currentCrew = CREW.find((c) => c.id === crewId) ?? CREW[0]
+  const day = dayOf(t)
 
-  // Summary stats
   const totalAlerts = allSnapshots.reduce((sum, s) => sum + s.alerts.length, 0)
   const urgentAlerts = allSnapshots.reduce((sum, s) => sum + s.alerts.filter((a) => a.level === 'urgent').length, 0)
   const actAlerts = allSnapshots.reduce((sum, s) => sum + s.alerts.filter((a) => a.level === 'act').length, 0)
   const watchAlerts = allSnapshots.reduce((sum, s) => sum + s.alerts.filter((a) => a.level === 'watch').length, 0)
 
-  // Crew needing medical officer attention
-  const needsMedical = allSnapshots.filter((s) =>
-    s.alerts.some((a) => ['rhythm', 'spo2', 'heart-rate', 'co2', 'o2', 'solar-storm'].includes(a.id))
-  )
+  const medicalIds = ['rhythm', 'spo2', 'heart-rate', 'co2', 'o2', 'solar-storm']
+  const needsMedical = allSnapshots.filter((s) => s.alerts.some((a) => medicalIds.includes(a.id)))
+  const exerciseIssues = allSnapshots.filter((s) => s.alerts.some((a) => a.id === 'exercise'))
+  const sleepIssues = allSnapshots.filter((s) => s.alerts.some((a) => ['sleep', 'reaction'].includes(a.id)))
 
-  // Crew with exercise issues
-  const exerciseIssues = allSnapshots.filter((s) =>
-    s.alerts.some((a) => a.id === 'exercise')
-  )
-
-  // Crew with sleep issues
-  const sleepIssues = allSnapshots.filter((s) =>
-    s.alerts.some((a) => ['sleep', 'reaction'].includes(a.id))
-  )
-
-  // Radiation exposure comparison
   const radiationData = allSnapshots.map((s) => ({
     name: s.crew.name,
+    role: s.crew.role,
     careerDose: Math.round(s.snap.careerDose),
     missionDose: Math.round(s.snap.missionDose),
     doseRate: Math.round(s.snap.doseRate * 10) / 10,
     priorDose: s.crew.priorDoseMsv,
   }))
 
+  // Eye checks come from the model; planned events are mission-level.
+  const eyeDue = CREW.map((c) => ({ day: nextEyeCheck(c, day), name: c.name })).sort((a, b) => a.day - b.day)
+  const timeline = [
+    ...eyeDue.slice(0, 2).map((e, i) => ({
+      day: e.day,
+      event: `Eye check due: ${e.name}`,
+      note: i === 0 ? 'First in the 14-day rotation' : 'Second in the rotation — confirm slot',
+    })),
+    { day: day + 7, event: 'Scheduled EVA: Tanaka and Reyes', note: 'Verify pre-EVA checklists complete' },
+    { day: day + 21, event: 'Mid-mission medical conference', note: 'Prepare crew health summary for Earth' },
+    { day: day + 30, event: 'Radiation shelter drill', note: 'Verify storm shelter readiness' },
+  ].sort((a, b) => a.day - b.day)
+
   return (
     <>
       <header className="page-header">
-        <h1 className="page-title">Command Dashboard</h1>
+        <h1 className="page-title">Command dashboard</h1>
         <p className="page-intro">
-          Commander's overview of all crew health status. View alerts, resource conflicts, and mission-critical metrics at a glance.
-          Current viewer: <strong>{currentCrew.name}</strong> ({currentCrew.role}).
+          Commander&rsquo;s view of all four crew members. Alerts lead, followed by resource conflicts and mission-critical
+          metrics. Viewer: <strong>{currentCrew.name}</strong> ({currentCrew.role}). As of{' '}
+          {formatClock(minuteOfDay(t))} ship time, Day {day}.
         </p>
       </header>
 
-      <Section title="Crew Alert Summary" note={`${totalAlerts} total alerts across crew • ${urgentAlerts} urgent, ${actAlerts} act, ${watchAlerts} watch`}>
+      <Section
+        title="Crew alert summary"
+        note={`${totalAlerts} alerts across crew · ${urgentAlerts} urgent, ${actAlerts} act, ${watchAlerts} watch`}
+      >
         <div className="command-summary">
           <Readout big label="Urgent" value={urgentAlerts} unit="alerts" level="urgent" note="Immediate action required" />
-          <Readout big label="Act Today" value={actAlerts} unit="alerts" level="act" note="Action required today" />
+          <Readout big label="Act today" value={actAlerts} unit="alerts" level="act" note="Action required today" />
           <Readout big label="Watch" value={watchAlerts} unit="alerts" level="watch" note="Monitor closely" />
-          <Readout big label="Total Crew" value={CREW.length} unit="members" note="All accounted for" />
+          <Readout big label="Total crew" value={CREW.length} unit="members" note="All accounted for" />
         </div>
       </Section>
 
-      <Section title="Crew Status Grid" note="Click a crew member to view their detailed alerts.">
+      <Section title="Crew status" note="Most urgent first. Open a card for the full alert list and direct links to each reading.">
+        <p className="sort-note">
+          Sorted by <strong>severity</strong>, then name. Top strip on each card carries the current status.
+        </p>
         <div className="crew-grid">
           {allSnapshots.map(({ crew, snap, alerts }) => {
-            const hasUrgent = alerts.some((a) => a.level === 'urgent')
-            const hasAct = alerts.some((a) => a.level === 'act')
-            const statusClass = hasUrgent ? 'urgent' : hasAct ? 'act' : alerts.length > 0 ? 'watch' : 'nominal'
+            const statusClass = statusOf(alerts)
+            const open = openCrew === crew.id
+            const detailId = `crew-detail-${crew.id}`
 
             return (
               <article key={crew.id} className={`crew-card ${statusClass} ${crew.id === crewId ? 'current' : ''}`}>
                 <div className="crew-card-header">
-                  <div className="crew-avatar">{crew.name.split(' ')[1][0]}</div>
+                  <div className="crew-avatar" aria-hidden="true">{crew.name.split(' ')[1][0]}</div>
                   <div className="crew-info">
                     <h4>{crew.name}</h4>
-                    <span className="crew-role">{crew.role}</span>
+                    <span className="crew-role">
+                      {crew.role}
+                      {crew.id === crewId && <span className="you-marker"> · you</span>}
+                    </span>
                   </div>
                   <span className={`status-badge ${statusClass}`}>
-                    {hasUrgent ? 'URGENT' : hasAct ? 'ACT' : alerts.length > 0 ? 'WATCH' : 'NOMINAL'}
+                    {statusClass === 'urgent'
+                      ? 'URGENT'
+                      : statusClass === 'act'
+                        ? 'ACT'
+                        : statusClass === 'watch'
+                          ? 'WATCH'
+                          : 'NOMINAL'}
                   </span>
                 </div>
 
@@ -126,10 +155,29 @@ export function Command() {
                   )}
                 </div>
 
-                {crew.id !== crewId && (
-                  <button className="btn btn-quiet btn-small crew-switch-btn">
-                    View details →
-                  </button>
+                <button
+                  className="btn btn-quiet btn-small crew-switch-btn"
+                  aria-expanded={open}
+                  aria-controls={detailId}
+                  onClick={() => setOpenCrew(open ? null : crew.id)}
+                >
+                  {open ? 'Hide details' : 'View details'}
+                </button>
+
+                {open && (
+                  <div className="crew-detail" id={detailId}>
+                    {alerts.length === 0 ? (
+                      <p className="muted">No active alerts. This crew member is fully nominal.</p>
+                    ) : (
+                      alerts.map((a) => (
+                        <div key={a.id} className={`crew-detail-alert ${a.level}`}>
+                          <strong>{a.title}</strong>
+                          <span>{a.action}</span>
+                          <Link to={a.to}>Open the reading</Link>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 )}
               </article>
             )
@@ -137,29 +185,40 @@ export function Command() {
         </div>
       </Section>
 
-      <Section title="Resource Conflicts & Priorities" note="Identified conflicts requiring Commander decisions.">
+      <Section title="Resource conflicts and priorities" note="Conflicts that need a Commander decision today.">
         <div className="conflicts-grid">
           {needsMedical.length > 0 && (
             <div className="conflict-card medical">
-              <h4>🏥 Medical Officer Attention Required</h4>
-              <p>{needsMedical.length} crew member{needsMedical.length !== 1 ? 's' : ''} need medical officer evaluation.</p>
+              <h4>Medical officer attention required</h4>
+              <p>
+                {needsMedical.length} crew member{needsMedical.length !== 1 ? 's need' : ' needs'} medical officer
+                evaluation.
+              </p>
               <ul>
                 {needsMedical.map((s) => (
                   <li key={s.crew.id}>
-                    <strong>{s.crew.name}</strong> — {s.alerts.filter((a) => ['rhythm', 'spo2', 'heart-rate', 'co2', 'o2', 'solar-storm'].includes(a.id)).map((a) => a.title).join(', ')}
+                    <strong>{s.crew.name}</strong> —{' '}
+                    {s.alerts
+                      .filter((a) => medicalIds.includes(a.id))
+                      .map((a) => a.title)
+                      .join(', ')}
                   </li>
                 ))}
               </ul>
               <div className="conflict-action">
-                <strong>Commander decision:</strong> Prioritize medical officer time. Consider telemedicine consult for non-critical cases.
+                <strong>Commander decision:</strong> Protect medical officer time. Route non-critical cases to a telemedicine
+                consult instead.
               </div>
             </div>
           )}
 
           {exerciseIssues.length > 0 && (
             <div className="conflict-card exercise">
-              <h4>💪 Exercise Non-Compliance</h4>
-              <p>{exerciseIssues.length} crew member{exerciseIssues.length !== 1 ? 's' : ''} behind on exercise prescription.</p>
+              <h4>Exercise non-compliance</h4>
+              <p>
+                {exerciseIssues.length} crew member{exerciseIssues.length !== 1 ? 's are' : ' is'} behind on the exercise
+                prescription.
+              </p>
               <ul>
                 {exerciseIssues.map((s) => (
                   <li key={s.crew.id}>
@@ -168,56 +227,64 @@ export function Command() {
                 ))}
               </ul>
               <div className="conflict-action">
-                <strong>Commander decision:</strong> Mandate protected exercise time. Adjust work schedule if needed.
+                <strong>Commander decision:</strong> Mandate protected exercise time. Adjust the work schedule if needed.
               </div>
             </div>
           )}
 
           {sleepIssues.length > 0 && (
             <div className="conflict-card sleep">
-              <h4>😴 Sleep / Cognitive Degradation</h4>
-              <p>{sleepIssues.length} crew member{sleepIssues.length !== 1 ? 's' : ''} showing sleep debt or cognitive slowing.</p>
+              <h4>Sleep and cognitive degradation</h4>
+              <p>
+                {sleepIssues.length} crew member{sleepIssues.length !== 1 ? 's are' : ' is'} showing sleep debt or cognitive
+                slowing.
+              </p>
               <ul>
                 {sleepIssues.map((s) => (
                   <li key={s.crew.id}>
-                    <strong>{s.crew.name}</strong> — {s.alerts.filter((a) => ['sleep', 'reaction'].includes(a.id)).map((a) => a.title).join(', ')}
+                    <strong>{s.crew.name}</strong> —{' '}
+                    {s.alerts
+                      .filter((a) => ['sleep', 'reaction'].includes(a.id))
+                      .map((a) => a.title)
+                      .join(', ')}
                   </li>
                 ))}
               </ul>
               <div className="conflict-action">
-                <strong>Commander decision:</strong> Reassign critical tasks (piloting, robotics). Authorize protected sleep periods.
+                <strong>Commander decision:</strong> Reassign critical tasks (piloting, robotics). Authorize protected sleep
+                periods.
               </div>
             </div>
           )}
 
           {needsMedical.length === 0 && exerciseIssues.length === 0 && sleepIssues.length === 0 && (
             <div className="conflict-card nominal">
-              <h4>✅ No Resource Conflicts</h4>
+              <h4>No resource conflicts</h4>
               <p>All crew within nominal parameters. No Commander intervention required at this time.</p>
             </div>
           )}
         </div>
       </Section>
 
-      <Section title="Radiation Exposure Comparison" note="Career dose includes prior missions. Career limit: 600 mSv.">
+      <Section title="Radiation exposure comparison" note="Career dose includes prior missions. NASA career limit: 600 mSv.">
         <div className="radiation-table">
           <table>
             <thead>
               <tr>
-                <th>Crew Member</th>
-                <th>Role</th>
-                <th>Prior Dose (mSv)</th>
-                <th>Mission Dose (mSv)</th>
-                <th>Career Total (mSv)</th>
-                <th>% of Limit</th>
-                <th>Current Rate (mSv/day)</th>
+                <th scope="col">Crew member</th>
+                <th scope="col">Role</th>
+                <th scope="col">Prior dose (mSv)</th>
+                <th scope="col">Mission dose (mSv)</th>
+                <th scope="col">Career total (mSv)</th>
+                <th scope="col">% of limit</th>
+                <th scope="col">Current rate (mSv/day)</th>
               </tr>
             </thead>
             <tbody>
               {radiationData.map((r) => (
                 <tr key={r.name}>
-                  <td>{r.name}</td>
-                  <td>{CREW.find((c) => c.name === r.name)?.role}</td>
+                  <th scope="row">{r.name}</th>
+                  <td>{r.role}</td>
                   <td>{r.priorDose}</td>
                   <td>{r.missionDose}</td>
                   <td><strong>{r.careerDose}</strong></td>
@@ -235,28 +302,15 @@ export function Command() {
         </div>
       </Section>
 
-      <Section title="Mission Timeline & Critical Events" note="Upcoming events requiring Commander awareness.">
+      <Section title="Mission timeline" note="Upcoming events, including each crew member's next 14-day eye check.">
         <div className="timeline">
-          <div className="timeline-item">
-            <span className="timeline-time">Day {dayOf(t) + 7}</span>
-            <span className="timeline-event">Scheduled EVA: Tanaka & Reyes</span>
-            <span className="timeline-note">Verify pre-EVA checklists complete</span>
-          </div>
-          <div className="timeline-item">
-            <span className="timeline-time">Day {dayOf(t) + 14}</span>
-            <span className="timeline-event">Eye checks due: Okafor, Reyes</span>
-            <span className="timeline-note">Schedule fundoscopy sessions</span>
-          </div>
-          <div className="timeline-item">
-            <span className="timeline-time">Day {dayOf(t) + 21}</span>
-            <span className="timeline-event">Mid-mission medical conference</span>
-            <span className="timeline-note">Prepare crew health summary for Earth</span>
-          </div>
-          <div className="timeline-item">
-            <span className="timeline-time">Day {dayOf(t) + 30}</span>
-            <span className="timeline-event">Radiation shelter drill</span>
-            <span className="timeline-note">Verify storm shelter readiness</span>
-          </div>
+          {timeline.map((item) => (
+            <div className="timeline-item" key={`${item.day}-${item.event}`}>
+              <span className="timeline-time">Day {item.day}</span>
+              <span className="timeline-event">{item.event}</span>
+              <span className="timeline-note">{item.note}</span>
+            </div>
+          ))}
         </div>
       </Section>
     </>

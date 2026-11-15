@@ -139,18 +139,20 @@ export function LineChart({
               </g>
             ))}
 
-            {series.map((s) => (
-              <path
-                key={s.name}
-                d={path(s.points) ?? undefined}
-                fill="none"
-                stroke={color(s)}
-                strokeWidth={2}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                strokeDasharray={DASH[s.style ?? 'solid']}
-              />
-            ))}
+            <g className="chart-series">
+              {series.map((s) => (
+                <path
+                  key={s.name}
+                  d={path(s.points) ?? undefined}
+                  fill="none"
+                  stroke={color(s)}
+                  strokeWidth={2}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  strokeDasharray={DASH[s.style ?? 'solid']}
+                />
+              ))}
+            </g>
 
             {directLabels &&
               ends.map((e) => (
