@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Input } from '../components/ui/input'
 import { useSession } from '../store/session'
 import { useStore } from '../store/store'
+import { MISSION_DAYS } from '../sim/mission'
 import { useSimClock } from '../store/hooks'
 import { AdminMessages } from '../components/AdminMessages'
 
@@ -47,9 +48,9 @@ interface CrewMember {
 
 type TabId = 'missions' | 'crew' | 'messages' | 'schedule' | 'reports'
 
-/* Versioned after the Mission Control rework so a demo opens on the fresh
+/* Versioned (v3: the in-flight crew's own mission) after the Mission Control rework so a demo opens on the fresh
    console rather than state saved by the earlier admin screens. */
-const STORAGE_KEY = 'orb-mission-control.v2'
+const STORAGE_KEY = 'orb-mission-control.v3'
 
 /** Missions are plotted on a two-year planning horizon. */
 const PLANNING_HORIZON = 730
@@ -63,24 +64,44 @@ const titleCase = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.
 
 function getDefaultCrew(): CrewMember[] {
   return [
+    // The four in flight; names and roles match src/sim/crew.ts.
     { id: 'okafor', name: 'Amara Okafor', role: 'Commander', specialties: ['Command', 'EVA', 'Robotics'], status: 'available' },
-    { id: 'lindqvist', name: 'Jonas Lindqvist', role: 'Flight Engineer', specialties: ['Systems', 'EVA', 'Robotics'], status: 'available' },
-    { id: 'reyes', name: 'Sofia Reyes', role: 'Medical Officer', specialties: ['Emergency Medicine', 'Space Physiology', 'Psychology'], status: 'available' },
-    { id: 'tanaka', name: 'Kenji Tanaka', role: 'Mission Scientist', specialties: ['Geology', 'Biology', 'Sample Collection'], status: 'available' },
-    { id: 'chen', name: 'Wei Chen', role: 'Pilot', specialties: ['Orbital Mechanics', 'Rendezvous', 'Entry/Descent/Landing'], status: 'available' },
-    { id: 'petrov', name: 'Alexei Petrov', role: 'Systems Engineer', specialties: ['Life Support', 'Power Systems', 'Thermal'], status: 'available' },
-    { id: 'williams', name: 'Sarah Williams', role: 'Mission Specialist', specialties: ['EVA', 'Robotics', 'Science Operations'], status: 'available' },
-    { id: 'okonkwo', name: 'Chidi Okonkwo', role: 'Payload Specialist', specialties: ['Materials Science', 'Combustion', 'Fluid Physics'], status: 'available' },
+    { id: 'lindqvist', name: 'Jonas Lindqvist', role: 'Flight engineer', specialties: ['Systems', 'EVA', 'Robotics'], status: 'available' },
+    { id: 'reyes', name: 'Sofia Reyes', role: 'Medical officer', specialties: ['Emergency medicine', 'Space physiology', 'Psychology'], status: 'available' },
+    { id: 'tanaka', name: 'Kenji Tanaka', role: 'Mission scientist', specialties: ['Geology', 'Biology', 'Sample collection'], status: 'available' },
+    // On the ground.
+    { id: 'chen', name: 'Wei Chen', role: 'Pilot', specialties: ['Orbital mechanics', 'Rendezvous', 'Entry, descent and landing'], status: 'available' },
+    { id: 'petrov', name: 'Alexei Petrov', role: 'Systems engineer', specialties: ['Life support', 'Power systems', 'Thermal'], status: 'available' },
+    { id: 'williams', name: 'Sarah Williams', role: 'Mission specialist', specialties: ['EVA', 'Robotics', 'Science operations'], status: 'available' },
+    { id: 'okonkwo', name: 'Chidi Okonkwo', role: 'Payload specialist', specialties: ['Materials science', 'Combustion', 'Fluid physics'], status: 'available' },
   ]
 }
 
-/** One example trip so the console opens with something to look at. Dated
-    relative to the running mission clock so it reads as upcoming (T-30)
-    whenever the demo is opened. */
+/** The deep-space transit the crew pages show, plus one upcoming trip for the
+    ground crew. The upcoming trip is dated relative to the running mission
+    clock so it reads as upcoming (T-30) whenever the demo is opened. */
 function getDefaultMissions(): Mission[] {
   const day = Math.floor(useStore.getState().t / 1440) + 1
   const startDate = Math.min(day + 30, PLANNING_HORIZON - 61)
   return [
+    {
+      id: 'orb-transit',
+      name: 'Orb deep-space transit',
+      program: 'Deep space',
+      description: 'The crew of four on a 210-day deep-space transit, monitored by Orb+.',
+      status: 'active',
+      startDate: 1,
+      endDate: MISSION_DAYS,
+      destination: 'Deep space',
+      crew: [
+        { crewId: 'okafor', role: 'commander', primary: true },
+        { crewId: 'lindqvist', role: 'flight_engineer', primary: false },
+        { crewId: 'reyes', role: 'medical_officer', primary: false },
+        { crewId: 'tanaka', role: 'mission_specialist', primary: false },
+      ],
+      objectives: ['Keep all four crew within health limits to mission end', 'Career radiation dose under 600 mSv'],
+      createdAt: 0,
+    },
     {
       id: 'artemis-iv',
       name: 'Artemis IV',
@@ -91,9 +112,9 @@ function getDefaultMissions(): Mission[] {
       endDate: startDate + 60,
       destination: 'Moon',
       crew: [
-        { crewId: 'okafor', role: 'commander', primary: true },
-        { crewId: 'chen', role: 'pilot', primary: false },
-        { crewId: 'reyes', role: 'medical_officer', primary: false },
+        { crewId: 'chen', role: 'commander', primary: true },
+        { crewId: 'williams', role: 'mission_specialist', primary: false },
+        { crewId: 'okonkwo', role: 'payload_specialist', primary: false },
       ],
       objectives: ['Crewed lunar landing', 'Surface habitat checkout', 'Deploy polar science payload'],
       createdAt: 0,
@@ -732,7 +753,7 @@ export function Admin() {
                         <Select
                           value={newMissionForm.program || 'Artemis'}
                           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNewMissionForm({ ...newMissionForm, program: e.target.value })}
-                          options={['Artemis', 'ISS', 'Mars', 'Gateway', 'Commercial', 'Custom'].map((v) => ({ value: v, label: v }))}
+                          options={['Artemis', 'Deep space', 'ISS', 'Mars', 'Gateway', 'Commercial', 'Custom'].map((v) => ({ value: v, label: v }))}
                         />
                       </label>
                     </div>
@@ -741,7 +762,7 @@ export function Admin() {
                         <Select
                           value={newMissionForm.destination || 'Moon'}
                           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNewMissionForm({ ...newMissionForm, destination: e.target.value })}
-                          options={['Moon', 'ISS', 'Mars', 'Gateway', 'LEO', 'Lunar Orbit'].map((v) => ({ value: v, label: v }))}
+                          options={['Moon', 'Deep space', 'ISS', 'Mars', 'Gateway', 'LEO', 'Lunar Orbit'].map((v) => ({ value: v, label: v }))}
                         />
                       </label>
                     </div>
