@@ -10,6 +10,18 @@ import { DemoDrawer } from './DemoDrawer'
 import { AIAdvisor } from './AIAdvisor'
 import { MoreHorizontal, ChevronDown } from 'lucide-react'
 
+/** Simple media query hook */
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches)
+  useEffect(() => {
+    const media = window.matchMedia(query)
+    const handler = () => setMatches(media.matches)
+    media.addEventListener('change', handler)
+    return () => media.removeEventListener('change', handler)
+  }, [query])
+  return matches
+}
+
 const CREW_NAV = [
   { to: '/', label: 'Today' },
   { to: '/body', label: 'Body' },
@@ -47,7 +59,10 @@ export function Shell() {
   const navItems = isCommander ? COMMANDER_NAV : CREW_NAV
 
   // On mobile, show first 5 tabs, rest go in "More" dropdown
-  const MAX_VISIBLE_TABS = 5
+  // On desktop, show more tabs
+  const isMobile = useMediaQuery('(max-width: 767px)')
+  const isTablet = useMediaQuery('(max-width: 1024px)')
+  const MAX_VISIBLE_TABS = isMobile ? 5 : isTablet ? 8 : 10
   const visibleTabs = navItems.slice(0, MAX_VISIBLE_TABS)
   const moreTabs = navItems.slice(MAX_VISIBLE_TABS)
 

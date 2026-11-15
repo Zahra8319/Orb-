@@ -73,3 +73,75 @@ export function useSimClock() {
     return () => window.clearInterval(id)
   }, [tick])
 }
+
+/** Glucose readings for current crew member. */
+export function useGlucose() {
+  const crewId = useStore((s) => s.crewId)
+  const glucose = useStore((s) => s.glucose)
+  return useMemo(
+    () => glucose.filter((g) => g.crewId === crewId).sort((a, b) => b.timestamp - a.timestamp),
+    [glucose, crewId]
+  )
+}
+
+/** Today's glucose readings. */
+export function useTodayGlucose() {
+  const day = useStore((s) => dayOf(s.t))
+  const readings = useGlucose()
+  return useMemo(() => readings.filter((g) => g.day === day), [readings, day])
+}
+
+/** Latest glucose reading. */
+export function useLatestGlucose() {
+  const readings = useTodayGlucose()
+  return readings[0]
+}
+
+/** Nutrition logs for current crew member. */
+export function useNutrition() {
+  const crewId = useStore((s) => s.crewId)
+  const nutrition = useStore((s) => s.nutrition)
+  return useMemo(
+    () => nutrition.filter((n) => n.crewId === crewId).sort((a, b) => b.timestamp - a.timestamp),
+    [nutrition, crewId]
+  )
+}
+
+/** Today's nutrition totals. */
+export function useTodayNutrition() {
+  const day = useStore((s) => dayOf(s.t))
+  const logs = useNutrition()
+  return useMemo(
+    () => logs.filter((n) => n.day === day),
+    [logs, day]
+  )
+}
+
+/** Today's nutrition totals summed. */
+export function useNutritionTotals() {
+  const logs = useTodayNutrition()
+  return useMemo(
+    () =>
+      logs.reduce(
+        (acc, n) => ({
+          calories: acc.calories + n.calories,
+          protein: acc.protein + n.protein,
+          carbs: acc.carbs + n.carbs,
+          fat: acc.fat + n.fat,
+          water: acc.water + n.water,
+        }),
+        { calories: 0, protein: 0, carbs: 0, fat: 0, water: 0 }
+      ),
+    [logs]
+  )
+}
+
+/** Add a glucose reading (convenience hook). */
+export function useAddGlucose() {
+  return useStore((s) => s.addGlucose)
+}
+
+/** Add a nutrition log (convenience hook). */
+export function useAddNutrition() {
+  return useStore((s) => s.addNutrition)
+}

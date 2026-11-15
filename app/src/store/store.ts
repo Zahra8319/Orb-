@@ -33,6 +33,25 @@ export interface ReactionResult {
   falseStarts: number
 }
 
+export interface GlucoseReading {
+  crewId: string
+  day: number
+  value: number // mg/dL
+  timestamp: number // mission minute
+  context: 'fasting' | 'pre-meal' | 'post-meal' | 'bedtime'
+}
+
+export interface NutritionLog {
+  crewId: string
+  day: number
+  calories: number
+  protein: number // grams
+  carbs: number // grams
+  fat: number // grams
+  water: number // liters
+  timestamp: number
+}
+
 interface State {
   t: number
   speed: number
@@ -42,6 +61,8 @@ interface State {
   sheltered: boolean
   moods: Record<string, number>
   reactions: ReactionResult[]
+  glucose: GlucoseReading[]
+  nutrition: NutritionLog[]
   /** Every round finished in a game, for every crew member. */
   gamePlays: GamePlay[]
   eyeChecks: Record<string, boolean>
@@ -58,6 +79,8 @@ interface State {
   addGamePlay: (gameId: string, value: number, detail?: string) => void
   logEyeCheck: () => void
   sendMessage: (text: string) => void
+  addGlucose: (reading: Omit<GlucoseReading, 'crewId' | 'day'>) => void
+  addNutrition: (log: Omit<NutritionLog, 'crewId' | 'day'>) => void
 }
 
 export const dayKey = (crewId: string, day: number) => `${crewId}:${day}`
@@ -114,6 +137,8 @@ const initial = () => ({
   sheltered: false,
   moods: {} as Record<string, number>,
   reactions: [] as ReactionResult[],
+  glucose: [] as GlucoseReading[],
+  nutrition: [] as NutritionLog[],
   gamePlays: [] as GamePlay[],
   eyeChecks: {} as Record<string, boolean>,
   messages: seedMessages(),
@@ -178,6 +203,14 @@ export const useStore = create<State>()(
         ],
       }
     }),
+  addGlucose: (reading) =>
+    set((s) => ({
+      glucose: [...s.glucose, { ...reading, crewId: s.crewId, day: dayOf(s.t) }],
+    })),
+  addNutrition: (log) =>
+    set((s) => ({
+      nutrition: [...s.nutrition, { ...log, crewId: s.crewId, day: dayOf(s.t) }],
+    })),
     }),
     {
       name: STORE_KEY,
@@ -191,6 +224,8 @@ export const useStore = create<State>()(
         sheltered: s.sheltered,
         moods: s.moods,
         reactions: s.reactions,
+        glucose: s.glucose,
+        nutrition: s.nutrition,
         gamePlays: s.gamePlays,
         eyeChecks: s.eyeChecks,
         messages: s.messages,

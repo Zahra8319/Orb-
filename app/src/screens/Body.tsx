@@ -1,12 +1,37 @@
+import { useState } from 'react'
 import { BarChart } from '../charts/BarChart'
 import { LineChart } from '../charts/LineChart'
 import { Readout, Section } from '../components/bits'
+import { BodyDiagram } from '../components/BodyDiagram'
 import { formatClock, minuteOfDay, MISSION_DAYS } from '../sim/mission'
 import { bodySeries, dayRecord, exerciseSoFar, eyeCheckDue, nextEyeCheck, vitalsAt, projectedBodySeries, projectBodyAtMissionEnd, projectedNoExerciseSeries, averageAdherence } from '../sim/model'
-import { useCrew, useSnapshot } from '../store/hooks'
+import { useCrew, useSnapshot, useTodayGlucose, useLatestGlucose, useNutritionTotals, useAddGlucose, useAddNutrition } from '../store/hooks'
 import { dayKey, useStore } from '../store/store'
 
 const ACTIVITY_NOTE = { sleep: 'asleep', cardio: 'during cardio', resistance: 'during resistance', awake: 'at rest' } as const
+
+const GLUCOSE_CONTEXTS = [
+  { value: 'fasting', label: 'Fasting (morning)' },
+  { value: 'pre-meal', label: 'Pre-meal' },
+  { value: 'post-meal', label: 'Post-meal (2hr)' },
+  { value: 'bedtime', label: 'Bedtime' },
+] as const
+
+function glucoseStatus(value: number): 'urgent' | 'act' | 'watch' | 'nominal' {
+  if (value >= 180) return 'urgent'
+  if (value >= 140) return 'act'
+  if (value >= 100) return 'watch'
+  return 'nominal'
+}
+
+function glucoseStatusLabel(status: string) {
+  switch (status) {
+    case 'urgent': return 'High - Act now'
+    case 'act': return 'Elevated - Monitor'
+    case 'watch': return 'Above optimal'
+    default: return 'Normal'
+  }
+}
 
 export function Body() {
   const crew = useCrew()
@@ -18,6 +43,15 @@ export function Body() {
   const eyeDone = useStore((s) => Boolean(s.eyeChecks[dayKey(s.crewId, day)]))
   const rec = dayRecord(crew, day, scenarios)
   const done = exerciseSoFar(crew, t, scenarios)
+
+  // Glucose & Nutrition
+  const todayGlucose = useTodayGlucose()
+  const latestGlucose = useLatestGlucose()
+  const nutritionTotals = useNutritionTotals()
+  const addGlucose = useAddGlucose()
+  const addNutrition = useAddNutrition()
+  const [glucoseForm, setGlucoseForm] = useState({ value: '', context: 'fasting' as const })
+  const [nutritionForm, setNutritionForm] = useState({ calories: '', protein: '', carbs: '', fat: '', water: '' })
 
   const body = bodySeries(crew, day, scenarios)
   const projected = projectedBodySeries(crew, day, scenarios)
@@ -47,6 +81,26 @@ export function Body() {
   const dueToday = eyeCheckDue(crew, day)
   const nextEye = dueToday && eyeDone ? nextEyeCheck(crew, day + 1) : nextEyeCheck(crew, day)
 
+  const handleGlucoseSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const value = Number(glucoseForm.value)
+    if (!value || value < 20 || value > 500) return
+    addGlucose({ value, context: glucoseForm.context, timestamp: t })
+    setGlucoseForm({ value: '', context: 'fasting' })
+  }
+
+  const handleNutritionSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const calories = Number(nutritionForm.calories) || 0
+    const protein = Number(nutritionForm.protein) || 0
+    const carbs = Number(nutritionForm.carbs) || 0
+    const fat = Number(nutritionForm.fat) || 0
+    const water = Number(nutritionForm.water) || 0
+    if (!calories && !protein && !carbs && !fat && !water) return
+    addNutrition({ calories, protein, carbs, fat, water, timestamp: t })
+    setNutritionForm({ calories: '', protein: '', carbs: '', fat: '', water: '' })
+  }
+
   return (
     <>
       <header className="page-header">
@@ -56,6 +110,158 @@ export function Body() {
           tracks what you have done and what it is saving.
         </p>
       </header>
+
+      {/* Body Diagram */}
+      <Section title="Body systems" note="Tap a system to navigate. Colored rings show current status.">
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--s-4)' }}>
+          <BodyDiagram />
+        </div>
+        <div className="mini-body-diagram" style={{ justifyContent: 'center', gap: 'var(--s-4)', flexWrap: 'wrap' }}>
+          {[
+            { id: 'heart', label: 'Cardio' },
+            { id: 'brain', label: 'Cognitive' },
+            { id: 'lungs', label: 'Respiratory' },
+            { id: 'bones', label: 'Musculoskeletal' },
+            { id: 'radiation', label: 'Radiation' },
+            { id: 'hydration', label: 'Nutrition' },
+          ].map((sys) => (
+            <a key={sys.id} href={`/${sys.id === 'heart' ? 'body' : sys.id === 'brain' ? 'sleep' : sys.id === 'lungs' ? 'body' : sys.id === 'bones' ? 'body' : sys.id === 'radiation' ? 'radiation' : 'body'}`} className="mini-legend-item">
+              <span className="mini-dot" style={{
+                background:
+                  sys.id === 'heart' ? 'var(--urgent)' :
+                  sys.id === 'brain' ? 'var(--primary)' :
+                  sys.id === 'lungs' ? 'var(--live)' :
+                  sys.id === 'bones' ? 'var(--watch)' :
+                  sys.id === 'radiation' ? 'var(--nasa-orange)' :
+                  'var(--nasa-cyan)'
+              }} />
+              <span style={{ fontSize: 'var(--t-xs)', color: 'var(--ink-soft)' }}>{sys.label}</span>
+            </a>
+          ))}
+        </div>
+      </Section>
+
+      {/* Glucose Tracking */}
+      <Section title="Blood glucose" note="Normal fasting: 70-99 mg/dL. Post-meal (2hr): under 140 mg/dL. Log readings throughout the day.">
+        <div className="glucose-section">
+          {/* Latest reading card */}
+          {latestGlucose && (
+            <div className="glucose-latest">
+              <div className="glucose-value-row">
+                <span className={`glucose-value ${glucoseStatus(latestGlucose.value)}`}>{latestGlucose.value}</span>
+                <span className="glucose-unit">mg/dL</span>
+                <span className={`glucose-status ${glucoseStatus(latestGlucose.value)}`}>{glucoseStatusLabel(glucoseStatus(latestGlucose.value))}</span>
+              </div>
+              <div className="glucose-meta">
+                <span>Context: {GLUCOSE_CONTEXTS.find(c => c.value === latestGlucose.context)?.label}</span>
+                <span>Logged: {formatClock(minuteOfDay(latestGlucose.timestamp))}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Today's readings */}
+          <div className="glucose-readings">
+            {todayGlucose.length === 0 ? (
+              <p className="muted">No readings today. Add your first below.</p>
+            ) : (
+              <div className="glucose-list">
+                {todayGlucose.map((g) => (
+                  <div key={g.timestamp} className={`glucose-item ${glucoseStatus(g.value)}`}>
+                    <span className="glucose-item-value">{g.value} mg/dL</span>
+                    <span className="glucose-item-context">{GLUCOSE_CONTEXTS.find(c => c.value === g.context)?.label}</span>
+                    <span className="glucose-item-time">{formatClock(minuteOfDay(g.timestamp))}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Add glucose form */}
+          <form onSubmit={handleGlucoseSubmit} className="glucose-form">
+            <div className="glucose-form-row">
+              <label>
+                <span>Glucose (mg/dL)</span>
+                <input
+                  type="number"
+                  min={20}
+                  max={500}
+                  placeholder="e.g., 95"
+                  value={glucoseForm.value}
+                  onChange={(e) => setGlucoseForm({ ...glucoseForm, value: e.target.value })}
+                  required
+                  inputMode="numeric"
+                />
+              </label>
+              <label>
+                <span>Context</span>
+                <select value={glucoseForm.context} onChange={(e) => setGlucoseForm({ ...glucoseForm, context: e.target.value as typeof glucoseForm.context })}>
+                  {GLUCOSE_CONTEXTS.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <button type="submit" className="btn">Log reading</button>
+          </form>
+        </div>
+      </Section>
+
+      {/* Nutrition Tracking */}
+      <Section title="Nutrition & Hydration" note="Target: 2,800 kcal; 100g protein; 3L water daily. Log meals and hydration throughout the day.">
+        <div className="nutrition-section">
+          {/* Totals cards */}
+          <div className="nutrition-totals">
+            <div className="nutrition-total">
+              <span className="nutrition-total-value">{nutritionTotals.calories.toLocaleString()}</span>
+              <span className="nutrition-total-label">kcal / 2,800</span>
+              <div className="nutrition-total-bar">
+                <div className="nutrition-total-fill" style={{ width: `${Math.min(100, (nutritionTotals.calories / 2800) * 100)}%` }} />
+              </div>
+            </div>
+            <div className="nutrition-total">
+              <span className="nutrition-total-value">{nutritionTotals.protein.toLocaleString()}</span>
+              <span className="nutrition-total-label">g protein / 100</span>
+              <div className="nutrition-total-bar">
+                <div className="nutrition-total-fill" style={{ width: `${Math.min(100, (nutritionTotals.protein / 100) * 100)}%` }} />
+              </div>
+            </div>
+            <div className="nutrition-total">
+              <span className="nutrition-total-value">{nutritionTotals.water.toFixed(1)}</span>
+              <span className="nutrition-total-label">L water / 3.0</span>
+              <div className="nutrition-total-bar">
+                <div className="nutrition-total-fill" style={{ width: `${Math.min(100, (nutritionTotals.water / 3) * 100)}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Add nutrition form */}
+          <form onSubmit={handleNutritionSubmit} className="nutrition-form">
+            <div className="nutrition-form-grid">
+              <label>
+                <span>Calories (kcal)</span>
+                <input type="number" min={0} max={5000} placeholder="e.g., 350" value={nutritionForm.calories} onChange={(e) => setNutritionForm({ ...nutritionForm, calories: e.target.value })} inputMode="numeric" />
+              </label>
+              <label>
+                <span>Protein (g)</span>
+                <input type="number" min={0} max={500} placeholder="e.g., 30" value={nutritionForm.protein} onChange={(e) => setNutritionForm({ ...nutritionForm, protein: e.target.value })} inputMode="numeric" />
+              </label>
+              <label>
+                <span>Carbs (g)</span>
+                <input type="number" min={0} max={500} placeholder="e.g., 40" value={nutritionForm.carbs} onChange={(e) => setNutritionForm({ ...nutritionForm, carbs: e.target.value })} inputMode="numeric" />
+              </label>
+              <label>
+                <span>Fat (g)</span>
+                <input type="number" min={0} max={200} placeholder="e.g., 15" value={nutritionForm.fat} onChange={(e) => setNutritionForm({ ...nutritionForm, fat: e.target.value })} inputMode="numeric" />
+              </label>
+              <label>
+                <span>Water (L)</span>
+                <input type="number" step="0.1" min={0} max={10} placeholder="e.g., 0.5" value={nutritionForm.water} onChange={(e) => setNutritionForm({ ...nutritionForm, water: e.target.value })} inputMode="numeric" />
+              </label>
+            </div>
+            <button type="submit" className="btn">Log meal</button>
+          </form>
+        </div>
+      </Section>
 
       <Section title="Exercise today">
         <div>
