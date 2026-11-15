@@ -380,7 +380,7 @@ export function Admin() {
     planningMissions: upcomingMissions.length,
     availableCrew: availableCrew.length,
     assignedCrew: assignedCrew.length,
-  }), [data.missions, data.crew, activeMissions.length, upcomingMissions.length, availableCrew.length, assignedCrew.length])
+  }), [data.missions, activeMissions.length, upcomingMissions.length, availableCrew.length, assignedCrew.length])
 
   const nowFraction = Math.min(Math.max((currentDay - 1) / PLANNING_HORIZON, 0), 1)
   const presentStatuses = MISSION_STATUSES.filter((s) => data.missions.some((m) => m.status === s))
