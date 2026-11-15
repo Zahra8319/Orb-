@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { LineChart } from '../charts/LineChart'
 import { Readout, Section } from '../components/bits'
 import type { Level } from '../rules/alerts'
@@ -14,6 +15,12 @@ function stamp(t: number): string {
   return `Day ${dayOf(t)}, ${formatClock(minuteOfDay(t))}`
 }
 
+const SENDER: Record<Message['from'], string> = {
+  me: 'You',
+  earth: 'Flight surgeon, Earth',
+  admin: 'Mission Control, Earth',
+}
+
 function MessageItem({ m, now }: { m: Message; now: number }) {
   const inTransit = now < m.arrivesAt
   const progress = Math.min(1, Math.max(0, (now - m.sentAt) / (m.arrivesAt - m.sentAt)))
@@ -21,7 +28,7 @@ function MessageItem({ m, now }: { m: Message; now: number }) {
     <li className="msg" data-from={m.from}>
       <div className="msg-body">{m.text}</div>
       <div className="msg-meta">
-        {m.from === 'me' ? 'You' : 'Flight surgeon, Earth'}, {stamp(m.from === 'me' ? m.sentAt : m.arrivesAt)}
+        {SENDER[m.from]}, {stamp(m.from === 'me' ? m.sentAt : m.arrivesAt)}
         {m.from === 'me' && (inTransit ? `. Reaches Earth in ${formatDelay((m.arrivesAt - now) * 60)}` : '. Delivered')}
       </div>
       {m.from === 'me' && inTransit && (
@@ -58,7 +65,7 @@ export function ShipEarth() {
 
   // Replies from Earth stay hidden until the signal has had time to arrive.
   const thread = messages.filter((m) => m.crewId === crew.id && (m.from === 'me' || t >= m.arrivesAt))
-  const waiting = messages.some((m) => m.crewId === crew.id && m.from === 'earth' && t < m.arrivesAt)
+  const waiting = messages.some((m) => m.crewId === crew.id && m.from !== 'me' && t < m.arrivesAt)
 
   return (
     <>
@@ -129,7 +136,11 @@ export function ShipEarth() {
           </div>
 
           <div>
-            <h3 className="subhead">Messages with your flight surgeon</h3>
+            <h3 className="subhead">Messages with Earth</h3>
+            <p className="section-note">
+              Your flight surgeon and Mission Control both write here. For a medical question that needs a
+              clinical answer, use <Link to="/consult">Consult Earth</Link>.
+            </p>
             <ul className="thread">
               {thread.map((m) => (
                 <MessageItem key={m.id} m={m} now={t} />
@@ -145,7 +156,7 @@ export function ShipEarth() {
               }}
             >
               <label>
-                <span className="visually-hidden">Message to your flight surgeon</span>
+                <span className="visually-hidden">Message to Earth</span>
                 <textarea
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}

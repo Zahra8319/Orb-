@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { commsDelaySec } from '../sim/mission'
 import { STORE_KEY, useStore } from './store'
 
 const saved = () => JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null') as { state: Record<string, unknown> } | null
@@ -35,5 +36,26 @@ describe('saved demo', () => {
     useStore.getState().addReaction(300, 0)
     useStore.getState().resetDemo()
     expect(saved()!.state.reactions).toEqual([])
+  })
+})
+
+describe('Mission Control messages', () => {
+  beforeEach(() => {
+    useStore.getState().resetDemo()
+  })
+
+  it('reach the crew member after the one-way radio delay, not instantly', () => {
+    const { t } = useStore.getState()
+    useStore.getState().sendAdminMessage('Please log your dose after the storm.', 'reyes')
+    const sent = useStore.getState().messages.at(-1)!
+    expect(sent).toMatchObject({ crewId: 'reyes', from: 'admin', sentAt: t })
+    expect(sent.arrivesAt).toBeCloseTo(t + commsDelaySec(t) / 60)
+    expect(sent.arrivesAt).toBeGreaterThan(t)
+  })
+
+  it('ignores an empty message', () => {
+    const before = useStore.getState().messages.length
+    useStore.getState().sendAdminMessage('   ', 'reyes')
+    expect(useStore.getState().messages).toHaveLength(before)
   })
 })

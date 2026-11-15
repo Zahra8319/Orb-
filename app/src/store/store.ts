@@ -18,14 +18,13 @@ export const SPEEDS = [
 export interface Message {
   id: number
   crewId: string
+  /** 'me' is the crew member, 'earth' the flight surgeon, 'admin' Mission Control. */
   from: 'me' | 'earth' | 'admin'
   text: string
   /** Mission minute it was sent. */
   sentAt: number
   /** Mission minute it reaches the other end. */
   arrivesAt: number
-  /** For admin messages: which crew member it's addressed to (or 'all') */
-  toCrewId?: string
 }
 
 export interface ReactionResult {
@@ -81,7 +80,8 @@ interface State {
   addGamePlay: (gameId: string, value: number, detail?: string) => void
   logEyeCheck: () => void
   sendMessage: (text: string) => void
-  sendAdminMessage: (text: string, toCrewId?: string) => void
+  /** Mission Control writes to one crew member; it reaches the ship after the radio delay. */
+  sendAdminMessage: (text: string, toCrewId: string) => void
   addGlucose: (reading: Omit<GlucoseReading, 'crewId' | 'day'>) => void
   addNutrition: (log: Omit<NutritionLog, 'crewId' | 'day'>) => void
 }
@@ -206,7 +206,7 @@ export const useStore = create<State>()(
         ],
       }
     }),
-  sendAdminMessage: (text: string, toCrewId?: string) =>
+  sendAdminMessage: (text, toCrewId) =>
     set((s) => {
       const trimmed = text.trim()
       if (!trimmed) return s
@@ -214,15 +214,7 @@ export const useStore = create<State>()(
       return {
         messages: [
           ...s.messages,
-          {
-            id: nextId,
-            crewId: toCrewId || s.crewId,
-            from: 'admin',
-            text: trimmed,
-            sentAt: s.t,
-            arrivesAt: s.t, // Instant for admin
-            toCrewId,
-          },
+          { id: nextId, crewId: toCrewId, from: 'admin', text: trimmed, sentAt: s.t, arrivesAt: s.t + delayMin(s.t) },
         ],
       }
     }),

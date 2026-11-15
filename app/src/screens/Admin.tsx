@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Input } from '../components/ui/input'
 import { useSession } from '../store/session'
 import { useStore } from '../store/store'
+import { useSimClock } from '../store/hooks'
+import { AdminMessages } from '../components/AdminMessages'
 
 /* Mission Control: the Earth side of Orb. Creates upcoming trips and assigns
    astronauts to them; the crew pages only ever show each astronaut their own
@@ -43,7 +45,7 @@ interface CrewMember {
   avatar?: string
 }
 
-type TabId = 'missions' | 'crew' | 'schedule' | 'reports'
+type TabId = 'missions' | 'crew' | 'messages' | 'schedule' | 'reports'
 
 /* Versioned after the Mission Control rework so a demo opens on the fresh
    console rather than state saved by the earlier admin screens. */
@@ -166,6 +168,8 @@ function Select({ value, onChange, options, className, disabled }: {
 }
 
 export function Admin() {
+  // Earth runs on the same mission clock as the ship, so messages keep moving.
+  useSimClock()
   const { signOut } = useSession()
   const navigate = useNavigate()
   const t = useStore((s) => s.t)
@@ -363,6 +367,7 @@ export function Admin() {
   const tabs: { id: TabId; label: string; count?: number }[] = [
     { id: 'missions', label: 'Missions', count: data.missions.length },
     { id: 'crew', label: 'Crew', count: data.crew.length },
+    { id: 'messages', label: 'Messages' },
     { id: 'schedule', label: 'Schedule' },
     { id: 'reports', label: 'Reports' },
   ]
@@ -538,6 +543,12 @@ export function Admin() {
                 })}
               </div>
             </Section>
+          </div>
+        )}
+
+        {activeTab === 'messages' && (
+          <div role="tabpanel" id="panel-messages" aria-labelledby="tab-messages" className="admin-panel">
+            <AdminMessages />
           </div>
         )}
 
