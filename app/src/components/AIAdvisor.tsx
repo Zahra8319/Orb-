@@ -171,6 +171,15 @@ function rich(text: string): ReactNode {
   )
 }
 
+/** A protocol written out as numbered steps, what to ask Earth, and when to escalate. */
+function protocolText(p: Protocol): string {
+  return (
+    p.autonomous.map((s, j) => `${j + 1}. ${s}`).join('\n') +
+    (p.earthQuestions.length ? `\n\n**When Earth replies, ask:**\n${p.earthQuestions.map((q) => `• ${q}`).join('\n')}` : '') +
+    (p.redFlags.length ? `\n\n🔴 **Escalate immediately if:** ${p.redFlags.join(', ')}` : '')
+  )
+}
+
 async function askGroq(question: string, alerts: Alert[]): Promise<string> {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
   if (!apiKey) throw new Error('No Groq API key')
@@ -202,7 +211,7 @@ async function askGroq(question: string, alerts: Alert[]): Promise<string> {
   return data.choices[0]?.message?.content ?? 'No response from Groq.'
 }
 
-export function AIAdvisor() {
+export function AIAdvisor({ hideTrigger = false }: { hideTrigger?: boolean }) {
   // The same alerts as the banner, including the crew member's own entries.
   const alerts = useAlerts()
 
@@ -229,15 +238,17 @@ export function AIAdvisor() {
   const [thinking, setThinking] = useState(false)
   const [groqAvailable, setGroqAvailable] = useState(() => !!import.meta.env.VITE_GROQ_API_KEY)
 
-  // Auto-open if there's an urgent alert and no messages yet
+  // An urgent alert puts its protocol at the top of the advisor. On a desktop the
+  // advisor opens beside the page. On a phone it would cover the whole screen,
+  // alert band and shelter button included, so it stays shut and its button pulses.
   useEffect(() => {
     const urgentProtocol = triage(alerts)
     if (urgentProtocol && messages.length === 0 && !open) {
-      setOpen(true)
+      if (!window.matchMedia('(max-width: 767px)').matches) setOpen(true)
       setMessages([
         {
           role: 'system',
-          content: `⚠️ Urgent: ${urgentProtocol.title} detected. Here are your immediate autonomous steps:`,
+          content: `⚠️ **Urgent: ${urgentProtocol.title}.** Do this now:\n\n${protocolText(urgentProtocol)}`,
           protocol: urgentProtocol,
           source: 'protocol',
         },
@@ -264,14 +275,7 @@ export function AIAdvisor() {
             {
               role: 'assistant',
               content:
-                (i === 0 ? `**${p.title}** - here's what to do now:\n\n` : '') +
-                p.autonomous.map((s, j) => `${j + 1}. ${s}`).join('\n') +
-                (p.earthQuestions.length
-                  ? `\n\n**When Earth replies, ask:**\n${p.earthQuestions.map((q) => `• ${q}`).join('\n')}`
-                  : '') +
-                (p.redFlags.length
-                  ? `\n\n🔴 **Escalate immediately if:** ${p.redFlags.join(', ')}`
-                  : ''),
+                (i === 0 ? `**${p.title}** - here's what to do now:\n\n` : '') + protocolText(p),
               protocol: p,
               source: 'protocol',
             },
@@ -337,6 +341,7 @@ export function AIAdvisor() {
   return (
     <>
       {/* Floating trigger button */}
+      {!hideTrigger && (
       <button
         className="ai-trigger"
         onClick={() => setOpen(!open)}
@@ -348,6 +353,7 @@ export function AIAdvisor() {
         {triage(alerts) && <span className="ai-pulse" aria-hidden="true" />}
         {!groqAvailable && <WifiOff className="ai-offline-badge" size={12} aria-label="Offline mode" />}
       </button>
+      )}
 
       {/* Panel */}
       {open && (
