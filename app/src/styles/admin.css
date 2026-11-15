@@ -1,0 +1,943 @@
+/* Mission Control admin — the Earth side of Orb.
+   Kept in its own file, outside the cascade layers: this screen renders the
+   shadcn Card / Button / Input components and has to pull them back into the
+   NASA console language — 2px corners, hairline rules, Archivo at full width.
+   Layered rules lose to Tailwind's utilities, so everything here is unlayered.
+   Every rule is scoped to .admin-page or to class names only this screen uses. */
+
+/* ---------- frame ---------- */
+
+.admin-page {
+  min-height: 100vh;
+  padding-bottom: var(--s-8);
+}
+
+.admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--bg);
+  border-bottom: 2px solid var(--rule-strong);
+}
+
+.admin-topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  min-height: 64px;
+}
+
+.admin-topbar-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--rule);
+}
+
+.admin-topbar-title {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.admin-topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.admin-badge {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  padding: 3px 8px;
+  background: var(--primary);
+  color: var(--on-primary);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+/* ---------- page head ---------- */
+
+.admin-header {
+  padding-top: var(--s-6);
+}
+
+.admin-header h1 {
+  font-size: var(--t-xl);
+  font-stretch: var(--wide);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.admin-sub {
+  margin-top: var(--s-3);
+  max-width: 68ch;
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+
+/* ---------- stats band ---------- */
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  margin-top: var(--s-5);
+  background: var(--rule);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.admin-stats .readout {
+  background: var(--surface);
+  padding: var(--s-4) var(--s-5);
+  min-width: 0;
+}
+
+/* ---------- tabs ---------- */
+
+.admin-tabs {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-6);
+  border-bottom: 1px solid var(--rule);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.admin-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-3) calc(var(--s-3) - 1px);
+  margin-bottom: -1px;
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-tab:hover {
+  color: var(--ink);
+}
+
+.admin-tab.active {
+  color: var(--ink);
+  font-weight: 700;
+  border-bottom-color: var(--primary);
+}
+
+.admin-tab-count {
+  font-size: var(--t-xs);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0 5px;
+  line-height: 1.6;
+}
+
+.admin-tab.active .admin-tab-count {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--bg);
+}
+
+/* ---------- panels ---------- */
+
+.admin-panel > .section:first-child {
+  margin-top: var(--s-5);
+  padding-top: 0;
+  border-top: 0;
+}
+
+.admin-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-4);
+}
+
+/* ---------- shared row language ---------- */
+
+.mission-details {
+  display: grid;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: var(--s-3);
+  align-items: baseline;
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--t-sm);
+}
+
+.detail-row:last-child {
+  border-bottom: 0;
+}
+
+.detail-label {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.mission-status,
+.crew-status {
+  flex: none;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.mission-status.planning,
+.crew-status.planning {
+  background: var(--planned);
+  color: var(--nasa-deep);
+}
+
+.mission-status.training,
+.crew-status.training {
+  background: var(--watch);
+  color: var(--nasa-deep);
+}
+
+.mission-status.active,
+.crew-status.assigned {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.mission-status.completed,
+.crew-status.available {
+  background: var(--live);
+  color: var(--nasa-deep);
+}
+
+.mission-status.scrubbed {
+  background: var(--rule);
+  color: var(--ink);
+}
+
+.crew-status.medical_hold {
+  background: color-mix(in srgb, var(--urgent) 16%, var(--white));
+  color: var(--nasa-deep);
+}
+
+.crew-status.retired {
+  background: var(--surface);
+  color: var(--ink-soft);
+  border: 1px solid var(--rule);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.chip {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink-soft);
+}
+
+/* ---------- empty state ---------- */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-6);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+.empty-state p.empty-state-title {
+  font-size: var(--t-md);
+  font-weight: 700;
+  font-stretch: var(--wide);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.empty-state p:not(.empty-state-title) {
+  max-width: 56ch;
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+
+/* ---------- missions ---------- */
+
+.missions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: var(--s-4);
+  align-items: start;
+}
+
+.mission-card {
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.mission-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 6px 16px rgb(6 31 74 / 0.12);
+}
+
+.mission-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+  width: 100%;
+}
+
+.mission-window {
+  position: relative;
+  height: 6px;
+  margin-bottom: var(--s-3);
+  background: var(--light-track);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.mission-window span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 4px;
+  border-radius: 2px;
+}
+
+.mission-window .planning {
+  background: var(--light-done);
+}
+
+.mission-window .training {
+  background: var(--watch);
+}
+
+.mission-window .active {
+  background: var(--primary);
+}
+
+.mission-window .completed {
+  background: var(--live);
+}
+
+.mission-window .scrubbed {
+  background: var(--nasa-grey);
+}
+
+.mission-description {
+  margin-top: var(--s-3);
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+
+.mission-objectives {
+  margin-top: var(--s-3);
+  display: grid;
+  gap: var(--s-2);
+}
+
+.mission-objectives ul {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.mission-objectives li {
+  position: relative;
+  padding-left: var(--s-4);
+  font-size: var(--t-sm);
+}
+
+.mission-objectives li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 6px;
+  height: 6px;
+  background: var(--primary);
+}
+
+.mission-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--rule);
+}
+
+/* ---------- crew ---------- */
+
+/* Scoped: Command's crew cards keep their own hover from app.css. */
+.admin-page .crew-card {
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-page .crew-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 6px 16px rgb(6 31 74 / 0.12);
+}
+
+.admin-page .crew-card-header {
+  margin-bottom: 0;
+}
+
+.crew-card .crew-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.crew-card .crew-status {
+  margin-left: auto;
+}
+
+/* ---------- schedule (gantt) ---------- */
+
+.gantt {
+  --label-w: 208px;
+  position: relative;
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+}
+
+.gantt-head {
+  display: grid;
+  grid-template-columns: var(--label-w) 1fr;
+  gap: var(--s-3);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--rule);
+}
+
+.gantt-corner {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.gantt-axis {
+  position: relative;
+  height: 18px;
+}
+
+.gantt-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(var(--tick-shift, -50%));
+  font-size: var(--t-xs);
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.gantt-body {
+  position: relative;
+  display: grid;
+  gap: var(--s-2);
+}
+
+.gantt-row {
+  display: grid;
+  grid-template-columns: var(--label-w) 1fr;
+  gap: var(--s-3);
+  align-items: center;
+}
+
+.gantt-label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gantt-name {
+  font-size: var(--t-sm);
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gantt-sub {
+  font-size: var(--t-xs);
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gantt-track {
+  position: relative;
+  height: 30px;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+.gantt-bar {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  min-width: 6px;
+  border-radius: 2px;
+}
+
+.gantt-bar.planning {
+  background: var(--light-done);
+}
+
+.gantt-bar.training {
+  background: var(--watch);
+}
+
+.gantt-bar.active {
+  background: var(--primary);
+}
+
+.gantt-bar.completed {
+  background: var(--live);
+}
+
+.gantt-bar.scrubbed {
+  background: var(--nasa-grey);
+}
+
+.gantt-now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--label-w) + var(--s-3) + (100% - var(--label-w) - var(--s-3)) * var(--now, 0));
+  border-left: 2px dashed var(--primary);
+  pointer-events: none;
+}
+
+.gantt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--rule);
+  font-size: var(--t-xs);
+  color: var(--ink-soft);
+}
+
+.gantt-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gantt-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--rule);
+}
+
+.gantt-swatch.planning {
+  background: var(--light-done);
+}
+
+.gantt-swatch.training {
+  background: var(--watch);
+}
+
+.gantt-swatch.active {
+  background: var(--primary);
+}
+
+.gantt-swatch.completed {
+  background: var(--live);
+}
+
+.gantt-swatch.scrubbed {
+  background: var(--nasa-grey);
+}
+
+.gantt-swatch.now {
+  width: 0;
+  height: 12px;
+  border-radius: 0;
+  border-left: 2px dashed var(--primary);
+  background: none;
+}
+
+/* ---------- reports ---------- */
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  gap: var(--s-4);
+  align-items: start;
+}
+
+.report-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.report-title svg {
+  flex: none;
+  color: var(--primary);
+}
+
+.admin-flash {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.admin-flash::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--live);
+}
+
+/* ---------- modals ---------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-4);
+  background: rgb(6 31 74 / 0.55);
+  animation: admin-fade 0.18s ease-out both;
+}
+
+.modal {
+  width: 100%;
+  max-width: 620px;
+  max-height: calc(100vh - var(--s-6));
+  overflow-y: auto;
+  outline: none;
+  animation: admin-rise 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.modal-wide {
+  max-width: 780px;
+}
+
+@keyframes admin-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes admin-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+  width: 100%;
+}
+
+.modal-close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: -4px -4px 0 0;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--bg);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.modal-close:hover {
+  border-color: var(--rule-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-2);
+  margin-top: var(--s-5);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--rule);
+}
+
+/* ---------- forms ---------- */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-4);
+}
+
+.form-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.form-grid label > input,
+.form-grid label > select,
+.form-grid label > textarea {
+  font-weight: 400;
+}
+
+.admin-page select,
+.admin-select {
+  appearance: none;
+  width: 100%;
+  background: var(--bg)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2379797C' stroke-width='2'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  padding: 9px 34px 9px 12px;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.admin-page textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--bg);
+  font-size: var(--t-sm);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.crew-assignment-list {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.assignment-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr auto auto;
+  gap: var(--s-2);
+  align-items: center;
+  padding: var(--s-2);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+.primary-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--t-sm);
+  font-weight: 400;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.primary-checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+
+/* ---------- shadcn, pulled back into the console language ----------
+   Unlayered on purpose: these beat the Tailwind utilities on Card, Button
+   and Input (rounded-xl, py-6, gap-6, shadow-sm, rounded-md, h-9). */
+
+.admin-page [data-slot='card'] {
+  gap: var(--s-3);
+  padding: var(--s-4) 0;
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+.admin-page [data-slot='card-header'],
+.admin-page [data-slot='card-content'] {
+  padding-inline: var(--s-4);
+}
+
+.admin-page [data-slot='card-title'] {
+  font-size: var(--t-base);
+  font-weight: 700;
+  line-height: 1.3;
+  font-stretch: var(--wide);
+  letter-spacing: -0.01em;
+}
+
+.admin-page [data-slot='card-description'] {
+  font-size: var(--t-xs);
+  line-height: 1.45;
+}
+
+.admin-page [data-slot='button'] {
+  border-radius: 2px;
+  font-weight: 650;
+}
+
+.admin-page [data-slot='button'][data-variant='default'] {
+  border-color: var(--primary);
+}
+
+.admin-page [data-slot='button'][data-variant='outline'] {
+  border-color: var(--rule-strong);
+}
+
+.admin-page [data-slot='button'][data-variant='destructive'] {
+  border-color: var(--urgent);
+}
+
+.admin-page [data-slot='input'] {
+  min-height: 40px;
+  background: var(--bg);
+  border-color: var(--rule-strong);
+  border-radius: 2px;
+}
+
+.modal [data-slot='card'] {
+  gap: var(--s-4);
+  padding-block: var(--s-5);
+}
+
+.modal [data-slot='card-header'],
+.modal [data-slot='card-content'] {
+  padding-inline: var(--s-5);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 900px) {
+  .admin-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gantt {
+    --label-w: 140px;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-header h1 {
+    font-size: var(--t-lg);
+  }
+
+  .admin-topbar-inner {
+    flex-wrap: wrap;
+    padding-block: var(--s-2);
+    min-height: 0;
+  }
+
+  .admin-topbar-right {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .missions-grid,
+  .reports-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-row {
+    grid-template-columns: 96px 1fr;
+  }
+
+  .gantt {
+    --label-w: 104px;
+    padding: var(--s-3);
+  }
+
+  .gantt-sub {
+    display: none;
+  }
+
+  /* Five ticks collide at this width: keep first, middle and last. */
+  .gantt-tick:nth-child(2),
+  .gantt-tick:nth-child(4) {
+    display: none;
+  }
+
+  .assignment-row {
+    grid-template-columns: 1fr;
+  }
+}

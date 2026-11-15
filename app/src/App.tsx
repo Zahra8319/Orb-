@@ -28,6 +28,7 @@ export default function App() {
     <HashRouter>
       <Routes>
         <Route path="login" element={<Login />} />
+        <Route path="admin" element={<Admin />} />
         <Route
           element={
             <RequireCrew>
@@ -44,7 +45,6 @@ export default function App() {
           <Route path="eva" element={<EVA />} />
           <Route path="scenarios" element={<ScenariosScreen />} />
           <Route path="command" element={<Command />} />
-          <Route path="admin" element={<Admin />} />
           <Route path="sources" element={<Sources />} />
           <Route path="*" element={<Today />} />
         </Route>
