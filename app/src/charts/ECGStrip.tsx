@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useWidth } from './useWidth'
 
 interface Props {
-  /** Current rate in beats per minute — sets the spacing between beats. */
+  /** Current rate in beats per minute - sets the spacing between beats. */
   bpm: number
   /** Irregular rhythm: beat intervals wobble, like an arrhythmia strip. */
   irregular?: boolean

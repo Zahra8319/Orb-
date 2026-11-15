@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { CREW } from '../sim/crew'
 import { MISSION_DAYS, commsDelaySec, dayOf, formatClock, formatDelay, minuteOfDay } from '../sim/mission'
@@ -8,6 +8,7 @@ import { useStore } from '../store/store'
 import { ClockText } from './bits'
 import { DemoDrawer } from './DemoDrawer'
 import { AIAdvisor } from './AIAdvisor'
+import { MoreHorizontal, ChevronDown } from 'lucide-react'
 
 const CREW_NAV = [
   { to: '/', label: 'Today' },
@@ -32,8 +33,10 @@ export function Shell() {
   const alerts = useAlerts()
   const sleepShift = useSleepShift()
   const [drawer, setDrawer] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const signOut = useSession((s) => s.signOut)
   const location = useLocation()
+  const navRef = useRef<HTMLUListElement>(null)
 
   useEffect(() => {
     document.documentElement.dataset.theme = sleepShift ? 'sleep' : 'day'
@@ -43,7 +46,14 @@ export function Shell() {
   const isCommander = crew.role === 'Commander'
   const navItems = isCommander ? COMMANDER_NAV : CREW_NAV
 
+  // On mobile, show first 5 tabs, rest go in "More" dropdown
+  const MAX_VISIBLE_TABS = 5
+  const visibleTabs = navItems.slice(0, MAX_VISIBLE_TABS)
+  const moreTabs = navItems.slice(MAX_VISIBLE_TABS)
+
   const top = alerts.find((a) => a.level !== 'watch')
+
+  const closeMore = () => setMoreOpen(false)
 
   return (
     <>
@@ -52,10 +62,41 @@ export function Shell() {
           <Link className="wordmark" to="/" aria-label="Orb, go to Today">
             Orb<span className="wordmark-plus">+</span>
           </Link>
-          <nav className="nav" aria-label="Main">
-            {navItems.map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.to === '/'}>{n.label}</NavLink>
+          <nav className="nav" aria-label="Main" ref={navRef}>
+            {visibleTabs.map((n) => (
+              <NavLink key={n.to} to={n.to} end={n.to === '/'} onClick={closeMore}>{n.label}</NavLink>
             ))}
+            {moreTabs.length > 0 && (
+              <div className="nav-more" role="menu">
+                <button
+                  className="nav-more-trigger"
+                  aria-haspopup="true"
+                  aria-expanded={moreOpen}
+                  aria-label="More navigation items"
+                  onClick={() => setMoreOpen(!moreOpen)}
+                >
+                  <MoreHorizontal size={18} aria-hidden="true" />
+                  <span className="nav-more-label">More</span>
+                  <ChevronDown size={14} aria-hidden="true" className={moreOpen ? 'open' : ''} />
+                </button>
+                {moreOpen && (
+                  <div className="nav-more-panel" role="menu">
+                    {moreTabs.map((n) => (
+                      <NavLink
+                        key={n.to}
+                        to={n.to}
+                        end={n.to === '/'}
+                        className="nav-more-item"
+                        role="menuitem"
+                        onClick={closeMore}
+                      >
+                        {n.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
         </div>
       </header>
@@ -82,7 +123,7 @@ export function Shell() {
       <div className="page">
         <div className="statusline">
           <span>
-            <strong>Day {dayOf(t)}</strong> of {MISSION_DAYS} to Mars, ship time <ClockText time={formatClock(minuteOfDay(t))} />
+            <strong>Day {dayOf(t)}</strong> of {MISSION_DAYS}, ship time <ClockText time={formatClock(minuteOfDay(t))} />
             {sleepShift ? ', sleep shift' : ''}
           </span>
           <span>

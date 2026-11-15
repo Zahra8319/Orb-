@@ -1542,7 +1542,9 @@ main {
 }
 
 .mars-lessons li::before {
-  content: '→';
+  content: '01';
+  counter-increment: lesson;
+  content: counter(lesson, decimal-leading-zero);
   position: absolute;
   left: 0;
   color: var(--primary);
@@ -2077,11 +2079,14 @@ main {
 }
 
 .detail-section li::before {
-  content: '→';
+  content: '';
   position: absolute;
   left: 0;
-  color: var(--primary);
-  font-weight: 700;
+  top: 0.5em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
 }
 
 .treatment-block {
@@ -3893,5 +3898,120 @@ main {
 @media (prefers-reduced-motion: reduce) {
   .mobile-hero-slide {
     transition: none !important;
+  }
+}
+
+/* ---------- Nav: mobile More dropdown + commander smaller tabs ---------- */
+
+.nav {
+  position: relative;
+}
+
+.nav-more {
+  position: relative;
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .nav-more {
+    display: inline-flex;
+  }
+}
+
+.nav-more-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--dur-fast), background var(--dur-fast);
+}
+
+.nav-more-trigger:hover {
+  border-color: var(--primary);
+  background: var(--bg);
+}
+
+.nav-more-trigger:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.nav-more-label {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .nav-more-label {
+    display: inline;
+  }
+}
+
+.nav-more-trigger .open {
+  transform: rotate(180deg);
+}
+
+.nav-more-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--surface);
+  box-shadow: 0 12px 24px -12px rgb(6 31 74 / 0.45);
+  z-index: 50;
+  overflow: hidden;
+  animation: rise-in 200ms var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-more-panel { animation: none; }
+}
+
+.nav-more-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast);
+}
+
+.nav-more-item:hover,
+.nav-more-item:focus {
+  background: var(--bg);
+  outline: none;
+}
+
+.nav-more-item:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
+/* Commander: smaller tab font so Command fits */
+@media (max-width: 1024px) {
+  .nav a {
+    font-size: var(--t-sm);
+    padding: 8px 10px;
+  }
+}
+
+/* Ensure the more trigger matches tab height */
+@media (max-width: 1024px) {
+  .nav-more-trigger {
+    font-size: var(--t-sm);
+    padding: 8px 10px;
   }
 }

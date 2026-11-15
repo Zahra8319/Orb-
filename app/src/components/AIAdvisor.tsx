@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { X, Stethoscope, AlertTriangle, CheckCircle, Loader2, WifiOff, Zap } from 'lucide-react'
+import { X, Stethoscope, AlertTriangle, CheckCircle, Loader2, WifiOff, Zap, Send } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { useStore } from '../store/store'
 import { evaluate } from '../rules/alerts'
@@ -44,7 +44,7 @@ const PROTOCOLS: Protocol[] = [
       'Hydrate: 500 mL water over 30 min.',
       'Review meds for stimulants (caffeine, decongestants).',
       'If HR persists > 110 after hydration: metoprolol 2.5 mg IV.',
-      'Monitor for arrhythmia — record ECG if rhythm becomes irregular.',
+      'Monitor for arrhythmia; record ECG if rhythm becomes irregular.',
     ],
     earthQuestions: [
       'HR 115 at rest, hydrated. Persists after 500 mL. Start metoprolol 2.5 mg IV?',
@@ -58,7 +58,7 @@ const PROTOCOLS: Protocol[] = [
     autonomous: [
       'If SpO₂ < 90%: 100% non-rebreather mask immediately.',
       'If SpO₂ 90–94%: nasal cannula 4 L/min, target > 95%.',
-      'Check cabin CO₂ — if > 4 mmHg, that\'s contributing. Increase scrubber.',
+      'Check cabin CO2; if > 4 mmHg, that\'s contributing. Increase scrubber.',
       'Lung ultrasound if trained: rule out pneumothorax.',
       'If unilateral absent breath sounds: needle decompression 2nd ICS MCL.',
     ],
@@ -149,8 +149,8 @@ function triage(alerts: ReturnType<typeof evaluate>): Protocol | null {
   return matched[0] || null
 }
 
-const NASA_SYSTEM_PROMPT = `You are a NASA flight surgeon assisting a crew member on a Mars transit mission.
-Communication delay to Earth is 20+ minutes. The crew must act autonomously.
+const NASA_SYSTEM_PROMPT = `You are a NASA flight surgeon assisting a crew member on a deep-space mission.
+Communication delay to Earth is significant. The crew must act autonomously.
 Only reference NASA standards: STD-3001 Vol 2, HRP Evidence Books, JSC Medical Checklists, NASA-STD-3000.
 If a question is outside these documents, say: "Consult flight surgeon on next pass."
 Be concise. Lead with immediate autonomous actions. No markdown unless asked.`
@@ -232,7 +232,7 @@ export function AIAdvisor() {
     const matched = matchProtocols(alerts, userMsg)
 
     if (matched.length > 0) {
-      // Protocol matched — respond immediately
+      // Protocol matched - respond immediately
       setTimeout(() => {
         matched.forEach((p, i) => {
           setMessages((prev) => [
@@ -240,7 +240,7 @@ export function AIAdvisor() {
             {
               role: 'assistant',
               content:
-                (i === 0 ? `**${p.title}** — here's what to do now:\n\n` : '') +
+                (i === 0 ? `**${p.title}** - here's what to do now:\n\n` : '') +
                 p.autonomous.map((s, j) => `${j + 1}. ${s}`).join('\n') +
                 (p.earthQuestions.length
                   ? `\n\n**When Earth replies, ask:**\n${p.earthQuestions.map((q) => `• ${q}`).join('\n')}`
@@ -258,7 +258,7 @@ export function AIAdvisor() {
       return
     }
 
-    // No protocol matched — try Groq if available
+    // No protocol matched - try Groq if available
     if (groqAvailable) {
       askGroq(userMsg, alerts)
         .then((answer) => {
@@ -266,7 +266,7 @@ export function AIAdvisor() {
             ...prev,
             {
               role: 'assistant',
-              content: answer + '\n\n*— via Mission Control link (Groq)*',
+              content: answer + '\n\n* - via Mission Control link (Groq)*',
               source: 'groq',
             },
           ])
@@ -351,7 +351,7 @@ export function AIAdvisor() {
                 {!groqAvailable && (
                   <p className="ai-offline-note">
                     <WifiOff size={14} aria-hidden="true" />
-                    Offline mode — add <code>VITE_GROQ_API_KEY</code> to enable Mission Control link.
+                    Offline mode - add <code>VITE_GROQ_API_KEY</code> to enable Mission Control link.
                   </p>
                 )}
                 <div className="ai-chips">
@@ -395,8 +395,12 @@ export function AIAdvisor() {
               aria-label="Medical question"
               disabled={thinking}
             />
-            <Button onClick={handleSend} disabled={!input.trim() || thinking} size="icon">
-              <Loader2 size={16} className={thinking ? 'spin' : ''} aria-hidden={!thinking} />
+            <Button onClick={handleSend} disabled={!input.trim() || thinking} size="icon" aria-label={thinking ? 'Sending…' : 'Send message'}>
+              {thinking ? (
+                <Loader2 size={16} className="spin" aria-hidden="true" />
+              ) : (
+                <Send size={16} aria-hidden="true" />
+              )}
             </Button>
           </div>
         </div>

@@ -60,17 +60,17 @@ export const SCENARIOS: Scenario[] = [
   },
   {
     id: 'co2-rise',
-    name: 'CO₂ Scrubber Degradation',
-    description: 'Primary CO₂ scrubber failing, cabin CO₂ rising 0.7 mmHg/hr.',
+    name: 'COâ‚‚ Scrubber Degradation',
+    description: 'Primary COâ‚‚ scrubber failing, cabin COâ‚‚ rising 0.7 mmHg/hr.',
     triggerDay: null,
     duration: 3,
     severity: 'major',
     category: 'environmental',
-    narrative: 'CABIN ATMOSPHERE: CO₂ scrubber efficiency degraded to 60%. CO₂ rising.',
+    narrative: 'CABIN ATMOSPHERE: COâ‚‚ scrubber efficiency degraded to 60%. COâ‚‚ rising.',
     guidance: [
       'Swap scrubber cartridge per procedure.',
       'Increase cabin fan speed to high.',
-      'Avoid heavy exercise until CO₂ < 3 mmHg.',
+      'Avoid heavy exercise until COâ‚‚ < 3 mmHg.',
       'Monitor for headache, dyspnea, cognitive slowing.',
     ],
     triggersAlerts: ['co2'],
@@ -88,7 +88,7 @@ export const SCENARIOS: Scenario[] = [
       'Record 30-second ECG strip immediately.',
       'If hemodynamically stable: metoprolol 5 mg IV, recheck in 15 min.',
       'If unstable: synchronized cardioversion 50 J.',
-      'Anticoagulation decision requires Earth consult (CHA₂DS₂-VASc).',
+      'Anticoagulation decision requires Earth consult (CHAâ‚‚DSâ‚‚-VASc).',
     ],
     triggersAlerts: ['rhythm', 'heart-rate'],
   },
@@ -104,8 +104,8 @@ export const SCENARIOS: Scenario[] = [
     guidance: [
       'Protected sleep: 8.5h opportunity, dark/quiet cabin',
       'Exercise prescription: mandatory daily cardio + resistance',
-      'Bright light therapy: 10,000 lux × 30 min AM',
-      'Sertraline 50 mg daily (if PHQ-9 ≥ 10, start after Earth consult)',
+      'Bright light therapy: 10,000 lux Ã; 30 min AM',
+      'Sertraline 50 mg daily (if PHQ-9 â‰¥ 10, start after Earth consult)',
       'Mirtazapine 15 mg HS (if insomnia prominent)',
       'Structured daily schedule with meaningful tasks',
       'Crew buddy system: daily check-ins',
@@ -127,7 +127,7 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
     severity: 'critical',
     category: 'medical',
     patientId: 'lindqvist',
-    narrative: 'MEDICAL EMERGENCY: Lindqvist reports severe RLQ pain × 6 hrs, nausea, fever 38.7°C. Guarding on exam. WBC 16,000.',
+    narrative: 'MEDICAL EMERGENCY: Lindqvist reports severe RLQ pain Ã; 6 hrs, nausea, fever 38.7Â°C. Guarding on exam. WBC 16,000.',
     differential: [
       'Acute appendicitis (most likely)',
       'Mesenteric adenitis',
@@ -161,7 +161,7 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
     disposition: [
       'Antibiotics-first with close monitoring (if uncomplicated, early presentation)',
       'Emergency laparoscopic appendectomy (if perforated, abscess, or failing medical mgmt)',
-      'Medical evacuation to Earth (not feasible in transit — must treat onboard)',
+      'Medical evacuation to Earth (not feasible in transit â€” must treat onboard)',
     ],
     triggersAlerts: [],
     guidance: [
@@ -191,7 +191,7 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
       'Renal ultrasound (hydronephrosis, stone visualization)',
       'Urinalysis (hematuria, crystals, WBC)',
       'CBC, BMP (renal function, infection markers)',
-      'Non-contrast CT not available — rely on ultrasound',
+      'Non-contrast CT not available â€” rely on ultrasound',
     ],
     treatment: [
       {
@@ -215,14 +215,14 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
       'Expect passage in 7-14 days for stones < 5 mm',
       'Stones 5-10 mm: 50% pass with MET',
       'Stones > 10 mm: usually require intervention',
-      'Recurrence risk: 50% at 5 years — implement prevention for all crew',
+      'Recurrence risk: 50% at 5 years â€” implement prevention for all crew',
     ],
     triggersAlerts: [],
     guidance: [
-      'Microgravity increases stone risk: bone demineralization → hypercalciuria, dehydration, stasis.',
+      'Microgravity increases stone risk: bone demineralization â†’ hypercalciuria, dehydration, stasis.',
       'ISS incidence: ~1 per 1000 astronaut-days.',
       'Ultrasound sensitivity for stones: 60-70% (operator dependent).',
-      'Capture stone for analysis — guides prevention.',
+      'Capture stone for analysis â€” guides prevention.',
     ],
   },
   {
@@ -234,7 +234,7 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
     severity: 'major',
     category: 'medical',
     patientId: 'okafor',
-    narrative: 'MEDICAL EVENT: Okafor (Commander) reports palpitations, mild dyspnea on exertion × 2 hrs. ECG: irregularly irregular, rate 128 bpm. BP 132/82. No chest pain.',
+    narrative: 'MEDICAL EVENT: Okafor (Commander) reports palpitations, mild dyspnea on exertion Ã; 2 hrs. ECG: irregularly irregular, rate 128 bpm. BP 132/82. No chest pain.',
     differential: [
       'Atrial fibrillation (new onset)',
       'Atrial flutter with variable block',
@@ -253,33 +253,33 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
     treatment: [
       {
         autonomous: [
-          'Metoprolol 5 mg IV q15min × 3 target HR < 100',
+          'Metoprolol 5 mg IV q15min Ã; 3 target HR < 100',
           'If IV not available: metoprolol 25 mg PO q6h',
           'Diltiazem 0.25 mg/kg IV bolus then 5-15 mg/hr infusion (alternative)',
-          'Anticoagulation: apixaban 5 mg BID (if CHA₂DS₂-VASc ≥ 2)',
+          'Anticoagulation: apixaban 5 mg BID (if CHAâ‚‚DSâ‚‚-VASc â‰¥ 2)',
           'Cardioversion if unstable: synchronized 50-100-200 J',
         ],
         earthConsult: [
           'Rate control vs. rhythm control strategy',
-          'Anticoagulation choice (apixaban vs. warfarin — monitoring issues)',
+          'Anticoagulation choice (apixaban vs. warfarin â€” monitoring issues)',
           'If rhythm control: amiodarone loading, then cardioversion',
           'Long-term: catheter ablation on return?',
-          'Commander fitness for duty — command decision impact',
+          'Commander fitness for duty â€” command decision impact',
         ],
       },
     ],
     disposition: [
       'Rate control acceptable for most; rhythm control if symptomatic despite rate control',
       'Anticoagulate for 4 weeks minimum post-cardioversion',
-      'CHA₂DS₂-VASc score determines long-term anticoagulation',
+      'CHAâ‚‚DSâ‚‚-VASc score determines long-term anticoagulation',
       'Commander may need temporary command transfer if symptomatic',
     ],
     triggersAlerts: ['rhythm', 'heart-rate'],
     guidance: [
       'Afib is the most common sustained arrhythmia in spaceflight.',
       'Triggers: dehydration, stress, alcohol, thyroid, structural heart disease.',
-      'In microgravity: fluid shift → atrial stretch → Afib substrate.',
-      'Commander Afib = command fitness issue — flight surgeon + program manager decision.',
+      'In microgravity: fluid shift â†’ atrial stretch â†’ Afib substrate.',
+      'Commander Afib = command fitness issue â€” flight surgeon + program manager decision.',
     ],
   },
   {
@@ -298,10 +298,10 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
       'Combined injury (radiation + trauma/burn)',
     ],
     workup: [
-      'Biodosimetry: CBC q6h × 48h (lymphocyte depletion kinetics)',
+      'Biodosimetry: CBC q6h Ã; 48h (lymphocyte depletion kinetics)',
       'Chromosome aberration assay (if capability exists)',
       'Electron paramagnetic resonance (EPR) dosimetry (tooth enamel)',
-      'Cytokine panel (IL-6, TNF-α, G-CSF)',
+      'Cytokine panel (IL-6, TNF-Î±, G-CSF)',
       'Serial CBC with differential (nadir at 3-4 weeks)',
     ],
     treatment: [
@@ -334,7 +334,7 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
     guidance: [
       'Time to vomiting is key triage: < 1 hr = > 2 Gy, 1-2 hr = 1-2 Gy, > 2 hr = < 1 Gy.',
       'Lymphocyte count at 24h predicts severity: > 1500 = mild, 500-1500 = moderate, < 500 = severe.',
-      'Medical officer being the patient creates care gap — cross-train all crew.',
+      'Medical officer being the patient creates care gap â€” cross-train all crew.',
       'SPE sheltering must be < 30 min from alert for < 0.5 Gy exposure.',
     ],
   },

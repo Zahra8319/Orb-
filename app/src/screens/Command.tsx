@@ -66,7 +66,7 @@ export function Command() {
     ...eyeDue.slice(0, 2).map((e, i) => ({
       day: e.day,
       event: `Eye check due: ${e.name}`,
-      note: i === 0 ? 'First in the 14-day rotation' : 'Second in the rotation — confirm slot',
+      note: i === 0 ? 'First in the 14-day rotation' : 'Second in the rotation; confirm slot',
     })),
     { day: day + 7, event: 'Scheduled EVA: Tanaka and Reyes', note: 'Verify pre-EVA checklists complete' },
     { day: day + 21, event: 'Mid-mission medical conference', note: 'Prepare crew health summary for Earth' },
@@ -86,7 +86,7 @@ export function Command() {
 
       <Section
         title="Crew alert summary"
-        note={`${totalAlerts} alerts across crew · ${urgentAlerts} urgent, ${actAlerts} act, ${watchAlerts} watch`}
+        note={`${totalAlerts} alerts across crew Â· ${urgentAlerts} urgent, ${actAlerts} act, ${watchAlerts} watch`}
       >
         <div className="command-summary">
           <Readout big label="Urgent" value={urgentAlerts} unit="alerts" level="urgent" note="Immediate action required" />
@@ -114,7 +114,7 @@ export function Command() {
                     <h4>{crew.name}</h4>
                     <span className="crew-role">
                       {crew.role}
-                      {crew.id === crewId && <span className="you-marker"> · you</span>}
+                      {crew.id === crewId && <span className="you-marker"> Â· you</span>}
                     </span>
                   </div>
                   <span className={`status-badge ${statusClass}`}>
@@ -135,7 +135,7 @@ export function Command() {
                     <span className="vital-unit">bpm</span>
                   </div>
                   <div className="vital">
-                    <span className="vital-label">SpO₂</span>
+                    <span className="vital-label">SpOâ‚‚</span>
                     <span className="vital-value">{snap.vitals.spo2}</span>
                     <span className="vital-unit">%</span>
                   </div>
@@ -205,7 +205,7 @@ export function Command() {
               <ul>
                 {needsMedical.map((s) => (
                   <li key={s.crew.id}>
-                    <strong>{s.crew.name}</strong> —{' '}
+                    <strong>{s.crew.name}</strong>:
                     {s.alerts
                       .filter((a) => medicalIds.includes(a.id))
                       .map((a) => a.title)
@@ -230,7 +230,7 @@ export function Command() {
               <ul>
                 {exerciseIssues.map((s) => (
                   <li key={s.crew.id}>
-                    <strong>{s.crew.name}</strong> — {s.alerts.find((a) => a.id === 'exercise')?.action}
+                    <strong>{s.crew.name}</strong> â€” {s.alerts.find((a) => a.id === 'exercise')?.action}
                   </li>
                 ))}
               </ul>
@@ -250,7 +250,7 @@ export function Command() {
               <ul>
                 {sleepIssues.map((s) => (
                   <li key={s.crew.id}>
-                    <strong>{s.crew.name}</strong> —{' '}
+                    <strong>{s.crew.name}</strong>:
                     {s.alerts
                       .filter((a) => ['sleep', 'reaction'].includes(a.id))
                       .map((a) => a.title)
