@@ -45,7 +45,7 @@ export function LoginForm({
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-4", className)} {...props}>
       <Card className="border-white/10 shadow-2xl shadow-black/60 backdrop-blur-md">
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
@@ -55,15 +55,15 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={submit} noValidate>
+          <form onSubmit={submit} noValidate className="space-y-3">
             <FieldGroup>
               {notice && (
-                <FieldDescription role="status" className="text-center">
+                <FieldDescription role="status" className="text-center text-sm">
                   {notice}
                 </FieldDescription>
               )}
               <Field data-invalid={error ? true : undefined}>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email" className="text-sm">Email</FieldLabel>
                 <Input
                   id="email"
                   type="email"
@@ -77,12 +77,13 @@ export function LoginForm({
                   aria-invalid={error ? true : undefined}
                   aria-describedby={error ? "email-error" : undefined}
                   required
+                  inputMode="email"
                 />
-                {error && <FieldError id="email-error">{error}</FieldError>}
+                {error && <FieldError id="email-error" className="text-sm">{error}</FieldError>}
               </Field>
               <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                <div className="flex items-center justify-between gap-2">
+                  <FieldLabel htmlFor="password" className="text-sm">Password</FieldLabel>
                   <button
                     type="button"
                     onClick={() =>
@@ -90,40 +91,37 @@ export function LoginForm({
                         "Passwords are reset by the flight surgeon on Earth. In this demo any password works."
                       )
                     }
-                    className="ml-auto text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                    className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline whitespace-nowrap"
                   >
                     Forgot your password?
                   </button>
                 </div>
-                <Input id="password" type="password" autoComplete="current-password" />
-                {notice && (
-                  <FieldDescription role="status">{notice}</FieldDescription>
-                )}
+                <Input id="password" type="password" autoComplete="current-password" inputMode="text" />
+                {notice && <FieldDescription role="status" className="text-sm">{notice}</FieldDescription>}
               </Field>
               <Field>
-                <Button type="submit">Sign in</Button>
+                <Button type="submit" className="w-full">Sign in</Button>
               </Field>
             </FieldGroup>
           </form>
         </CardContent>
       </Card>
-      <details className="group px-6 text-center text-sm text-muted-foreground">
+      <details className="group px-4 text-center text-sm text-muted-foreground">
         <summary className="cursor-pointer list-none underline underline-offset-4 hover:text-foreground [&::-webkit-details-marker]:hidden">
           Demo crew emails
         </summary>
-        <ul className="mt-3 flex flex-col gap-1">
+        <ul className="mt-2 flex flex-col gap-1">
           {CREW.map((c) => (
             <li key={c.id}>
               <button
                 type="button"
-                className="hover:text-foreground"
+                className="hover:text-foreground text-left px-2 py-1 rounded"
                 onClick={() => {
                   setEmail(crewEmail(c))
                   setError("")
                 }}
               >
-                {crewEmail(c)}{" "}
-                <span className="text-muted-foreground/70">({c.role})</span>
+                {crewEmail(c)} <span className="text-muted-foreground/70">({c.role})</span>
               </button>
             </li>
           ))}
