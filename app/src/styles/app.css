@@ -4242,3 +4242,45 @@ main {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Radiation: NASA SEP Events ---------- */
+
+.sep-events {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.sep-event {
+  padding: var(--s-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--surface);
+}
+
+.sep-event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--s-2);
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.sep-event-header strong {
+  font-size: var(--t-sm);
+  color: var(--ink);
+}
+
+.sep-event-header time {
+  font-size: var(--t-xs);
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.sep-event-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  font-size: var(--t-xs);
+  color: var(--ink-soft);
+}

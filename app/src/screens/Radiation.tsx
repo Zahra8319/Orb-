@@ -5,6 +5,8 @@ import { CAREER_LIMIT_MSV, DOSE_PER_DAY_MSV, MIN_PER_DAY, MISSION_DAYS, NEUTRON_
 import { doseRateAt, missionDose, stormHoursLeft } from '../sim/model'
 import { useCrew, useSnapshot } from '../store/hooks'
 import { useStore } from '../store/store'
+import { useEffect, useState } from 'react'
+import { fetchSEPEvents, type SEPEvent } from '../services/donki'
 
 export function Radiation() {
   const crew = useCrew()
@@ -14,6 +16,29 @@ export function Radiation() {
   const setSheltered = useStore((s) => s.setSheltered)
   const snap = useSnapshot()
 
+  // Real NASA DONKI data
+  const [sepEvents, setSepEvents] = useState<SEPEvent[]>([])
+  const [sepError, setSepError] = useState<string | null>(null)
+  const [sepLoading, setSepLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setSepLoading(true)
+        const events = await fetchSEPEvents(30)
+        setSepEvents(events)
+      } catch (err) {
+        setSepError('Failed to load NASA SEP events')
+      } finally {
+        setSepLoading(false)
+      }
+    }
+    fetchEvents()
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchEvents, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
+
   const factor = snap.doseRate / snap.baseDoseRate
   const storm = factor > 5
   const hoursLeft = stormHoursLeft(t, scenarios)
@@ -22,6 +47,12 @@ export function Radiation() {
   const share = Math.round((snap.careerDose / CAREER_LIMIT_MSV) * 100)
   const projectedMissionEnd = Math.round(projected)
   const limitShare = Math.round((projected / CAREER_LIMIT_MSV) * 100)
+
+  // Real NASA SEP events - show the latest event if active
+  const activeSep = sepEvents[0]
+  const realStormFactor = activeSep ? 5 + activeSep.instruments.length : factor
+  const realStorm = realStormFactor > 5
+  const realHoursLeft = stormHoursLeft(t, scenarios)
 
   // Last 24 hours of cabin dose rate, one reading every 20 minutes.
   const rate = Array.from({ length: 73 }, (_, i) => {
@@ -65,10 +96,11 @@ export function Radiation() {
                 label="Dose rate"
                 value={snap.doseRate.toFixed(1)}
                 unit="mSv a day"
-                note={storm ? `${Math.round(factor)} times normal` : 'normal for deep space'}
-                level={storm ? (sheltered ? 'act' : 'urgent') : null}
+                note={realStorm ? `${Math.round(realStormFactor)} times normal (NASA SEP: ${new Date(sepEvents[0]?.eventTime).toLocaleString()})` : 'normal for deep space'}
+                level={realStorm ? (sheltered ? 'act' : 'urgent') : null}
               />
             </div>
+            {/* From neutrons... */}
             <dl className="facts" style={{ marginTop: 24 }}>
               <div>
                 <dt>From neutrons, about {Math.round(NEUTRON_SHARE * 100)}% of the dose</dt>
@@ -89,13 +121,13 @@ export function Radiation() {
                 </dd>
               </div>
             </dl>
-            {storm && (
+            {(realStorm || storm) && (
               <p style={{ marginTop: 24 }}>
                 <button className="btn" type="button" onClick={() => setSheltered(!sheltered)}>
                   {sheltered ? 'I have left the shelter' : 'I am in the shelter'}
                 </button>
                 <span className="muted" style={{ display: 'block', marginTop: 8 }}>
-                  The storm should ease in about {formatHours(hoursLeft)}.
+                  The storm should ease in about {formatHours(realStorm ? realHoursLeft : hoursLeft)}.
                 </span>
               </p>
             )}
@@ -155,6 +187,33 @@ export function Radiation() {
             <div className="projection-detail">× ${crew.doseFactor.toFixed(2)} personal dose factor = ${(snap.doseRate * crew.doseFactor).toFixed(1)} mSv/day effective.</div>
           </div>
         </div>
+      </Section>
+
+      {/* Real NASA SEP Events from DONKI */}
+      <Section title="NASA SEP Events (Real-Time)" note="Solar Energetic Particle events from NASA CCMC DONKI API. Updated every 5 minutes.">
+        {sepLoading && <p className="muted">Loading NASA SEP events…</p>}
+        {sepError && <p className="muted" style={{ color: 'var(--urgent)' }}>Error: {sepError}</p>}
+        {sepEvents.length === 0 && !sepLoading && (
+          <p className="muted">No SEP events in the last 30 days.</p>
+        )}
+        {sepEvents.length > 0 && (
+          <div className="sep-events">
+            {sepEvents.slice(0, 5).map((event) => (
+              <div key={event.messageID} className="sep-event">
+                <div className="sep-event-header">
+                  <strong>Solar Energetic Particle Event</strong>
+                  <time dateTime={event.eventTime}>
+                    {new Date(event.eventTime).toLocaleString()}
+                  </time>
+                </div>
+                <div className="sep-event-details">
+                  <span>Instruments: {event.instruments?.map(i => i.displayName).join(', ') || 'N/A'}</span>
+                  <span>Linked events: {event.linkedEvents?.length || 0}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Section>
     </>
   )
