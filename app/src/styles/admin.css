@@ -109,6 +109,15 @@
   scrollbar-width: none;
 }
 
+/* On a phone the tabs scroll sideways; the fade shows there are more. */
+@media (max-width: 767px) {
+  .admin-tabs {
+    -webkit-mask-image: linear-gradient(to right, #000 85%, transparent);
+    mask-image: linear-gradient(to right, #000 85%, transparent);
+    padding-right: var(--s-6);
+  }
+}
+
 .admin-tabs::-webkit-scrollbar {
   display: none;
 }

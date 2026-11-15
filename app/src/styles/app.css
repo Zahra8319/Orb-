@@ -996,9 +996,10 @@ main {
 .drawer {
   position: fixed;
   inset: 0 0 0 auto;
-  z-index: 30;
+  /* Above the phone tab bar (90) and the advisor button (100). */
+  z-index: 115;
   width: min(380px, 100vw);
-  padding: var(--s-5);
+  padding: var(--s-5) var(--s-5) calc(var(--s-5) + env(safe-area-inset-bottom));
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--bg);
@@ -1543,8 +1544,6 @@ main {
 }
 
 .mars-lessons li::before {
-  content: '01';
-  counter-increment: lesson;
   content: counter(lesson, decimal-leading-zero);
   position: absolute;
   left: 0;
@@ -1670,7 +1669,7 @@ main {
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: var(--s-4);
 }
 
@@ -3126,11 +3125,8 @@ main {
   color: var(--primary);
 }
 
+/* A sentence, so it wraps as text; flex split it into pieces. */
 .sort-note {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s-2);
   font-size: var(--t-sm);
   color: var(--ink-soft);
   margin-bottom: var(--s-4);
@@ -4432,7 +4428,7 @@ main {
 
 .nutrition-totals {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--s-3);
 }
 
@@ -4552,4 +4548,48 @@ main {
   gap: var(--s-3);
   font-size: var(--t-xs);
   color: var(--ink-soft);
+}
+
+/* ---------- Phone fixes ---------- */
+
+.glucose-readings > .muted {
+  margin: 0;
+  padding: var(--s-3);
+}
+
+@media (max-width: 767px) {
+  /* Five mood buttons on one row, clear of the advisor button. */
+  .mood-row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .mood-btn {
+    min-width: 0;
+    padding: 8px 4px;
+    font-size: var(--t-xs);
+  }
+
+  .nutrition-totals {
+    gap: var(--s-2);
+  }
+
+  .nutrition-total {
+    padding: var(--s-3) var(--s-2);
+  }
+
+  .nutrition-total-label {
+    font-size: 0.6875rem;
+  }
+
+  /* Start and End side by side, Reset across the full width under them. */
+  .eva-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .eva-controls > :nth-child(n + 3) {
+    grid-column: 1 / -1;
+  }
 }

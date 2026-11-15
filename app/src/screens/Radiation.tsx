@@ -174,7 +174,7 @@ export function Radiation() {
           <div className="projection-card">
             <div className="projection-label">Career limit usage</div>
             <div className="projection-value">{limitShare}%</div>
-            <div className="projection-detail">Of the ${CAREER_LIMIT_MSV} mSv NASA career limit.</div>
+            <div className="projection-detail">Of the {CAREER_LIMIT_MSV} mSv NASA career limit.</div>
           </div>
           <div className="projection-card">
             <div className="projection-label">Remaining margin</div>
@@ -184,7 +184,7 @@ export function Radiation() {
           <div className="projection-card">
             <div className="projection-label">Daily dose rate</div>
             <div className="projection-value">{snap.doseRate.toFixed(1)} mSv/day</div>
-            <div className="projection-detail">× ${crew.doseFactor.toFixed(2)} personal dose factor = ${(snap.doseRate * crew.doseFactor).toFixed(1)} mSv/day effective.</div>
+            <div className="projection-detail">× {crew.doseFactor.toFixed(2)} personal dose factor = {(snap.doseRate * crew.doseFactor).toFixed(1)} mSv/day effective.</div>
           </div>
         </div>
       </Section>

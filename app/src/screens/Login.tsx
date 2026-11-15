@@ -100,7 +100,7 @@ export function Login() {
             <span className="flex size-7 items-center justify-center rounded-full bg-nasa-blue text-white ring-1 ring-white/25">
               <Orbit className="size-4" aria-hidden="true" />
             </span>
-            Orb<span className="wordmark-plus">+</span>
+            <span>Orb<span className="wordmark-plus">+</span></span>
           </a>
           <LoginForm
             onSignIn={(crewId) => {

@@ -261,6 +261,12 @@ export function EVA() {
 
   const getMetricStatus = (key: keyof typeof METRIC_THRESHOLDS, value: number) => {
     const th = METRIC_THRESHOLDS[key]
+    // Suit O2 and pressure are dangerous when they fall, so their danger limit sits below warn.
+    if (th.danger < th.warn) {
+      if (value <= th.danger) return 'danger'
+      if (value <= th.warn) return 'warn'
+      return 'nominal'
+    }
     if (value >= th.danger) return 'danger'
     if (value >= th.warn) return 'warn'
     return 'nominal'
@@ -373,7 +379,6 @@ export function EVA() {
               ].map((m) => (
                 <Readout
                   key={m.key}
-                  big={m.key === 'heartRate' || m.key === 'coreTemp' || m.key === 'suitCO2'}
                   label={m.label}
                   value={<span key={String(m.value)} className="metric-flash">{m.value}</span>}
                   unit={m.unit}

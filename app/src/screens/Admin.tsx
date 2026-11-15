@@ -433,7 +433,11 @@ export function Admin() {
               aria-selected={activeTab === tab.id}
               aria-controls={`panel-${tab.id}`}
               className={`admin-tab ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={(e) => {
+                setActiveTab(tab.id)
+                // On a phone the tab row scrolls; keep the chosen tab in view.
+                e.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+              }}
             >
               {tab.label}
               {tab.count !== undefined && <span className="admin-tab-count">{tab.count}</span>}
@@ -472,7 +476,9 @@ export function Admin() {
                           <div className="mission-card-head">
                             <div>
                               <CardTitle>{mission.name}</CardTitle>
-                              <CardDescription>{mission.program} &bull; {mission.destination}</CardDescription>
+                              <CardDescription>
+                                {mission.program === mission.destination ? mission.program : <>{mission.program} &bull; {mission.destination}</>}
+                              </CardDescription>
                             </div>
                             <span className={`mission-status ${mission.status}`}>{prettify(mission.status)}</span>
                           </div>

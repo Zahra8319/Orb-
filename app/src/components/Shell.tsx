@@ -313,7 +313,8 @@ export function Shell() {
       )}
 
       {drawer && <DemoDrawer onClose={() => setDrawer(false)} />}
-      <AIAdvisor />
+      {/* On a phone the advisor button would sit on the game, where you swipe. */}
+      <AIAdvisor hideTrigger={isPhone && location.pathname.startsWith('/games/play/')} />
     </>
   )
 }
