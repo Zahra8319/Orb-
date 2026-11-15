@@ -23,6 +23,43 @@
   padding: 18px clamp(20px, 7vw, 112px);
 }
 
+.landing-nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 3vw, 28px);
+}
+
+/* Mission Control is the Earth-side console, so it reads as a quieter link beside Sign in. */
+.landing-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  color: #c9d4e8;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  text-decoration: none;
+  text-shadow: 0 1px 12px rgb(2 8 22 / 0.8);
+  transition: color 0.2s ease;
+}
+
+.landing-link:hover {
+  color: var(--white);
+}
+
+.landing-more-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* On a phone the link keeps its icon and short name so it fits beside Sign in. */
+@media (max-width: 480px) {
+  .landing-link {
+    font-size: var(--t-xs);
+  }
+}
+
 .landing-mark {
   display: inline-flex;
   align-items: center;

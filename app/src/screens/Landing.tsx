@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Orbit } from 'lucide-react'
+import { ArrowRight, Orbit, Satellite } from 'lucide-react'
 
 import { useSession } from '@/store/session'
 
@@ -261,9 +261,15 @@ export function Landing() {
             Orb<span className="wordmark-plus">+</span>
           </span>
         </Link>
-        <Link to={cta.to} className="landing-btn landing-btn--ghost">
-          {cta.label}
-        </Link>
+        <nav className="landing-nav" aria-label="Front page">
+          <Link to="/admin" className="landing-link">
+            <Satellite size={16} aria-hidden="true" />
+            Mission Control
+          </Link>
+          <Link to={cta.to} className="landing-btn landing-btn--ghost">
+            {cta.label}
+          </Link>
+        </nav>
       </header>
 
       <main>
@@ -361,10 +367,16 @@ export function Landing() {
               <dd>Simulated telemetry and scripted scenarios show how Orb+ reacts when something changes.</dd>
             </div>
           </dl>
-          <Link to={cta.to} className="landing-btn">
-            {cta.label}
-            <ArrowRight size={18} aria-hidden="true" />
-          </Link>
+          <div className="landing-more-actions">
+            <Link to={cta.to} className="landing-btn">
+              {cta.label}
+              <ArrowRight size={18} aria-hidden="true" />
+            </Link>
+            <Link to="/admin" className="landing-btn landing-btn--ghost">
+              <Satellite size={18} aria-hidden="true" />
+              Open Mission Control
+            </Link>
+          </div>
           <p className="landing-foot">A NASA Space Apps 2026 project. Hero footage is AI generated.</p>
         </section>
       </main>
