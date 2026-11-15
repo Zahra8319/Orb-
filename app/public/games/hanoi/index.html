@@ -443,6 +443,7 @@
     if (rec) { store.best[String(n)] = moves; saveStore(); }
     endKey = 'hanoi.over';
     endStats = { level: levelIdx + 1, n: n, moves: moves, par: par, stars: stars, best: bestFor(n), record: rec };
+    if (window.OrbBridge) OrbBridge.result(levelIdx + 1, n + ' disks in ' + moves + ' moves');
     refreshHud();
     refreshStatus();
     refreshOver();

@@ -137,6 +137,7 @@
   }
 </style>
 <script src="../i18n.js"></script>
+<script src="../orb-bridge.js"></script>
 </head>
 <body>
 
@@ -353,6 +354,7 @@
       try { localStorage.setItem(BEST_KEY, String(best)); } catch (e) {}
     }
     document.getElementById('new-record').classList.toggle('hidden', !rec);
+    if (window.OrbBridge) OrbBridge.result(reached, 'Sequence of ' + reached);
     refreshAll();
     overOverlay.classList.remove('hidden');
     sfx.bad();

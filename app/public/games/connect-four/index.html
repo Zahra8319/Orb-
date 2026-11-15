@@ -121,6 +121,7 @@
   }
 </style>
 <script src="../i18n.js"></script>
+<script src="../orb-bridge.js"></script>
 </head>
 <body>
 
@@ -403,10 +404,12 @@
   function chooseMove() {
     var cols = validCols(cells);
     if (!cols.length) return -1;
-    if (Math.random() < RANDOM_CHANCE[mode]) {
+    // Orb assist (0-3): more random moves and a shallower search after a run of losses.
+    var assist = window.OrbBridge ? OrbBridge.assist : 0;
+    if (Math.random() < RANDOM_CHANCE[mode] + assist * 0.2) {
       return cols[Math.floor(Math.random() * cols.length)];
     }
-    var depth = DEPTH[mode];
+    var depth = Math.max(1, DEPTH[mode] - assist);
     var bestScore = -Infinity, bestCols = [];
     for (var i = 0; i < cols.length; i++) {
       var c = cols[i];
@@ -466,6 +469,10 @@
       sfx.draw();
     }
     saveScores();
+    if (window.OrbBridge) {
+      var you = win && win.p === HUMAN;
+      OrbBridge.result(you ? 1 : win ? 0 : 0.5, (you ? 'Win' : win ? 'Loss' : 'Draw') + ', ' + mode);
+    }
     renderScore();
     renderBoard();                      // repaint the discs first…
     var cols = boardEl.querySelectorAll('.col');

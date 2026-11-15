@@ -137,6 +137,7 @@
   }
 </style>
 <script src="../i18n.js"></script>
+<script src="../orb-bridge.js"></script>
 </head>
 <body>
 
@@ -515,6 +516,7 @@
     var rec = false;
     if (!best[size] || moves < best[size]) { best[size] = moves; rec = true; saveBest(); }
     endStats = { moves: moves, par: par, stars: st };
+    if (window.OrbBridge) OrbBridge.result(1, size + '×' + size + ' in ' + moves + ' moves');
     sfx.win();
     document.getElementById('new-record').classList.toggle('hidden', !rec);
     refreshAll();

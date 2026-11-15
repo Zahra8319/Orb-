@@ -165,6 +165,7 @@
   }
 </style>
 <script src="../i18n.js"></script>
+<script src="../orb-bridge.js"></script>
 </head>
 <body>
 
@@ -686,6 +687,7 @@
     endKey = 'nonogram.over';
     var stars = mistakes === 0 ? 3 : mistakes <= 3 ? 2 : 1;
     endStats = { level: level, time: time, mistakes: mistakes, stars: stars };
+    if (window.OrbBridge) OrbBridge.result(level, 'Level ' + level + ', ' + mistakes + ' mistakes');
     var rec = level > store.best;
     if (rec) { store.best = level; saveStore(); }
     if (level > store.level && level < TOTAL_LEVELS) { store.level = level + 1; saveStore(); }
