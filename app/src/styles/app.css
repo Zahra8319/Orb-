@@ -3795,21 +3795,121 @@ main {
   animation: spin 1s linear infinite;
 }
 
-/* Ensure the panel stays above the shell */
-@media (max-width: 480px) {
-  .ai-panel {
-    right: 0;
-    left: 0;
-    max-width: none;
-    bottom: 0;
-    border-radius: 4px 4px 0 0;
-    max-height: 70vh;
-  }
+/* Phone: a round button above the tab bar, and a full-screen conversation. */
+@media (max-width: 767px) {
   .ai-trigger {
     right: var(--s-4);
-    left: var(--s-4);
+    bottom: calc(60px + env(safe-area-inset-bottom) + var(--s-4));
+    width: 56px;
+    height: 56px;
+    padding: 0;
     justify-content: center;
-    bottom: var(--s-4);
+    border: none;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 0 10px 24px -8px rgb(6 31 74 / 0.55);
+  }
+
+  .ai-trigger .ai-offline-badge {
+    display: none;
+  }
+
+  .ai-trigger .ai-pulse {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--bg);
+  }
+
+  .ai-panel {
+    inset: 0;
+    z-index: 120;
+    max-width: none;
+    max-height: none;
+    height: 100dvh;
+    border: none;
+    border-radius: 0;
+    padding-top: env(safe-area-inset-top);
+    animation: sheet-up 240ms var(--ease-out) both;
+  }
+
+  .ai-header {
+    min-height: 56px;
+    padding: var(--s-2) var(--s-2) var(--s-2) var(--s-4);
+  }
+
+  .ai-title-row {
+    font-size: 1rem;
+  }
+
+  .ai-close {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+  }
+
+  .ai-messages {
+    padding: var(--s-4);
+    gap: var(--s-4);
+  }
+
+  .ai-welcome {
+    text-align: left;
+    padding: var(--s-2) 0;
+    font-size: var(--t-base);
+  }
+
+  /* One swipeable row of suggestions instead of a wrapped block. */
+  .ai-chips {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    margin: 0 calc(-1 * var(--s-4));
+    padding: 0 var(--s-4) var(--s-1);
+    scrollbar-width: none;
+  }
+
+  .ai-chip {
+    flex: none;
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: var(--t-sm);
+  }
+
+  .ai-message {
+    max-width: 92%;
+  }
+
+  .ai-message.system {
+    max-width: 100%;
+  }
+
+  .ai-bubble {
+    font-size: var(--t-base);
+    padding: var(--s-3);
+    border-radius: 14px;
+  }
+
+  .ai-input-row {
+    padding: var(--s-3) var(--s-4) calc(var(--s-3) + env(safe-area-inset-bottom));
+  }
+
+  /* 16px or larger keeps iOS from zooming in when the field is tapped. */
+  .ai-input-row input {
+    min-height: 48px;
+    font-size: 16px;
+    border-radius: 24px;
+    padding: 0 var(--s-4);
+  }
+
+  .ai-input-row button {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    flex: none;
   }
 }
 
@@ -3902,21 +4002,46 @@ main {
   }
 }
 
-/* ---------- Nav: mobile More dropdown + commander smaller tabs ---------- */
+/* ---------- Nav: More menu (tablet, desktop) and tab bar (phone) ---------- */
 
-.nav {
+.nav-wrap {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  flex: 1;
+  min-width: 0;
 }
 
+.nav-wrap .nav {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* A hidden copy of every tab label, measured to decide how many tabs fit. */
+.nav-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+}
+
+.nav-measure span {
+  white-space: nowrap;
+  font-weight: 650;
+}
+
+@media (max-width: 1024px) {
+  .nav-measure span {
+    font-size: var(--t-sm);
+  }
+}
+
+/* Outside the scrolling tab strip, so its menu is not clipped. */
 .nav-more {
   position: relative;
-  display: none;
-}
-
-@media (max-width: 767px) {
-  .nav-more {
-    display: inline-flex;
-  }
+  flex: none;
 }
 
 .nav-more-trigger {
@@ -3934,24 +4059,14 @@ main {
   transition: border-color var(--dur-fast), background var(--dur-fast);
 }
 
-.nav-more-trigger:hover {
+.nav-more-trigger:hover,
+.nav-more-trigger.is-current {
   border-color: var(--primary);
-  background: var(--bg);
 }
 
 .nav-more-trigger:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
-}
-
-.nav-more-label {
-  display: none;
-}
-
-@media (min-width: 480px) {
-  .nav-more-label {
-    display: inline;
-  }
 }
 
 .nav-more-trigger .open {
@@ -3962,38 +4077,33 @@ main {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  min-width: 180px;
+  min-width: 200px;
   border: 1px solid var(--rule-strong);
   border-radius: 2px;
-  background: var(--surface);
+  background: var(--bg);
   box-shadow: 0 12px 24px -12px rgb(6 31 74 / 0.45);
   z-index: 50;
   overflow: hidden;
   animation: rise-in 200ms var(--ease-out) both;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .nav-more-panel { animation: none; }
-}
-
 .nav-more-item {
   display: block;
-  width: 100%;
   padding: 12px 16px;
-  border: none;
-  background: transparent;
   color: var(--ink);
   font-size: var(--t-sm);
   font-weight: 600;
-  text-align: left;
-  cursor: pointer;
+  text-decoration: none;
   transition: background var(--dur-fast);
 }
 
-.nav-more-item:hover,
-.nav-more-item:focus {
-  background: var(--bg);
-  outline: none;
+.nav-more-item:hover {
+  background: var(--surface);
+}
+
+.nav-more-item[aria-current='page'] {
+  color: var(--primary);
+  box-shadow: inset 3px 0 0 var(--primary);
 }
 
 .nav-more-item:focus-visible {
@@ -4001,23 +4111,182 @@ main {
   outline-offset: -3px;
 }
 
-/* Commander: smaller tab font so Command fits */
+/* Tablet: smaller tabs so six fit beside the wordmark. */
 @media (max-width: 1024px) {
   .nav a {
     font-size: var(--t-sm);
-    padding: 8px 10px;
   }
 }
 
-/* Ensure the more trigger matches tab height */
-@media (max-width: 1024px) {
-  .nav-more-trigger {
-    font-size: var(--t-sm);
-    padding: 8px 10px;
+/* Phone: the top bar is just the wordmark; navigation sits at the bottom, under the thumb. */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--rule-strong);
+  background: var(--bg);
+  box-shadow: 0 -8px 24px -16px rgb(6 31 74 / 0.35);
+}
+
+.tabbar-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 60px;
+  padding: 6px 2px;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tabbar-item[aria-current='page'],
+.tabbar-item.is-current {
+  color: var(--primary);
+}
+
+.tabbar-item[aria-current='page']::before,
+.tabbar-item.is-current::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 22%;
+  right: 22%;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--primary);
+}
+
+.tabbar-item:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  /* Above the advisor button (100), below the open advisor (120). */
+  z-index: 110;
+  display: flex;
+  align-items: flex-end;
+  background: rgb(2 8 22 / 0.5);
+  animation: fade-in 160ms ease-out both;
+}
+
+.sheet {
+  width: 100%;
+  max-height: 85dvh;
+  overflow-y: auto;
+  padding: var(--s-2) var(--s-4) calc(var(--s-5) + env(safe-area-inset-bottom));
+  border-radius: 16px 16px 0 0;
+  background: var(--bg);
+  box-shadow: 0 -20px 40px -20px rgb(6 31 74 / 0.5);
+  animation: sheet-up 240ms var(--ease-out) both;
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+}
+
+.sheet-head h2 {
+  margin: 0;
+  font-size: var(--t-lg);
+}
+
+.sheet-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-2);
+}
+
+.sheet-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 88px;
+  padding: var(--s-3) var(--s-2);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+}
+
+.sheet-item svg {
+  color: var(--primary);
+}
+
+.sheet-item[aria-current='page'] {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
 
+@media (max-width: 767px) {
+  .topbar-inner {
+    min-height: 56px;
+    padding-top: 0;
+  }
+
+  /* Room under the last content for the tab bar and the advisor button. */
+  body:has(.tabbar) {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom) + 72px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-more-panel,
+  .sheet,
+  .sheet-backdrop {
+    animation: none;
+  }
+}
 
 .glucose-section,
 .nutrition-section {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { Fragment, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { X, Stethoscope, AlertTriangle, CheckCircle, Loader2, WifiOff, Zap, Send } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { useAlerts } from '../store/hooks'
@@ -160,6 +160,17 @@ interface Message {
   source?: 'protocol' | 'groq' | 'offline'
 }
 
+/** Shows **bold** as bold. Everything else stays plain text, line breaks kept. */
+function rich(text: string): ReactNode {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith('**') && part.endsWith('**') && part.length > 4 ? (
+      <strong key={i}>{part.slice(2, -2)}</strong>
+    ) : (
+      <Fragment key={i}>{part}</Fragment>
+    ),
+  )
+}
+
 async function askGroq(question: string, alerts: Alert[]): Promise<string> {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
   if (!apiKey) throw new Error('No Groq API key')
@@ -196,6 +207,23 @@ export function AIAdvisor() {
   const alerts = useAlerts()
 
   const [open, setOpen] = useState(false)
+
+  // Escape closes the advisor. On a phone it fills the screen, so the page
+  // behind it stops scrolling while it is open.
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    const phone = window.matchMedia('(max-width: 767px)').matches
+    const prev = document.body.style.overflow
+    if (phone) document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [open])
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [thinking, setThinking] = useState(false)
@@ -323,7 +351,7 @@ export function AIAdvisor() {
 
       {/* Panel */}
       {open && (
-        <div className="ai-panel" role="dialog" aria-label="Orb Medical Advisor">
+        <div className="ai-panel" role="dialog" aria-modal="true" aria-label="Orb Medical Advisor">
           <div className="ai-header">
             <div className="ai-title-row">
               <Stethoscope size={18} aria-hidden="true" />
@@ -347,7 +375,7 @@ export function AIAdvisor() {
                 {!groqAvailable && (
                   <p className="ai-offline-note">
                     <WifiOff size={14} aria-hidden="true" />
-                    Onboard protocols only. Add <code>VITE_GROQ_API_KEY</code> for AI answers to other questions.
+                    <span>Onboard protocols only. AI answers are off; set <code>VITE_GROQ_API_KEY</code> to turn them on.</span>
                   </p>
                 )}
                 <div className="ai-chips">
@@ -363,7 +391,7 @@ export function AIAdvisor() {
               <div key={i} className={`ai-message ${msg.role}`}>
                 {msg.role === 'system' && <span className="ai-system-badge">URGENT</span>}
                 <div className={`ai-bubble ${msg.source === 'groq' ? 'ai-bubble-groq' : msg.source === 'offline' ? 'ai-bubble-offline' : ''}`}>
-                  {msg.content}
+                  {rich(msg.content)}
                 </div>
                 {msg.protocol && (
                   <div className="ai-protocol-ref">
@@ -387,11 +415,11 @@ export function AIAdvisor() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="Describe symptoms, paste alert, or ask a question…"
+              placeholder="Describe symptoms or an alert…"
               aria-label="Medical question"
               disabled={thinking}
             />
-            <Button onClick={() => handleSend(input)} disabled={!input.trim() || thinking} size="icon" aria-label={thinking ? 'Sending…' : 'Send message'}>
+            <Button onClick={() => handleSend(input)} disabled={!input.trim() || thinking} size="icon" className="max-md:size-12 max-md:rounded-full" aria-label={thinking ? 'Sending…' : 'Send message'}>
               {thinking ? (
                 <Loader2 size={16} className="spin" aria-hidden="true" />
               ) : (
