@@ -5,6 +5,7 @@ import { Orbit } from 'lucide-react'
 import { LoginForm } from '@/components/login-form'
 import { ShootingStars, type HoleCamera } from '@/components/ShootingStars'
 import { BlackHoleHeroSection } from '@/components/ui/blackhole-hero-section'
+import { MobileHeroSlideshow } from '@/components/MobileHeroSlideshow'
 import { useSession } from '@/store/session'
 
 /** True while the viewport is narrow. Drives the layout swap below. */
@@ -21,16 +22,13 @@ function useNarrow(query = '(max-width: 767px)') {
 }
 
 /**
- * Sign-in, set over a ray-traced black hole.
+ * Sign-in: black hole on desktop, lightweight image slideshow on mobile.
  *
- * Wide screens: the form on the left under a veil, the hole to the right.
- * Phones: the form on top, the hole low in the frame, veil from the top,
- * and fewer ray steps because a phone pays for every one.
- * The disc keeps the component's own warm palette: white-hot rim, orange, ember.
+ * Desktop: form left under veil, hole right.
+ * Mobile: form top, pre-rendered image slideshow below (60fps, no ray-tracing).
  */
 export function Login() {
   const narrow = useNarrow()
-  const veryNarrow = useNarrow('(max-width: 480px)')
   const signedIn = useSession((s) => s.crewId)
   const signIn = useSession((s) => s.signIn)
   const navigate = useNavigate()
@@ -46,37 +44,56 @@ export function Login() {
 
   if (signedIn) return <Navigate to={from} replace />
 
-  // One camera for the black hole and the meteors it bends, so they line up.
+  // Mobile slideshow frames (pre-rendered, lightweight)
+  const mobileFrames = [
+    '/hero/sm/f-001.webp',
+    '/hero/sm/f-015.webp',
+    '/hero/sm/f-030.webp',
+    '/hero/sm/f-045.webp',
+    '/hero/sm/f-060.webp',
+  ]
+
+  // Desktop black hole camera
   const camera: HoleCamera = {
-    focus: narrow ? [0.5, 0.9] : [0.7, 0.48],
-    fov: narrow ? 60 : 42,
+    focus: [0.7, 0.48],
+    fov: 42,
     distance: 24,
   }
 
   return (
     <div className="orb-ui orb-night fixed inset-0 overflow-y-auto bg-black font-sans text-foreground">
-      {/* Black hole hero - reduced quality on mobile for performance */}
-      <BlackHoleHeroSection
-        className="fixed! inset-0"
-        focus={camera.focus}
-        scrim={narrow ? 'top' : 'left'}
-        scrimStrength={veryNarrow ? 0.75 : narrow ? 0.88 : 0.92}
-        distance={camera.distance}
-        elevation={veryNarrow ? -9 : narrow ? -7 : -5.5}
-        fov={camera.fov}
-        glow={veryNarrow ? 0.7 : narrow ? 0.85 : 1}
-        steps={veryNarrow ? 120 : narrow ? 200 : 300}
-        resolution={veryNarrow ? 0.5 : narrow ? 0.6 : 0.7}
-        starBrightness={veryNarrow ? 0.5 : narrow ? 0.7 : 0.8}
-        spinSpeed={0.09}
-      />
-
-      {/* Shooting stars - disabled on very narrow for performance */}
-      {!veryNarrow && (
-        <ShootingStars className="z-[1]" every={narrow ? 1.2 : 0.7} hole={camera} />
+      {/* Desktop: Black hole hero */}
+      {!narrow && (
+        <>
+          <BlackHoleHeroSection
+            className="fixed! inset-0"
+            focus={camera.focus}
+            scrim="left"
+            scrimStrength={0.92}
+            distance={camera.distance}
+            elevation={-5.5}
+            fov={camera.fov}
+            glow={1}
+            steps={300}
+            resolution={0.7}
+            starBrightness={0.8}
+            spinSpeed={0.09}
+          />
+          <ShootingStars className="z-[1]" every={0.7} hole={camera} />
+        </>
       )}
 
-      <main className="relative z-10 flex min-h-svh flex-col items-center justify-start gap-6 p-4 pt-10 pb-20 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)] md:items-start md:justify-center md:p-8 lg:pl-16">
+      {/* Mobile: Image slideshow (lightweight, 60fps) */}
+      {narrow && (
+        <MobileHeroSlideshow
+          images={mobileFrames}
+          interval={7000}
+          pauseOnHover={true}
+          className="fixed inset-0 -z-10"
+        />
+      )}
+
+      <main className="relative z-10 flex min-h-svh flex-col items-center justify-start gap-4 p-4 pt-10 pb-20 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)] md:items-start md:justify-center md:p-8 lg:pl-16">
         <div className="flex w-full max-w-sm flex-col gap-4">
           <a
             href="/"
