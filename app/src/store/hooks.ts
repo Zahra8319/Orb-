@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useCallback } from 'react'
+import { useEffect, useMemo } from 'react'
 import { reactionForDay, type DayReaction } from '../games/health'
 import type { GamePlay } from '../games/types'
 import { evaluate, type Alert } from '../rules/alerts'
 import { crewById, type Crew } from '../sim/crew'
 import { dayOf, minuteOfDay } from '../sim/mission'
 import { dayRecord, snapshot, usualWake, type Snapshot } from '../sim/model'
-import { useStore } from './store'
+import { useStore, type Message } from './store'
 import { userInputFor } from './userInput'
 
 export function useCrew(): Crew {
@@ -146,54 +146,18 @@ export function useAddNutrition() {
   return useStore((s) => s.addNutrition)
 }
 
-/** Messages for a specific crew member (for admin view). */
-export function useCrewMessages(crewId: string) {
+/**
+ * One crew member's thread as Mission Control sees it on Earth: messages from
+ * the ship once they have crossed the gap, and everything Earth has sent.
+ */
+export function useEarthThread(crewId: string): Message[] {
   const messages = useStore((s) => s.messages)
   const t = useStore((s) => s.t)
   return useMemo(
     () =>
       messages
-        .filter((m) => m.crewId === crewId && m.arrivesAt <= t)
+        .filter((m) => m.crewId === crewId && (m.from === 'me' ? t >= m.arrivesAt : t >= m.sentAt))
         .sort((a, b) => a.sentAt - b.sentAt),
-    [messages, crewId, t]
+    [messages, crewId, t],
   )
-}
-
-/** All messages for admin (with crew names). */
-export function useAllMessages() {
-  const messages = useStore((s) => s.messages)
-  const t = useStore((s) => s.t)
-  return useMemo(
-    () =>
-      messages
-        .filter((m) => m.arrivesAt <= t)
-        .sort((a, b) => a.sentAt - b.sentAt),
-    [messages, t]
-  )
-}
-
-/** Send a message from admin to crew. */
-export function useSendAdminMessage() {
-  return useStore((s) => s.sendAdminMessage)
-}
-
-/** Send a message from crew to admin (for crew). */
-export function useSendToAdmin() {
-  const crewId = useStore((s) => s.crewId)
-  return useCallback((text: string) => {
-    const trimmed = text.trim()
-    if (!trimmed) return
-    const t = useStore.getState().t
-    const nextId = useStore.getState().messages.reduce((m, x) => Math.max(m, x.id), 0) + 1
-    const msg = {
-      id: nextId,
-      crewId,
-      from: 'me' as const,
-      text: trimmed,
-      sentAt: t,
-      arrivesAt: t,
-      toCrewId: 'admin',
-    }
-    useStore.setState((s) => ({ messages: [...s.messages, msg] }))
-  }, [])
 }

@@ -203,9 +203,9 @@ export function SleepMind() {
           </div>
         </dl>
         <p style={{ marginTop: 16 }}>
-          <Link className="link" to="/games/reaction">Play Reaction Rush</Link>
+          <Link className="link" to="/games/play/reaction">Play Reaction Rush</Link>
           {'  ·  '}
-          <Link className="link" to="/games/simon-says">Play Simon Says</Link>
+          <Link className="link" to="/games/play/simon-says">Play Simon Says</Link>
         </p>
       </Section>
     </>

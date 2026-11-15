@@ -21,6 +21,11 @@ function useNarrow(query = '(max-width: 767px)') {
   return narrow
 }
 
+/** Mobile slideshow frames, compressed to WebP in public/hero/mobile/. */
+const MOBILE_FRAMES = ['mobile-astro', 'dyson', 'iss069e018537-1', 'cipher-spacewalk'].map(
+  (name) => `${import.meta.env.BASE_URL}hero/mobile/${name}.webp`,
+)
+
 /**
  * Sign-in: black hole on desktop, lightweight image slideshow on mobile.
  *
@@ -44,13 +49,6 @@ export function Login() {
 
   if (signedIn) return <Navigate to={from} replace />
 
-  // Mobile slideshow frames (your 4 images)
-  const mobileFrames = [
-    '/hero/mobile/mobile-astro.jpg',
-    '/hero/mobile/dyson.png',
-    '/hero/mobile/iss069e018537-1.jpg',
-    '/hero/mobile/cipher-spacewalk.png',
-  ]
 
   // Desktop black hole camera
   const camera: HoleCamera = {
@@ -85,7 +83,7 @@ export function Login() {
       {/* Mobile: Image slideshow (lightweight, 60fps) */}
       {narrow && (
         <MobileHeroSlideshow
-          images={mobileFrames}
+          images={MOBILE_FRAMES}
           interval={7000}
           pauseOnHover={true}
           className="fixed inset-0 -z-10"

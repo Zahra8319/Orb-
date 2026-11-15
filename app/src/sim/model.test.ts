@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CREW } from './crew'
+import { CREW, crewById } from './crew'
 import { MIN_PER_DAY, START_MIN, commsDelaySec, dayOf, formatDelay, minuteOfDay } from './mission'
 import {
   activityAt,
@@ -110,6 +110,11 @@ describe('vitals', () => {
   it('flags an irregular rhythm only when that scenario is running', () => {
     expect(vitalsAt(crew, now, NO_SCENARIOS).irregular).toBe(false)
     expect(vitalsAt(crew, now + 1, { ...NO_SCENARIOS, 'irregular-heart': now }).irregular).toBe(true)
+  })
+  it('gives the arrhythmia case to its patient, the commander, and no one else', () => {
+    const sc = { ...NO_SCENARIOS, arrhythmia: now }
+    expect(vitalsAt(crewById('okafor'), now + 1, sc).irregular).toBe(true)
+    expect(vitalsAt(crewById('lindqvist'), now + 1, sc).irregular).toBe(false)
   })
 })
 

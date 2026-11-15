@@ -1,6 +1,6 @@
 # Orb+
 
-**A personal health monitor for astronauts on the way to Mars.**
+**A personal health monitor for astronauts on long deep-space missions.**
 
 Orb+ is our entry for the NASA Space Apps 2026 challenge
 [*Create Health Monitoring Software for Astronauts on Space Missions*](https://www.spaceappschallenge.org/2026/challenges/health-monitoring-software/).
@@ -9,7 +9,7 @@ one calm view. When something drifts, Orb says what it saw and what to do, becau
 by radio.
 
 > Orb+ is a prototype. Every reading is simulated in the browser; there is no backend, no real sensor data, and it is
-> not a medical device.
+> not a medical device. The optional AI advisor is the only part that talks to an outside service.
 
 ## Try it
 
@@ -19,11 +19,14 @@ npm ci
 npm run dev        # http://localhost:5173
 ```
 
-- **Front page:** `http://localhost:5173/#/welcome`, a scroll-driven hero that leads to sign-in.
+- **Front page:** `http://localhost:5173/welcome`, a scroll-driven hero that leads to sign-in.
 - **Sign in:** pick one of the demo crew on the sign-in screen. The password is not checked.
-- **Mission Control:** `http://localhost:5173/#/admin`, the Earth-side roster of missions and crew.
-- **Demo controls:** the button in the footer of every crew screen. Speed up time, pause it, reset the demo, and
-  trigger events such as a solar storm, a CO2 scrubber fault or an irregular heart rhythm to see the alerts respond.
+- **Mission Control:** `http://localhost:5173/admin`, the Earth side: missions, crew roster, and messages with each
+  crew member that cross the same radio delay as everything else.
+- **Demo controls:** the button in the footer of every crew screen. Speed up time, reset the demo, and start events
+  to see the alerts respond: a solar storm, a CO2 scrubber fault, an irregular heart rhythm, a week of short sleep or
+  missed exercise. The clinical case files (appendicitis, kidney stone and others) are there too; they add a full
+  write-up for training but do not change the readings.
 
 | Demo crew | Email | Role |
 |---|---|---|
@@ -32,7 +35,7 @@ npm run dev        # http://localhost:5173
 | Sofia Reyes | `sofia.reyes@orb.mission` | Medical officer |
 | Kenji Tanaka | `kenji.tanaka@orb.mission` | Mission scientist |
 
-The mission is a 210-day Mars transit with a crew of four. Each person has their own baselines (resting heart rate,
+The mission is a 210-day deep-space transit with a crew of four. Each person has their own baselines (resting heart rate,
 sleep need, reaction time, prior radiation dose), so the same day looks different for each of them.
 
 ## What is inside
@@ -42,16 +45,17 @@ The screens follow NASA's five hazards of human spaceflight.
 | Screen | NASA hazard | What it shows |
 |---|---|---|
 | Today | All five | A 24-hour day ring, live vitals and ECG, what needs you today, trends since launch |
-| Body | Gravity fields | Exercise against the plan, estimated bone and muscle change, resting heart rate, eye checks |
+| Body | Gravity fields | Blood glucose and nutrition logs, exercise against the plan, estimated bone and muscle change, resting heart rate, eye checks |
 | Sleep and mind | Isolation and confinement | Sleep and sleep owed, body clock, a daily mood check-in, a reaction-time test, readings from games |
 | Radiation | Space radiation | Career dose against the 600 mSv limit, cabin dose rate, storm shelter guidance |
-| Ship and Earth | Hostile environments, distance from Earth | Cabin air, the radio delay to Earth |
+| Ship and Earth | Hostile environments, distance from Earth | Cabin air, the radio delay, messages with the flight surgeon and Mission Control |
 | Consult Earth | Distance from Earth | Medical questions to the flight surgeon, answered after the light-time delay |
 | EVA Monitor | Hostile environments | Pre-spacewalk checklist, live suit physiology, abort criteria |
-| Scenarios | — | Inject clinical and environmental events for training or a demo |
+| Scenarios | — | Start live events (they change readings and alerts) or open clinical case files for training |
 | Games | Isolation and confinement | Ten short games for breaks between tasks |
 | Command | — | The commander's view of all four crew, most urgent first |
 | Sources | — | The NASA and CSA pages behind what Orb measures |
+| Orb Medical | — | The button on every crew screen: onboard protocols matched to your alerts, plus optional AI answers |
 
 **Games.** Reaction Rush and Simon Says also count toward Sleep and mind as reaction and memory readings. Games you can
 lose ease off after a losing streak and harden again as you win; see
@@ -67,7 +71,12 @@ lose ease off after a losing streak and harden again as you win; see
   to take. A crew member's own entries (reaction tests, eye checks, the storm shelter switch) feed their alerts, on
   their own screens and on Command alike.
 - **Saved in the browser.** The demo survives a page reload: mission clock, scenarios, test results, game rounds,
-  moods and messages. "Reset demo" clears it.
+  moods, glucose and nutrition logs, messages and each crew member's consultations. "Reset demo" clears it.
+- **Orb Medical** (`app/src/components/AIAdvisor.tsx`). Matches your alerts and what you type to onboard protocols,
+  with no network needed. With `VITE_GROQ_API_KEY` set in `app/.env` it also asks a Groq-hosted model about anything
+  the protocols do not cover, and labels those answers as AI-generated. Vite builds that key into the JavaScript sent
+  to every visitor, so use it for local demos only and leave it unset on a public deployment.
+- **Installable.** A web app manifest lets the app be added to a home screen.
 - **Charts** (`app/src/charts/`) are hand-built SVG, each with a table view for screen readers.
 - **Design.** NASA blue `#0B3D91`, NASA red `#FC3D21`, white and grey, in `app/src/styles/tokens.css`. Red is kept
   for urgent alerts.
@@ -81,7 +90,8 @@ Built with React 19, TypeScript, Vite, Tailwind CSS, Zustand and d3-shape; teste
 | [`app/`](app/) | The Orb+ web app ([app README](app/README.md)) |
 | [`space-health-resources/`](space-health-resources/) | Material scraped from the challenge's Resources tab and the NASA/CSA pages it links to (about 127 MB) |
 | [`scripts/spaceapps-scraper/`](scripts/spaceapps-scraper/) | The scraper that collected it |
-| [`vercel.json`](vercel.json) | Deploy settings: installs and builds in `app/`, serves `app/dist` |
+| [`vercel.json`](vercel.json) | Deploy settings when the Vercel project root is the repo: builds in `app/`, serves `app/dist`, sends every route to the app |
+| [`app/vercel.json`](app/vercel.json) | The same when the Vercel project's Root Directory is set to `app` |
 
 ## Checks
 
@@ -100,4 +110,6 @@ npm run build      # production build in app/dist
 - Five games (Lights Out, Simon Says, Tower of Hanoi, Connect Four, Nonogram) are by mashukui under the MIT License;
   see [`app/public/games/LICENSES.md`](app/public/games/LICENSES.md). The other five were made for Orb.
 - The front-page hero footage is AI generated.
+- The mobile sign-in photos `cipher-spacewalk`, `dyson` and `iss069e018537-1` are NASA images (the first two from
+  the challenge resources' NASA pages).
 - Orb+ uses NASA's colours but is not affiliated with or endorsed by NASA, and does not use the NASA insignia.

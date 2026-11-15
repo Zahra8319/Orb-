@@ -4,7 +4,7 @@ import { Section } from '../components/bits'
 import { commsDelaySec, dayOf, formatDelay, formatClock, MIN_PER_DAY } from '../sim/mission'
 import { evaluate } from '../rules/alerts'
 import { useSnapshot } from '../store/hooks'
-import { useStore } from '../store/store'
+import { DEMO_RESET_EVENT, useStore } from '../store/store'
 
 interface Consultation {
   id: string
@@ -21,7 +21,7 @@ interface Consultation {
 
 const CATEGORIES = [
   { value: 'cardiac', label: 'Cardiac / Rhythm' },
-  { value: 'respiratory', label: 'Respiratory / SpOâ‚‚' },
+  { value: 'respiratory', label: 'Respiratory / SpO₂' },
   { value: 'neurological', label: 'Neurological / Cognitive' },
   { value: 'musculoskeletal', label: 'Musculoskeletal / Injury' },
   { value: 'radiation', label: 'Radiation Exposure' },
@@ -32,24 +32,24 @@ const CATEGORIES = [
 const EARTH_RESPONSES: Record<string, string[]> = {
   cardiac: [
     "Flight Surgeon: Review the 30-sec ECG strip you recorded. If Afib with RVR >110, give metoprolol 5 mg IV. Recheck in 15 min. If hemodynamically unstable, synchronized cardioversion 50 J. We'll review the strip when it downlinks.",
-    "Flight Surgeon: Sinus tachycardia at 115 bpm at rest. Check hydration status â€” drink 500 mL water over 30 min. Review meds for stimulants. If HR persists >110 after hydration, give metoprolol 2.5 mg IV. Monitor for arrhythmia.",
+    "Flight Surgeon: Sinus tachycardia at 115 bpm at rest. Check hydration status — drink 500 mL water over 30 min. Review meds for stimulants. If HR persists >110 after hydration, give metoprolol 2.5 mg IV. Monitor for arrhythmia.",
     "Flight Surgeon: PVCs noted on strip. If <6/min and asymptomatic, observe. If frequent or runs of VT, give amiodarone 150 mg IV over 10 min. Obtain 12-lead when bandwidth allows.",
   ],
   respiratory: [
-    "Flight Surgeon: SpOâ‚‚ 92% at rest. Increase FiOâ‚‚ to 30% via nasal cannula. Check cabin COâ‚‚ â€” if >4 mmHg, that's contributing. Recheck in 20 min. If SpOâ‚‚ <90%, go to 100% non-rebreather and call us immediately.",
-    "Flight Surgeon: Increased work of breathing. Rule out pneumothorax â€” do lung ultrasound if trained. If unilateral absent breath sounds, needle decompression 2nd ICS MCL. Otherwise, albuterol 2.5 mg neb q20 min Ã; 3.",
+    "Flight Surgeon: SpO₂ 92% at rest. Increase FiO₂ to 30% via nasal cannula. Check cabin CO₂ — if >4 mmHg, that's contributing. Recheck in 20 min. If SpO₂ <90%, go to 100% non-rebreather and call us immediately.",
+    "Flight Surgeon: Increased work of breathing. Rule out pneumothorax — do lung ultrasound if trained. If unilateral absent breath sounds, needle decompression 2nd ICS MCL. Otherwise, albuterol 2.5 mg neb q20 min × 3.",
   ],
   neurological: [
     "Flight Surgeon: Reaction time 18% slower. This tracks with your 5.2 h sleep avg. No acute stroke signs on your exam. Priority: protected sleep 8 h tonight. No EVA or robotics for 24 h. Re-test reaction time tomorrow AM.",
-    "Flight Surgeon: New headache + photophobia. Could be COâ‚‚, SANS, or tension. Check cabin COâ‚‚, do fundoscopy photo for papilledema. Ibuprofen 600 mg. If worsens or neuro deficits, urgent downlink for neurology consult.",
+    "Flight Surgeon: New headache + photophobia. Could be CO₂, SANS, or tension. Check cabin CO₂, do fundoscopy photo for papilledema. Ibuprofen 600 mg. If worsens or neuro deficits, urgent downlink for neurology consult.",
   ],
   musculoskeletal: [
     "Flight Surgeon: Shoulder pain on ARED resistance. Likely rotator cuff tendinopathy. Modify: drop to 50% load, avoid overhead. Add scapular stabilization daily. Ice 15 min post-exercise. If no improvement in 7 days, MRI on return.",
-    "Flight Surgeon: Back pain after deadlifts. Discogenic pattern? Avoid flexion under load. McKenzie extension Ã; 10 q2h. Continue cardio. If radiculopathy, gabapentin 100 mg TID. We'll review exercise logs.",
+    "Flight Surgeon: Back pain after deadlifts. Discogenic pattern? Avoid flexion under load. McKenzie extension × 10 q2h. Continue cardio. If radiculopathy, gabapentin 100 mg TID. We'll review exercise logs.",
   ],
   radiation: [
-    "Flight Surgeon: Career dose at 520 mSv (87% of limit). Remaining mission: 67 days. Stay in shielded bunk for sleep. Minimize EVA. If SPE forecast, pre-position in storm shelter 30 min early. We're tracking cumulative risk.",
-    "Flight Surgeon: Solar storm ongoing. Dose rate 6Ã; normal. Remain in shelter until rate <2Ã; background. Take potassium iodide 130 mg now if thyroid dose projected >50 mSv. We'll update when storm decays.",
+    "Flight Surgeon: We have your career dose projection from the Radiation page and it stays under the 600 mSv limit if you keep to plan. Stay in shielded bunk for sleep. Minimize EVA. If SPE forecast, pre-position in storm shelter 30 min early. We're tracking cumulative risk.",
+    "Flight Surgeon: Solar storm ongoing. Dose rate 6× normal. Remain in shelter until the rate falls below 5× normal, then log your dose. We'll update when the storm decays.",
   ],
   behavioral: [
     "Flight Surgeon: Sleep debt 14 h over 7 days, mood 2/5. This is a medical issue, not personal. Commander: move non-critical tasks off this crew member for 48 h. Protected 8.5 h sleep opportunity. Melatonin 3 mg at bedtime. Daily check-ins with medical officer.",
@@ -75,19 +75,30 @@ function generateId(): string {
 
 const RING_CIRCUMFERENCE = 163.36
 const REPLY_LAG_SEC = 30
-/** The exchange plays 60Ã; faster than real light-time so the demo fits a minute. */
+/** The exchange plays 60× faster than real light-time so the demo fits a minute. */
 const COMPRESSION = 60
+
+/** Each crew member's consultations are their own. "Reset demo" clears them all. */
+const CONSULT_KEY_PREFIX = 'orb-consultations-v3:'
+
+function loadConsultations(crewId: string): Consultation[] {
+  try {
+    const saved = localStorage.getItem(CONSULT_KEY_PREFIX + crewId)
+    const parsed = saved ? JSON.parse(saved) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
 
 export function Consult() {
   const t = useStore((s) => s.t)
+  const crewId = useStore((s) => s.crewId)
   const snap = useSnapshot()
   const alerts = evaluate(snap)
   const formRef = useRef<HTMLElement | null>(null)
 
-  const [consultations, setConsultations] = useState<Consultation[]>(() => {
-    const saved = localStorage.getItem('orb-consultations-v2')
-    return saved ? JSON.parse(saved) : []
-  })
+  const [consultations, setConsultations] = useState<Consultation[]>(() => loadConsultations(crewId))
   const [question, setQuestion] = useState('')
   const [category, setCategory] = useState('cardiac')
   const [urgency, setUrgency] = useState<'routine' | 'urgent' | 'emergency'>('routine')
@@ -103,10 +114,21 @@ export function Consult() {
 
   // Persist consultations
   useEffect(() => {
-    localStorage.setItem('orb-consultations-v2', JSON.stringify(consultations))
-  }, [consultations])
+    try {
+      localStorage.setItem(CONSULT_KEY_PREFIX + crewId, JSON.stringify(consultations))
+    } catch {
+      // Blocked storage: they last until reload.
+    }
+  }, [consultations, crewId])
 
-  // Advance each transmission. Light-time seconds are compressed 60Ã;.
+  // "Reset demo" clears the saved consultations; clear the ones on screen too.
+  useEffect(() => {
+    const clear = () => setConsultations([])
+    window.addEventListener(DEMO_RESET_EVENT, clear)
+    return () => window.removeEventListener(DEMO_RESET_EVENT, clear)
+  }, [])
+
+  // Advance each transmission. Light-time seconds are compressed 60×.
   useEffect(() => {
     setConsultations((prev) => {
       let changed = false
@@ -144,7 +166,7 @@ export function Consult() {
     setFlash(
       `Transmitted. Earth receives it in ${formatDelay(delaySec / 2)}. Reply due about ${formatClock(
         (t + delaySec / 60 + REPLY_LAG_SEC / 60) % MIN_PER_DAY,
-      )} ship time â€” fast-forwarded to about ${Math.round((delaySec + REPLY_LAG_SEC) / COMPRESSION)} seconds in this simulation.`,
+      )} ship time — fast-forwarded to about ${Math.round((delaySec + REPLY_LAG_SEC) / COMPRESSION)} seconds in this simulation.`,
     )
     setQuestion('')
   }, [t, question, urgency, category])
@@ -191,7 +213,7 @@ export function Consult() {
     )
     setUrgency(alert.level === 'urgent' ? 'emergency' : alert.level === 'act' ? 'urgent' : 'routine')
     setQuestion(
-      `Alert: ${alert.title}. ${alert.action} Should I proceed autonomously or wait for Earth guidance? Current vitals: HR ${snap.vitals.heartRate}, SpOâ‚‚ ${snap.vitals.spo2}%, Cabin COâ‚‚ ${snap.cabin.co2} mmHg.`,
+      `Alert: ${alert.title}. ${alert.action} Should I proceed autonomously or wait for Earth guidance? Current vitals: HR ${snap.vitals.heartRate}, SpO₂ ${snap.vitals.spo2}%, Cabin CO₂ ${snap.cabin.co2} mmHg.`,
     )
     setFlash(null)
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -203,7 +225,7 @@ export function Consult() {
         <h1 className="page-title">Consult Earth</h1>
         <p className="page-intro">
           One-way delay: <strong>{formatDelay(commsDelaySec(t))}</strong>. Round trip: <strong>{formatDelay(roundTrip)}</strong>.
-          Submit a medical question â€” Earth responds after the light-time delay. While you wait, you decide autonomously.
+          Submit a medical question — Earth responds after the light-time delay. While you wait, you decide autonomously.
         </p>
       </header>
 
@@ -244,7 +266,7 @@ export function Consult() {
                 Transmit to Mission Control
               </button>
               <span className="consult-submit-note">
-                Round trip {formatDelay(roundTrip)} Â· fast-forwarded to about{' '}
+                Round trip {formatDelay(roundTrip)} · fast-forwarded to about{' '}
                 {Math.round((roundTrip + REPLY_LAG_SEC) / COMPRESSION)} seconds
               </span>
             </div>
@@ -259,7 +281,7 @@ export function Consult() {
 
       <Section
         title={`Active consultations${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
-        note="Your transmission travels at light speed. The countdown shows real light-time, fast-forwarded 60Ã; so you can watch the exchange complete."
+        note="Your transmission travels at light speed. The countdown shows real light-time, fast-forwarded 60× so you can watch the exchange complete."
       >
         {consultations.length === 0 ? (
           <p className="muted">No consultations yet. Submit one above to see the delay in action.</p>
@@ -307,7 +329,7 @@ export function Consult() {
                             <span className="progress-text">{formatTimeRemaining(remaining)}</span>
                           </div>
                           <span className="status-label">
-                            {c.status === 'pending' ? 'In transit to Earth' : 'Earth replying â€” inbound'}
+                            {c.status === 'pending' ? 'In transit to Earth' : 'Earth replying — inbound'}
                           </span>
                         </>
                       )}
@@ -374,7 +396,7 @@ export function Consult() {
         )}
       </Section>
 
-      <Section title="Why this matters for Mars" note="Communication delay fundamentally changes medical operations.">
+      <Section title="Why this matters in deep space" note="Communication delay fundamentally changes medical operations.">
         <div className="mars-context">
           <div className="mars-card">
             <h4>Earth orbit (ISS)</h4>
@@ -385,7 +407,7 @@ export function Consult() {
             <p>Delay: <strong>about 1.3 seconds</strong> each way. Near-real-time. Earth stays in the loop for major decisions.</p>
           </div>
           <div className="mars-card current">
-            <h4>Mars transit (this mission)</h4>
+            <h4>Deep-space transit (this mission)</h4>
             <p>Delay: <strong>{formatDelay(commsDelaySec(t))}</strong> one way. <strong>{formatDelay(roundTrip)}</strong> round trip.</p>
             <p className="mars-emphasis">Crew must decide autonomously. Earth advises, does not direct.</p>
           </div>
@@ -393,10 +415,10 @@ export function Consult() {
         <div className="mars-lessons">
           <h4>What this simulator teaches</h4>
           <ol className="mars-lessons-list">
-            <li><strong>Document your reasoning</strong> â€” the flight surgeon needs to understand your autonomous decision when they finally respond.</li>
-            <li><strong>Stabilize first</strong> â€” in an emergency, you act before Earth knows there is a problem.</li>
-            <li><strong>Consult early for non-emergencies</strong> â€” use the delay productively; submit routine questions before they become urgent.</li>
-            <li><strong>Trust your training</strong> â€” you are the medical provider on scene. Earth is a consultant, not the commander.</li>
+            <li><strong>Document your reasoning</strong> — the flight surgeon needs to understand your autonomous decision when they finally respond.</li>
+            <li><strong>Stabilize first</strong> — in an emergency, you act before Earth knows there is a problem.</li>
+            <li><strong>Consult early for non-emergencies</strong> — use the delay productively; submit routine questions before they become urgent.</li>
+            <li><strong>Trust your training</strong> — you are the medical provider on scene. Earth is a consultant, not the commander.</li>
           </ol>
         </div>
       </Section>

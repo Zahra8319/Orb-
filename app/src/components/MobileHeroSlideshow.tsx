@@ -59,7 +59,7 @@ export function MobileHeroSlideshow({
       el.removeEventListener('mouseleave', resume)
       el.removeEventListener('focusout', resume)
     }
-  }, [interval, pauseOnHover])
+  }, [images.length, interval, pauseOnHover])
 
   return (
     <div

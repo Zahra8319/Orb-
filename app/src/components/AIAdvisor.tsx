@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { X, Stethoscope, AlertTriangle, CheckCircle, Loader2, WifiOff, Zap, Send } from 'lucide-react'
 import { Button } from '../components/ui/button'
-import { useStore } from '../store/store'
-import { evaluate } from '../rules/alerts'
-import { snapshot } from '../sim/model'
-import { CREW } from '../sim/crew'
+import { useAlerts } from '../store/hooks'
+import type { Alert } from '../rules/alerts'
 
 /** What the advisor knows how to address. */
 interface Protocol {
@@ -104,11 +102,11 @@ const PROTOCOLS: Protocol[] = [
     autonomous: [
       'If SPE forecast: pre-position in storm shelter 30 min early.',
       'Stay in shielded bunk for sleep. Minimize EVA.',
-      'If thyroid dose projected > 50 mSv: potassium iodide 130 mg now.',
+      'Stay in the shelter until the dose rate falls below 5 times normal, then log your dose.',
       'Track cumulative career dose against 600 mSv limit.',
     ],
     earthQuestions: [
-      'Career dose 520 mSv (87% limit). 67 days remaining. Confirm shelter protocol?',
+      'Confirm the shelter plan and my remaining career dose budget against the 600 mSv limit?',
     ],
     redFlags: ['dose rate > 10× normal', 'career dose > 550 mSv', 'nausea/vomiting'],
   },
@@ -129,7 +127,7 @@ const PROTOCOLS: Protocol[] = [
 ]
 
 /** Match protocols against current alerts + free text. */
-function matchProtocols(alerts: ReturnType<typeof evaluate>, query: string): Protocol[] {
+function matchProtocols(alerts: Alert[], query: string): Protocol[] {
   const text = query.toLowerCase()
   const alertIds = alerts.map((a) => a.id)
   const alertTitles = alerts.map((a) => a.title.toLowerCase())
@@ -142,7 +140,7 @@ function matchProtocols(alerts: ReturnType<typeof evaluate>, query: string): Pro
 }
 
 /** Quick triage: return the most urgent protocol, or null. */
-function triage(alerts: ReturnType<typeof evaluate>): Protocol | null {
+function triage(alerts: Alert[]): Protocol | null {
   const urgent = alerts.some((a) => a.level === 'urgent')
   if (!urgent) return null
   const matched = matchProtocols(alerts, '')
@@ -162,7 +160,7 @@ interface Message {
   source?: 'protocol' | 'groq' | 'offline'
 }
 
-async function askGroq(question: string, alerts: ReturnType<typeof evaluate>): Promise<string> {
+async function askGroq(question: string, alerts: Alert[]): Promise<string> {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
   if (!apiKey) throw new Error('No Groq API key')
 
@@ -177,7 +175,8 @@ async function askGroq(question: string, alerts: ReturnType<typeof evaluate>): P
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
+      // llama-3.1-70b-versatile was retired by Groq; this is its replacement.
+      model: 'llama-3.3-70b-versatile',
       temperature: 0.2,
       max_tokens: 500,
       messages: [
@@ -193,11 +192,8 @@ async function askGroq(question: string, alerts: ReturnType<typeof evaluate>): P
 }
 
 export function AIAdvisor() {
-  const crewId = useStore((s) => s.crewId)
-  const t = useStore((s) => s.t)
-  const scenarios = useStore((s) => s.scenarios)
-  const snap = snapshot(CREW.find((c) => c.id === crewId)!, t, scenarios)
-  const alerts = evaluate(snap)
+  // The same alerts as the banner, including the crew member's own entries.
+  const alerts = useAlerts()
 
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
@@ -221,9 +217,9 @@ export function AIAdvisor() {
     }
   }, [alerts, open, messages.length])
 
-  const handleSend = useCallback(() => {
-    if (!input.trim()) return
-    const userMsg = input.trim()
+  const handleSend = useCallback((text: string) => {
+    if (!text.trim()) return
+    const userMsg = text.trim()
     setInput('')
     setMessages((prev) => [...prev, { role: 'user', content: userMsg, source: 'protocol' }])
     setThinking(true)
@@ -266,7 +262,7 @@ export function AIAdvisor() {
             ...prev,
             {
               role: 'assistant',
-              content: answer + '\n\n* - via Mission Control link (Groq)*',
+              content: answer + '\n\nAI-generated (Groq), not from Mission Control. Check it against your protocols.',
               source: 'groq',
             },
           ])
@@ -278,7 +274,7 @@ export function AIAdvisor() {
             {
               role: 'assistant',
               content:
-                'Connection to Mission Control lost. I only have onboard protocols.\n\n' +
+                'Could not reach the AI service. I only have onboard protocols.\n\n' +
                 'Describe symptoms or paste an alert title, and I\'ll match NASA guidance.',
               source: 'offline',
             },
@@ -306,7 +302,7 @@ export function AIAdvisor() {
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSend()
+      handleSend(input)
     }
   }
 
@@ -336,7 +332,7 @@ export function AIAdvisor() {
                 <AlertTriangle className="ai-urgent-badge" size={16} aria-label="Urgent protocol active" />
               )}
               {groqAvailable && (
-                <Zap className="ai-groq-badge" size={14} aria-label="Groq connected" />
+                <Zap className="ai-groq-badge" size={14} aria-label="AI answers on (Groq)" />
               )}
             </div>
             <button className="ai-close" onClick={() => setOpen(false)} aria-label="Close">
@@ -351,12 +347,12 @@ export function AIAdvisor() {
                 {!groqAvailable && (
                   <p className="ai-offline-note">
                     <WifiOff size={14} aria-hidden="true" />
-                    Offline mode - add <code>VITE_GROQ_API_KEY</code> to enable Mission Control link.
+                    Onboard protocols only. Add <code>VITE_GROQ_API_KEY</code> for AI answers to other questions.
                   </p>
                 )}
                 <div className="ai-chips">
                   {['Irregular rhythm at 118', 'SpO₂ dropped to 91%', 'Sleep debt 14 hrs', 'Shoulder pain on ARED', 'Cabin CO₂ 4.5 mmHg'].map((q) => (
-                    <button key={q} className="ai-chip" onClick={() => { setInput(q); handleSend(); }}>
+                    <button key={q} className="ai-chip" onClick={() => handleSend(q)}>
                       {q}
                     </button>
                   ))}
@@ -380,7 +376,7 @@ export function AIAdvisor() {
             {thinking && (
               <div className="ai-message assistant">
                 <Loader2 className="ai-thinking" size={16} aria-hidden="true" />
-                <span>{groqAvailable ? 'Contacting Mission Control…' : 'Matching protocols…'}</span>
+                <span>{groqAvailable ? 'Asking the AI model…' : 'Matching protocols…'}</span>
               </div>
             )}
           </div>
@@ -395,7 +391,7 @@ export function AIAdvisor() {
               aria-label="Medical question"
               disabled={thinking}
             />
-            <Button onClick={handleSend} disabled={!input.trim() || thinking} size="icon" aria-label={thinking ? 'Sending…' : 'Send message'}>
+            <Button onClick={() => handleSend(input)} disabled={!input.trim() || thinking} size="icon" aria-label={thinking ? 'Sending…' : 'Send message'}>
               {thinking ? (
                 <Loader2 size={16} className="spin" aria-hidden="true" />
               ) : (
@@ -407,14 +403,4 @@ export function AIAdvisor() {
       )}
     </>
   )
-}
-
-/** Tiny hook to use the advisor anywhere. */
-export function useAIAdvisor() {
-  const crewId = useStore((s) => s.crewId)
-  const t = useStore((s) => s.t)
-  const scenarios = useStore((s) => s.scenarios)
-  const snap = snapshot(CREW.find((c) => c.id === crewId)!, t, scenarios)
-  const alerts = evaluate(snap)
-  return { alerts, triage: triage(alerts) }
 }

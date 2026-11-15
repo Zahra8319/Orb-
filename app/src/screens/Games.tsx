@@ -35,7 +35,7 @@ export function Games() {
                 const plays = mine.filter((p) => p.gameId === g.id)
                 return (
                   <li key={g.id} className="game-card">
-                    <Link to={`/games/${g.id}`}>
+                    <Link to={`/games/play/${g.id}`}>
                       <strong>{g.title}</strong>
                       <span>{g.description}</span>
                       <span className="game-card-meta">
