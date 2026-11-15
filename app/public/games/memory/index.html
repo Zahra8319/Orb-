@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Memory Match</title>
+<style>html,body{margin:0;min-height:100%;background:#061f4a;color:#fff;font:16px system-ui,sans-serif}
+body{display:grid;place-items:center;padding:12px;box-sizing:border-box}
+#g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:min(92vw,420px)}
+button.k{aspect-ratio:1;font-size:2rem;border:0;border-radius:6px;background:#0b3d91;color:#fff;cursor:pointer}
+button.k.on{background:#f1f5fb;color:#061f4a}button.k.done{background:#02bfe7;color:#061f4a}
+button.k:focus-visible{outline:3px solid #ff9d1e}#m{margin-bottom:10px;text-align:center}
+#r{margin-top:12px;padding:8px 16px;border:0;border-radius:6px;background:#fc3d21;color:#fff;cursor:pointer}</style></head><body>
+<main><div id="m" aria-live="polite">Moves 0</div><div id="g"></div><div style="text-align:center"><button id="r">New game</button></div></main>
+<script>
+const E=['🚀','🌍','🌙','⭐','🛰️','☄️','🪐','👨‍🚀'],g=document.getElementById('g'),m=document.getElementById('m');
+let open=[],moves=0,left,lock;
+function start(){g.innerHTML='';moves=0;left=E.length;open=[];lock=false;m.textContent='Moves 0';
+ [...E,...E].sort(()=>Math.random()-.5).forEach(e=>{const b=document.createElement('button');b.className='k';b.setAttribute('aria-label','Hidden card');
+ b.onclick=()=>flip(b,e);g.appendChild(b)})}
+function flip(b,e){if(lock||b.classList.contains('on')||b.classList.contains('done'))return;
+ b.classList.add('on');b.textContent=e;b.dataset.e=e;b.setAttribute('aria-label',e);open.push(b);
+ if(open.length<2)return;moves++;m.textContent='Moves '+moves;const[a,c]=open;open=[];
+ if(a.dataset.e===c.dataset.e){[a,c].forEach(k=>{k.className='k done'});if(--left===0)m.textContent='You won in '+moves+' moves!'}
+ else{lock=true;setTimeout(()=>{[a,c].forEach(k=>{k.className='k';k.textContent='';k.setAttribute('aria-label','Hidden card')});lock=false},700)}}
+document.getElementById('r').onclick=start;start();
+</script></body></html>
