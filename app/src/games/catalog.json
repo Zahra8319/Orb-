@@ -6,12 +6,17 @@
       "description": "Eat, grow, do not hit the wall. Arrow keys or swipe.",
       "category": "arcade",
       "thumbnail": "",
-      "source": {
-        "kind": "local",
-        "path": "snake/index.html"
-      },
+      "source": { "kind": "local", "path": "snake/index.html" },
       "license": "Original work, Orb project",
-      "credit": "Made for Orb"
+      "credit": "Made for Orb",
+      "rules": [
+        "Steer with the arrow keys, or swipe on the board.",
+        "Eat the red square to grow by one and score a point.",
+        "Running into a wall or your own tail ends the round.",
+        "Tap the board or press Space to play again."
+      ],
+      "scoring": { "kind": "max", "format": "{v} points" },
+      "assist": { "lossBelow": 5 }
     },
     {
       "id": "memory",
@@ -19,12 +24,15 @@
       "description": "Flip cards and find all the pairs.",
       "category": "puzzle",
       "thumbnail": "",
-      "source": {
-        "kind": "local",
-        "path": "memory/index.html"
-      },
+      "source": { "kind": "local", "path": "memory/index.html" },
       "license": "Original work, Orb project",
-      "credit": "Made for Orb"
+      "credit": "Made for Orb",
+      "rules": [
+        "Sixteen cards hide eight pairs. Flip two at a time.",
+        "A matching pair stays face up. A miss turns back over after a moment.",
+        "Every two flips is one move. Find all the pairs in as few moves as you can."
+      ],
+      "scoring": { "kind": "min", "format": "{v} moves" }
     },
     {
       "id": "tictactoe",
@@ -32,12 +40,17 @@
       "description": "Beat the computer. It is not perfect.",
       "category": "puzzle",
       "thumbnail": "",
-      "source": {
-        "kind": "local",
-        "path": "tictactoe/index.html"
-      },
+      "source": { "kind": "local", "path": "tictactoe/index.html" },
       "license": "Original work, Orb project",
-      "credit": "Made for Orb"
+      "credit": "Made for Orb",
+      "rules": [
+        "You are X and go first. The computer is O.",
+        "Take turns marking an empty square.",
+        "Three of your marks in a row, column or diagonal wins.",
+        "A full board with no line of three is a draw."
+      ],
+      "scoring": { "kind": "wins", "format": "{v}" },
+      "assist": {}
     },
     {
       "id": "merge",
@@ -45,12 +58,17 @@
       "description": "Slide tiles, join equal numbers, chase a high score.",
       "category": "puzzle",
       "thumbnail": "",
-      "source": {
-        "kind": "local",
-        "path": "merge/index.html"
-      },
+      "source": { "kind": "local", "path": "merge/index.html" },
       "license": "Original work, Orb project",
-      "credit": "Made for Orb"
+      "credit": "Made for Orb",
+      "rules": [
+        "Slide every tile at once with the arrow keys or a swipe.",
+        "Two equal tiles that meet merge into one tile with their sum, and the sum is added to your score.",
+        "A new 2 or 4 appears after every move.",
+        "When the board is full and no move can merge, the game is over."
+      ],
+      "scoring": { "kind": "max", "format": "{v} points" },
+      "assist": { "lossBelow": 600 }
     },
     {
       "id": "reaction",
@@ -58,77 +76,104 @@
       "description": "Wait for green, tap fast. Beat your best time.",
       "category": "arcade",
       "thumbnail": "",
-      "source": {
-        "kind": "local",
-        "path": "reaction/index.html"
-      },
+      "source": { "kind": "local", "path": "reaction/index.html" },
       "license": "Original work, Orb project",
-      "credit": "Made for Orb"
+      "credit": "Made for Orb",
+      "rules": [
+        "Tap the panel, or press Space or Enter, to start. Then wait.",
+        "When it turns green, tap as fast as you can. Your time shows in milliseconds.",
+        "Tapping before green is a false start and the round does not count.",
+        "Five or more taps in a day give Orb a reaction reading for Sleep and mind."
+      ],
+      "scoring": { "kind": "min", "format": "{v} ms" },
+      "health": "reaction"
     },
     {
-      "source": {
-        "kind": "local",
-        "path": "lights-out/index.html"
-      },
+      "id": "lights-out",
       "title": "Lights Out",
       "description": "Tap a light to flip it and its four neighbors; switch every light off.",
-      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/lights-out",
+      "category": "puzzle",
       "thumbnail": "",
+      "source": { "kind": "local", "path": "lights-out/index.html" },
       "license": "MIT",
-      "id": "lights-out",
-      "category": "puzzle"
+      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/lights-out",
+      "rules": [
+        "Tapping a light flips it and its four neighbours: up, down, left and right.",
+        "Switch every light off to solve the board.",
+        "Choose Easy 3×3, Normal 5×5 or Hard 7×7. Par is the fewest moves the board needs.",
+        "Undo and Restart are always allowed."
+      ],
+      "scoring": { "kind": "count", "format": "{v} solved" }
     },
     {
-      "source": {
-        "kind": "local",
-        "path": "simon-says/index.html"
-      },
+      "id": "simon-says",
       "title": "Simon Says",
       "description": "Watch the four lights and repeat the sequence as it grows.",
-      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/simon-says",
+      "category": "arcade",
       "thumbnail": "",
+      "source": { "kind": "local", "path": "simon-says/index.html" },
       "license": "MIT",
-      "id": "simon-says",
-      "category": "arcade"
+      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/simon-says",
+      "rules": [
+        "Watch the four pads light up in a sequence.",
+        "Repeat it in the same order by tapping the pads, or with keys 1 to 4 or the arrow keys.",
+        "Each round adds one step and plays a little faster.",
+        "One wrong pad ends the game. Your longest sequence counts toward Sleep and mind as a memory reading."
+      ],
+      "scoring": { "kind": "max", "format": "a sequence of {v}" },
+      "health": "memory"
     },
     {
-      "source": {
-        "kind": "local",
-        "path": "hanoi/index.html"
-      },
+      "id": "hanoi",
       "title": "Tower of Hanoi",
       "description": "Move each disk to the last peg without placing a larger disk on a smaller one.",
-      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/hanoi",
+      "category": "puzzle",
       "thumbnail": "",
+      "source": { "kind": "local", "path": "hanoi/index.html" },
       "license": "MIT",
-      "id": "hanoi",
-      "category": "puzzle"
+      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/hanoi",
+      "rules": [
+        "Move the whole stack from the first peg to the last.",
+        "Move one disk at a time, always the top disk of a peg.",
+        "Never put a larger disk on a smaller one.",
+        "Five levels, from 3 to 7 disks. Par is the fewest moves possible."
+      ],
+      "scoring": { "kind": "max", "format": "level {v}" }
     },
     {
-      "source": {
-        "kind": "local",
-        "path": "connect-four/index.html"
-      },
+      "id": "connect-four",
       "title": "Connect Four",
       "description": "Drop discs and line up four against the computer.",
-      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/connect-four",
+      "category": "classic",
       "thumbnail": "",
+      "source": { "kind": "local", "path": "connect-four/index.html" },
       "license": "MIT",
-      "id": "connect-four",
-      "category": "classic"
+      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/connect-four",
+      "rules": [
+        "You and the computer take turns dropping a disc into a column. It falls to the lowest free space.",
+        "Four of your discs in a row, column or diagonal wins.",
+        "A full board with no four in a line is a draw.",
+        "Choose Easy, Medium or Hard before you start."
+      ],
+      "scoring": { "kind": "wins", "format": "{v}" },
+      "assist": {}
     },
     {
-      "source": {
-        "kind": "local",
-        "path": "nonogram/index.html"
-      },
+      "id": "nonogram",
       "title": "Nonogram",
       "description": "Use the number clues to fill the grid in this logic puzzle.",
-      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/nonogram",
+      "category": "puzzle",
       "thumbnail": "",
+      "source": { "kind": "local", "path": "nonogram/index.html" },
       "license": "MIT",
-      "id": "nonogram",
-      "category": "puzzle"
+      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/nonogram",
+      "rules": [
+        "The numbers beside each row and above each column are the lengths of its runs of filled squares, in order.",
+        "Runs are separated by at least one empty square.",
+        "Use Fill to fill a square and Mark ✕ to note one that must stay empty.",
+        "Twelve levels from 5×5 to 12×12. Every puzzle has exactly one solution."
+      ],
+      "scoring": { "kind": "max", "format": "level {v}" }
     }
   ]
 }

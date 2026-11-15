@@ -12,7 +12,10 @@ describe('game catalog', () => {
 })
 
 describe('resolveGameUrl', () => {
-  const base = { id: 'x', title: 'X', description: '', category: 'arcade', thumbnail: '', license: 'MIT', credit: '' }
+  const base = {
+    id: 'x', title: 'X', description: '', category: 'arcade', thumbnail: '', license: 'MIT', credit: '',
+    rules: [], scoring: { kind: 'max' as const, format: '{v}' },
+  }
   it('resolves local games under /games/', () => {
     const g: Game = { ...base, source: { kind: 'local', path: 'snake/index.html' } }
     expect(resolveGameUrl(g)).toBe('/games/snake/index.html')
