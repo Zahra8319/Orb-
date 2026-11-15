@@ -217,7 +217,7 @@ export function Landing() {
                 ref={(el) => { beatRefs.current[0] = el }}
                 onFocus={() => revealBeat(0)}
               >
-                <p className="hero-eyebrow">Deep space Â· crew of four</p>
+                <p className="hero-eyebrow">Deep space · crew of four</p>
                 <h1 className="hero-title">Know your body, all the way.</h1>
                 <p className="hero-copy">
                   Orb+ is a personal health monitor for astronauts. Heart, sleep, radiation and suit, in one calm

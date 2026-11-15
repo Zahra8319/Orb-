@@ -1,7 +1,7 @@
 const SOURCES: { feature: string; why: string; title: string; url: string }[] = [
   {
     feature: 'The five screens',
-    why: 'Orb is organised around the five hazards NASAâ€™s Human Research Program names for human spaceflight.',
+    why: 'Orb is organised around the five hazards NASA’s Human Research Program names for human spaceflight.',
     title: 'NASA: 5 Hazards of Human Spaceflight',
     url: 'https://www.nasa.gov/hrp/hazards/',
   },
@@ -82,7 +82,7 @@ const NUMBERS: { value: string; why: string; title: string; url: string }[] = [
   },
   {
     value: 'Career radiation limit: 600 mSv',
-    why: 'NASAâ€™s standard sets a career effective dose limit of 600 mSv for all astronauts.',
+    why: 'NASA’s standard sets a career effective dose limit of 600 mSv for all astronauts.',
     title: 'NASA: Radiation Protection technical brief',
     url: 'https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf',
   },
@@ -94,7 +94,7 @@ const NUMBERS: { value: string; why: string; title: string; url: string }[] = [
   },
   {
     value: 'Cabin CO2 target: 3 mmHg',
-    why: 'NASAâ€™s spaceflight standard limits the one-hour average CO2 level to 3 mmHg, after crews reported headaches at higher levels.',
+    why: 'NASA’s spaceflight standard limits the one-hour average CO2 level to 3 mmHg, after crews reported headaches at higher levels.',
     title: 'NASA Technical Reports Server: CO2 on the space station',
     url: 'https://ntrs.nasa.gov/citations/20150021777',
   },

@@ -131,7 +131,7 @@ export function Radiation() {
 
       <Section
         title="Projection at mission end (Day 210)"
-        note={`Projected career dose: ${projectedMissionEnd} mSv (${limitShare}% of ${CAREER_LIMIT_MSV} mSv limit). Current rate: ${snap.doseRate.toFixed(1)} mSv/day Ã— ${crew.doseFactor.toFixed(2)} dose factor.`}
+        note={`Projected career dose: ${projectedMissionEnd} mSv (${limitShare}% of ${CAREER_LIMIT_MSV} mSv limit). Current rate: ${snap.doseRate.toFixed(1)} mSv/day × ${crew.doseFactor.toFixed(2)} dose factor.`}
       >
         <div className="projection-cards">
           <div className="projection-card">
@@ -152,7 +152,7 @@ export function Radiation() {
           <div className="projection-card">
             <div className="projection-label">Daily dose rate</div>
             <div className="projection-value">{snap.doseRate.toFixed(1)} mSv/day</div>
-            <div className="projection-detail">Ã— ${crew.doseFactor.toFixed(2)} personal dose factor = ${(snap.doseRate * crew.doseFactor).toFixed(1)} mSv/day effective.</div>
+            <div className="projection-detail">× ${crew.doseFactor.toFixed(2)} personal dose factor = ${(snap.doseRate * crew.doseFactor).toFixed(1)} mSv/day effective.</div>
           </div>
         </div>
       </Section>
