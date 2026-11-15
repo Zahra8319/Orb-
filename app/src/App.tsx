@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Shell } from './components/Shell'
 import { useSession } from './store/session'
 import { Admin } from './screens/Admin'
@@ -31,7 +31,7 @@ function RequireCrew({ children }: { children: ReactNode }) {
 
 export default function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
         <Route path="welcome" element={<Landing />} />
         <Route path="login" element={<Login />} />
@@ -58,6 +58,6 @@ export default function App() {
           <Route path="*" element={<Today />} />
         </Route>
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   )
 }

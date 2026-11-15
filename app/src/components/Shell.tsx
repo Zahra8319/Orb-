@@ -7,6 +7,7 @@ import { useSession } from '../store/session'
 import { useStore } from '../store/store'
 import { ClockText } from './bits'
 import { DemoDrawer } from './DemoDrawer'
+import { AIAdvisor } from './AIAdvisor'
 
 const CREW_NAV = [
   { to: '/', label: 'Today' },
@@ -112,6 +113,7 @@ export function Shell() {
       </div>
 
       {drawer && <DemoDrawer onClose={() => setDrawer(false)} />}
+      <AIAdvisor />
     </>
   )
 }
