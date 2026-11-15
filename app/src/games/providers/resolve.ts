@@ -7,7 +7,7 @@ const ALLOWED_EMBED_HOSTS = ['playgama.com', 'html5.gamedistribution.com']
 export function resolveGameUrl(game: Game): string | null {
   const { source } = game
   if (source.kind === 'local') {
-    return `/games/${source.path.replace(/^\/+/, '')}`
+    return `${import.meta.env.BASE_URL}games/${source.path.replace(/^\/+/, '')}`
   }
   try {
     const host = new URL(source.url).hostname
