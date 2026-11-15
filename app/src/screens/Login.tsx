@@ -37,9 +37,9 @@ export function Login() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = 'sleep'
-    document.title = 'Sign in · Orb'
+    document.title = 'Sign in · Orb+'
     return () => {
-      document.title = 'Orb'
+      document.title = 'Orb+'
     }
   }, [])
 
@@ -74,7 +74,7 @@ export function Login() {
             <span className="flex size-7 items-center justify-center rounded-full bg-nasa-blue text-white ring-1 ring-white/25">
               <Orbit className="size-4" aria-hidden="true" />
             </span>
-            Orb
+            Orb<span className="wordmark-plus">+</span>
           </a>
           <LoginForm
             onSignIn={(crewId) => {

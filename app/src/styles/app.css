@@ -95,6 +95,22 @@ input {
   line-height: 1;
 }
 
+/* The plus in Orb+ rides at the top right of the b, and stays red in every theme. */
+.wordmark-plus {
+  position: relative;
+  top: -0.62em;
+  font-size: 0.55em;
+  font-weight: 800;
+  letter-spacing: 0;
+  color: var(--nasa-red);
+  margin-left: 1px;
+}
+
+/* Sleep shift: the word goes white on deep blue. The plus stays red. */
+:root[data-theme='sleep'] .wordmark {
+  color: var(--white);
+}
+
 .nav {
   display: flex;
   gap: var(--s-5);
@@ -156,6 +172,23 @@ input {
   font-weight: 650;
 }
 
+/* The colon pulses so a still clock reads as running time. */
+@media (prefers-reduced-motion: no-preference) {
+  .clock-colon {
+    animation: clock-pulse 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes clock-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+
 main {
   padding: var(--s-7) 0 var(--s-8);
 }
@@ -175,6 +208,7 @@ main {
 .footer-actions {
   display: flex;
   gap: var(--s-4);
+  margin-left: auto;
   align-items: center;
 }
 
@@ -534,6 +568,22 @@ main {
   fill: var(--ink);
   font-weight: 650;
   font-size: 13px;
+}
+
+/* ECG strip: a regular rhythm scrolls left at real speed, like a bedside monitor. */
+@media (prefers-reduced-motion: no-preference) {
+  .ecg-scroll {
+    animation: ecg-scroll var(--ecg-dur, 1s) linear infinite;
+  }
+}
+
+@keyframes ecg-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--ecg-shift, 0px));
+  }
 }
 
 .axis-line {

@@ -4,7 +4,6 @@ A personal health monitor for astronauts on a Mars transit. Built for the NASA S
 "Create Health Monitoring Software for Astronauts on Space Missions".
 
 Orb is a frontend-only app. Every reading is simulated in the browser; there is no backend and no real sensor data.
-It is not a medical device and is not affiliated with NASA.
 
 ## Run it
 

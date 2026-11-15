@@ -371,7 +371,7 @@ export function Admin() {
     <div className="orb-ui admin-page">
       <header className="admin-topbar">
         <div className="page admin-topbar-inner">
-          <span className="wordmark">Orb</span>
+          <span className="wordmark">Orb<span className="wordmark-plus">+</span></span>
           <span className="admin-topbar-sep" aria-hidden="true" />
           <span className="admin-topbar-title">Mission Control</span>
           <div className="admin-topbar-right">

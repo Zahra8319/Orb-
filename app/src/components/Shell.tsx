@@ -5,6 +5,7 @@ import { MISSION_DAYS, commsDelaySec, dayOf, formatClock, formatDelay, minuteOfD
 import { useAlerts, useSimClock, useSleepShift } from '../store/hooks'
 import { useSession } from '../store/session'
 import { useStore } from '../store/store'
+import { ClockText } from './bits'
 import { DemoDrawer } from './DemoDrawer'
 
 const NAV = [
@@ -42,7 +43,7 @@ export function Shell() {
       <header className="topbar">
         <div className="page topbar-inner">
           <Link className="wordmark" to="/" aria-label="Orb, go to Today">
-            Orb
+            Orb<span className="wordmark-plus">+</span>
           </Link>
           <nav className="nav" aria-label="Main">
             {NAV.map((n) => (
@@ -84,7 +85,7 @@ export function Shell() {
       <div className="page">
         <div className="statusline">
           <span>
-            <strong>Day {dayOf(t)}</strong> of {MISSION_DAYS} to Mars, ship time {formatClock(minuteOfDay(t))}
+            <strong>Day {dayOf(t)}</strong> of {MISSION_DAYS} to Mars, ship time <ClockText time={formatClock(minuteOfDay(t))} />
             {sleepShift ? ', sleep shift' : ''}
           </span>
           <span>
@@ -97,7 +98,6 @@ export function Shell() {
         </main>
 
         <footer className="footer">
-          <span>Simulated data for a NASA Space Apps entry. Not a medical device. Not affiliated with NASA.</span>
           <span className="footer-actions">
             <Link className="link" to="/sources">
               Sources

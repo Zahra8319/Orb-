@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
 import { DayRing } from '../charts/DayRing'
 import { dayBlocks } from '../charts/dayBlocks'
+import { ECGStrip } from '../charts/ECGStrip'
 import { TrendStrip } from '../charts/TrendStrip'
 import { LevelIcon, Readout } from '../components/bits'
-import { LEVEL_WORD } from '../rules/alerts'
+import { LEVEL_WORD, THRESHOLDS } from '../rules/alerts'
 import { CAREER_LIMIT_MSV, dayOf, formatClock, formatHours } from '../sim/mission'
-import { bodySeries, dayRecord, missionDose, sleepStats, vitalsAt } from '../sim/model'
+import { bodySeries, dayRecord, missionDose, sleepStats } from '../sim/model'
 import { useAlerts, useCrew, useSnapshot, useTodayReaction } from '../store/hooks'
 import { dayKey, useStore } from '../store/store'
 
@@ -64,8 +65,13 @@ export function Today() {
       ? `Nothing needs attention. ${tasks.length} ${tasks.length === 1 ? 'thing is' : 'things are'} left on today’s plan.`
       : 'Nothing needs attention, and today’s plan is done.'
 
-  // Last 30 minutes of heart rate, one reading a minute.
-  const heartTrace = Array.from({ length: 31 }, (_, i) => vitalsAt(crew, t - (30 - i), scenarios).heartRate)
+  // The trace goes red only when the rhythm or rate leaves the normal range,
+  // the same rule as the heart-rate alert (exercise excluded).
+  const hrAlarm =
+    snap.vitals.irregular ||
+    (snap.vitals.activity !== 'cardio' &&
+      snap.vitals.activity !== 'resistance' &&
+      snap.vitals.heartRate > THRESHOLDS.restingHeartRate)
 
   const body = bodySeries(crew, day, scenarios)
   const every = (n: number) => body.filter((_, i) => i % n === 0 || i === body.length - 1)
@@ -119,7 +125,7 @@ export function Today() {
                 note={snap.vitals.irregular ? 'Irregular rhythm' : ACTIVITY_NOTE[snap.vitals.activity]}
                 level={snap.vitals.irregular ? 'urgent' : null}
               >
-                <TrendStrip values={heartTrace} live />
+                <ECGStrip bpm={snap.vitals.heartRate} irregular={snap.vitals.irregular} abnormal={hrAlarm} />
               </Readout>
               <Readout
                 label="Blood oxygen"
