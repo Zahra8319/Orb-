@@ -106,8 +106,7 @@ export function Sources() {
       <h1 className="page-title">Sources</h1>
       <p className="page-intro">
         Every reading in Orb is simulated. What Orb measures, and why, comes from the NASA and Canadian Space Agency pages listed for the
-        Space Apps challenge &ldquo;Create Health Monitoring Software for Astronauts on Space Missions&rdquo;. Orb is a hackathon entry. It
-        is not a medical device and is not affiliated with or endorsed by NASA.
+        Space Apps challenge &ldquo;Create Health Monitoring Software for Astronauts on Space Missions&rdquo;.
       </p>
       <section className="section">
         <h2 className="section-title">Where each part comes from</h2>

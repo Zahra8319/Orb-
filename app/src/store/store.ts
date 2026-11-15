@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { CREW } from '../sim/crew'
 import { START_MIN, commsDelaySec, dayOf } from '../sim/mission'
 import { NO_SCENARIOS, type ScenarioId, type Scenarios } from '../sim/scenarios'
-import type { Level } from '../rules/alerts'
 
 export type ThemeMode = 'auto' | 'day' | 'sleep'
 
@@ -43,12 +42,6 @@ interface State {
   reactions: ReactionResult[]
   eyeChecks: Record<string, boolean>
   messages: Message[]
-  /** Alerts the flight surgeon has seen: `${crewId}:${alertId}` -> level when seen. */
-  acknowledged: Record<string, Level>
-  /** Mission Control sees readings as old as the radio delay. */
-  earthDelay: boolean
-  /** Canned Earth replies to crew messages; off while a flight surgeon answers. */
-  autoReply: boolean
   tick: (realSeconds: number) => void
   setSpeed: (speed: number) => void
   setCrew: (id: string) => void
@@ -60,10 +53,6 @@ interface State {
   addReaction: (ms: number, falseStarts: number) => void
   logEyeCheck: () => void
   sendMessage: (text: string) => void
-  replyAsEarth: (crewId: string, text: string) => void
-  acknowledge: (key: string, level: Level) => void
-  setEarthDelay: (value: boolean) => void
-  setAutoReply: (value: boolean) => void
 }
 
 export const dayKey = (crewId: string, day: number) => `${crewId}:${day}`
@@ -122,15 +111,12 @@ const initial = () => ({
   reactions: [] as ReactionResult[],
   eyeChecks: {} as Record<string, boolean>,
   messages: seedMessages(),
-  acknowledged: {} as Record<string, Level>,
 })
 
 export const useStore = create<State>((set, get) => ({
   ...initial(),
   crewId: CREW[0].id,
   themeMode: 'auto',
-  earthDelay: true,
-  autoReply: true,
 
   tick: (realSeconds) => {
     const { speed, t } = get()
@@ -141,7 +127,7 @@ export const useStore = create<State>((set, get) => ({
   toggleScenario: (id) =>
     set((s) => ({
       scenarios: { ...s.scenarios, [id]: s.scenarios[id] === null ? s.t : null },
-      sheltered: id === 'solarStorm' ? false : s.sheltered,
+      sheltered: id === 'solar-storm' ? false : s.sheltered,
     })),
   resetDemo: () => set(initial()),
   setThemeMode: (themeMode) => set({ themeMode }),
@@ -157,13 +143,10 @@ export const useStore = create<State>((set, get) => ({
       const nextId = s.messages.reduce((m, x) => Math.max(m, x.id), 0) + 1
       const out = delayMin(s.t)
       const replySent = s.t + out + 4
-      const sent: Message = { id: nextId, crewId: s.crewId, from: 'me', text: trimmed, sentAt: s.t, arrivesAt: s.t + out }
-      // With a flight surgeon signed in, a person answers instead of the canned replies.
-      if (!s.autoReply) return { messages: [...s.messages, sent] }
       return {
         messages: [
           ...s.messages,
-          sent,
+          { id: nextId, crewId: s.crewId, from: 'me', text: trimmed, sentAt: s.t, arrivesAt: s.t + out },
           {
             id: nextId + 1,
             crewId: s.crewId,
@@ -175,19 +158,4 @@ export const useStore = create<State>((set, get) => ({
         ],
       }
     }),
-  replyAsEarth: (crewId, text) =>
-    set((s) => {
-      const trimmed = text.trim()
-      if (!trimmed) return s
-      const id = s.messages.reduce((m, x) => Math.max(m, x.id), 0) + 1
-      return {
-        messages: [
-          ...s.messages,
-          { id, crewId, from: 'earth', text: trimmed, sentAt: s.t, arrivesAt: s.t + delayMin(s.t) },
-        ],
-      }
-    }),
-  acknowledge: (key, level) => set((s) => ({ acknowledged: { ...s.acknowledged, [key]: level } })),
-  setEarthDelay: (earthDelay) => set({ earthDelay }),
-  setAutoReply: (autoReply) => set({ autoReply }),
 }))

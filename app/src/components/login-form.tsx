@@ -18,20 +18,15 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { CREW } from "@/sim/crew"
-import {
-  SURGEON_EMAIL,
-  accountForEmail,
-  crewEmail,
-  type Account,
-} from "@/store/session"
+import { crewEmail, findCrewByEmail } from "@/store/session"
 
-/** shadcn login-03, adapted to Orb: crew and the flight surgeon sign in with their mission email. */
+/** shadcn login-03, adapted to Orb: crew sign in with their mission email. */
 export function LoginForm({
   className,
   onSignIn,
   ...props
 }: Omit<React.ComponentProps<"div">, "onSubmit"> & {
-  onSignIn: (account: Account) => void
+  onSignIn: (crewId: string) => void
 }) {
   const [email, setEmail] = useState("")
   const [error, setError] = useState("")
@@ -39,19 +34,14 @@ export function LoginForm({
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const account = accountForEmail(email)
-    if (!account) {
+    const crew = findCrewByEmail(email)
+    if (!crew) {
       setError(
-        `No one on this mission uses that email. Try ${crewEmail(CREW[0])}.`
+        `No crew member uses that email. Try ${crewEmail(CREW[0])}.`
       )
       return
     }
-    onSignIn(account)
-  }
-
-  const pick = (value: string) => {
-    setEmail(value)
-    setError("")
+    onSignIn(crew.id)
   }
 
   return (
@@ -67,6 +57,11 @@ export function LoginForm({
         <CardContent>
           <form onSubmit={submit} noValidate>
             <FieldGroup>
+              {notice && (
+                <FieldDescription role="status" className="text-center">
+                  {notice}
+                </FieldDescription>
+              )}
               <Field data-invalid={error ? true : undefined}>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
@@ -114,7 +109,7 @@ export function LoginForm({
       </Card>
       <details className="group px-6 text-center text-sm text-muted-foreground">
         <summary className="cursor-pointer list-none underline underline-offset-4 hover:text-foreground [&::-webkit-details-marker]:hidden">
-          Demo emails
+          Demo crew emails
         </summary>
         <ul className="mt-3 flex flex-col gap-1">
           {CREW.map((c) => (
@@ -122,28 +117,18 @@ export function LoginForm({
               <button
                 type="button"
                 className="hover:text-foreground"
-                onClick={() => pick(crewEmail(c))}
+                onClick={() => {
+                  setEmail(crewEmail(c))
+                  setError("")
+                }}
               >
                 {crewEmail(c)}{" "}
                 <span className="text-muted-foreground/70">({c.role})</span>
               </button>
             </li>
           ))}
-          <li className="mt-2 border-t border-white/10 pt-2">
-            <button
-              type="button"
-              className="hover:text-foreground"
-              onClick={() => pick(SURGEON_EMAIL)}
-            >
-              {SURGEON_EMAIL}{" "}
-              <span className="text-muted-foreground/70">(Mission Control)</span>
-            </button>
-          </li>
         </ul>
       </details>
-      <FieldDescription className="px-6 text-center">
-        Simulated data for a NASA Space Apps entry. Not a medical device.
-      </FieldDescription>
     </div>
   )
 }

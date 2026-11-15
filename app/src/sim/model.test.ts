@@ -75,12 +75,12 @@ describe('day records', () => {
   })
   it('a week of short sleep raises sleep debt', () => {
     const normal = sleepStats(crew, today, NO_SCENARIOS)
-    const short = sleepStats(crew, today, { ...NO_SCENARIOS, shortSleep: now })
+    const short = sleepStats(crew, today, { ...NO_SCENARIOS, 'short-sleep': now })
     expect(short.debt7).toBeGreaterThan(normal.debt7 + 8)
     expect(short.avg7).toBeLessThan(5.5)
   })
   it('missed exercise zeroes the previous four days', () => {
-    const sc = { ...NO_SCENARIOS, missedExercise: now }
+    const sc = { ...NO_SCENARIOS, 'missed-exercise': now }
     expect(dayRecord(crew, today - 1, sc).cardioDone).toBe(0)
     expect(dayRecord(crew, today - 4, sc).resistanceDone).toBe(0)
     expect(missedExerciseDays(crew, today, sc)).toBe(4)
@@ -109,7 +109,7 @@ describe('vitals', () => {
   })
   it('flags an irregular rhythm only when that scenario is running', () => {
     expect(vitalsAt(crew, now, NO_SCENARIOS).irregular).toBe(false)
-    expect(vitalsAt(crew, now + 1, { ...NO_SCENARIOS, irregularHeart: now }).irregular).toBe(true)
+    expect(vitalsAt(crew, now + 1, { ...NO_SCENARIOS, 'irregular-heart': now }).irregular).toBe(true)
   })
 })
 
@@ -122,7 +122,7 @@ describe('cabin', () => {
     }
   })
   it('CO2 climbs past 4 mmHg three hours into a scrubber fault', () => {
-    expect(cabinAt(now + 180, { ...NO_SCENARIOS, co2Rise: now }).co2).toBeGreaterThan(4)
+    expect(cabinAt(now + 180, { ...NO_SCENARIOS, 'co2-rise': now }).co2).toBeGreaterThan(4)
   })
 })
 
@@ -141,12 +141,12 @@ describe('radiation', () => {
     expect(dose).toBeLessThan(285)
   })
   it('a solar storm multiplies the dose rate and adds dose', () => {
-    const sc = { ...NO_SCENARIOS, solarStorm: now }
+    const sc = { ...NO_SCENARIOS, 'solar-storm': now }
     expect(doseRateAt(now + 60, sc)).toBeGreaterThan(doseRateAt(now + 60, NO_SCENARIOS) * 5)
     expect(missionDose(crew, now + 600, sc)).toBeGreaterThan(missionDose(crew, now + 600, NO_SCENARIOS) + 2)
   })
   it('the storm is over a day later', () => {
-    const sc = { ...NO_SCENARIOS, solarStorm: now }
+    const sc = { ...NO_SCENARIOS, 'solar-storm': now }
     expect(doseRateAt(now + MIN_PER_DAY, sc)).toBeLessThan(3)
   })
 })
@@ -158,7 +158,7 @@ describe('body trends', () => {
     expect(series).toHaveLength(today)
     expect(last.bone).toBeLessThan(0)
     expect(last.bone).toBeGreaterThan(-4)
-    const lazy = bodySeries(crew, today, { ...NO_SCENARIOS, missedExercise: now })
+    const lazy = bodySeries(crew, today, { ...NO_SCENARIOS, 'missed-exercise': now })
     expect(lazy[lazy.length - 1].bone).toBeLessThan(last.bone)
   })
 })

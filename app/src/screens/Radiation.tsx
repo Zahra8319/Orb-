@@ -20,6 +20,8 @@ export function Radiation() {
   const daysLeft = Math.max(0, MISSION_DAYS - t / MIN_PER_DAY)
   const projected = snap.careerDose + daysLeft * DOSE_PER_DAY_MSV * crew.doseFactor
   const share = Math.round((snap.careerDose / CAREER_LIMIT_MSV) * 100)
+  const projectedMissionEnd = Math.round(projected)
+  const limitShare = Math.round((projected / CAREER_LIMIT_MSV) * 100)
 
   // Last 24 hours of cabin dose rate, one reading every 20 minutes.
   const rate = Array.from({ length: 73 }, (_, i) => {
@@ -30,6 +32,13 @@ export function Radiation() {
   const since = Array.from({ length: 30 }, (_, i) => {
     const at = t - (29 - i) * MIN_PER_DAY
     return { x: at / MIN_PER_DAY, y: missionDose(crew, at, scenarios) + crew.priorDoseMsv }
+  })
+
+  // Projected career dose curve to mission end
+  const projectedCurve = Array.from({ length: Math.ceil(daysLeft) + 1 }, (_, i) => {
+    const d = t / MIN_PER_DAY + i
+    const at = Math.min(d, MISSION_DAYS) * MIN_PER_DAY
+    return { x: d, y: Math.min(missionDose(crew, at, scenarios) + crew.priorDoseMsv, projectedMissionEnd) }
   })
 
   return (
@@ -105,15 +114,47 @@ export function Radiation() {
         </div>
       </Section>
 
-      <Section title="Last 30 days" note="Career dose in mSv. It only ever goes up, so the slope is what matters.">
+      <Section title="Last 30 days + projection" note="Career dose in mSv. Solid line = actual, dotted = projected at current rate. Career limit: 600 mSv.">
         <LineChart
-          label="Career radiation dose over the last 30 days"
-          series={[{ name: 'Career dose', points: since }]}
+          label="Career radiation dose: actual (solid) and projected (dotted) to mission end"
+          series={[
+            { name: 'Career dose (actual)', points: since },
+            { name: 'Career dose (projected)', points: projectedCurve, style: 'dotted', tone: 1 },
+          ]}
           xFormat={(x) => `Day ${Math.floor(x) + 1}`}
           yFormat={(y) => `${Math.round(y)}`}
           xHeader="Mission day"
-          height={220}
+          height={280}
+          refs={[{ y: CAREER_LIMIT_MSV, label: `Career limit ${CAREER_LIMIT_MSV} mSv`, tone: 'urgent' }]}
         />
+      </Section>
+
+      <Section
+        title="Projection at Mars arrival (Day 210)"
+        note={`Projected career dose: ${projectedMissionEnd} mSv (${limitShare}% of ${CAREER_LIMIT_MSV} mSv limit). Current rate: ${snap.doseRate.toFixed(1)} mSv/day × ${crew.doseFactor.toFixed(2)} dose factor.`}
+      >
+        <div className="projection-cards">
+          <div className="projection-card">
+            <div className="projection-label">Projected career dose</div>
+            <div className="projection-value">{projectedMissionEnd} mSv</div>
+            <div className="projection-detail">At mission end (Day 210) if current rate continues.</div>
+          </div>
+          <div className="projection-card">
+            <div className="projection-label">Career limit usage</div>
+            <div className="projection-value">{limitShare}%</div>
+            <div className="projection-detail">Of the ${CAREER_LIMIT_MSV} mSv NASA career limit.</div>
+          </div>
+          <div className="projection-card">
+            <div className="projection-label">Remaining margin</div>
+            <div className="projection-value">{Math.max(0, CAREER_LIMIT_MSV - projectedMissionEnd)} mSv</div>
+            <div className="projection-detail">Buffer before reaching career limit.</div>
+          </div>
+          <div className="projection-card">
+            <div className="projection-label">Daily dose rate</div>
+            <div className="projection-value">{snap.doseRate.toFixed(1)} mSv/day</div>
+            <div className="projection-detail">× ${crew.doseFactor.toFixed(2)} personal dose factor = ${(snap.doseRate * crew.doseFactor).toFixed(1)} mSv/day effective.</div>
+          </div>
+        </div>
       </Section>
     </>
   )

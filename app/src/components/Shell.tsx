@@ -1,93 +1,60 @@
 import { useEffect, useState } from 'react'
-<<<<<<< HEAD
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-=======
 import { Link, NavLink, Outlet } from 'react-router-dom'
->>>>>>> 47fbfe56a4b4b18413135723d6f3e8221797cbbf
 import { CREW } from '../sim/crew'
 import { MISSION_DAYS, commsDelaySec, dayOf, formatClock, formatDelay, minuteOfDay } from '../sim/mission'
-import { useAlerts, useCrew, useSimClock, useSleepShift } from '../store/hooks'
+import { useAlerts, useSimClock, useSleepShift } from '../store/hooks'
 import { useSession } from '../store/session'
 import { useStore } from '../store/store'
+import { ClockText } from './bits'
 import { DemoDrawer } from './DemoDrawer'
 
-const NAV = [
+const CREW_NAV = [
   { to: '/', label: 'Today' },
   { to: '/body', label: 'Body' },
   { to: '/sleep', label: 'Sleep and mind' },
   { to: '/radiation', label: 'Radiation' },
   { to: '/ship', label: 'Ship and Earth' },
+  { to: '/consult', label: 'Consult Earth' },
+  { to: '/eva', label: 'EVA Monitor' },
+  { to: '/scenarios', label: 'Scenarios' },
+  { to: '/games', label: 'Games' },
 ]
 
-<<<<<<< HEAD
-=======
 const COMMANDER_NAV = [...CREW_NAV, { to: '/command', label: 'Command' }]
 
->>>>>>> 47fbfe56a4b4b18413135723d6f3e8221797cbbf
 export function Shell() {
   useSimClock()
   const t = useStore((s) => s.t)
   const crewId = useStore((s) => s.crewId)
-  const setCrew = useStore((s) => s.setCrew)
   const sheltered = useStore((s) => s.sheltered)
   const setSheltered = useStore((s) => s.setSheltered)
   const alerts = useAlerts()
   const sleepShift = useSleepShift()
   const [drawer, setDrawer] = useState(false)
   const signOut = useSession((s) => s.signOut)
-  const role = useSession((s) => s.role)
-  const viewAs = useSession((s) => s.viewAs)
-  const crew = useCrew()
-  const navigate = useNavigate()
 
   useEffect(() => {
     document.documentElement.dataset.theme = sleepShift ? 'sleep' : 'day'
   }, [sleepShift])
 
+  const crew = CREW.find((c) => c.id === crewId) ?? CREW[0]
+  const isCommander = crew.role === 'Commander'
+  const navItems = isCommander ? COMMANDER_NAV : CREW_NAV
+
   const top = alerts.find((a) => a.level !== 'watch')
 
   return (
     <>
-      {role === 'flight-surgeon' && (
-        <div className="viewas-band" role="status">
-          <div className="page viewas-band-inner">
-            <span>
-              You are seeing <strong>{crew.name}</strong>&rsquo;s Orb, exactly as they see it on board.
-            </span>
-            <button
-              className="btn btn-small"
-              onClick={() => {
-                viewAs(null)
-                navigate('/admin')
-              }}
-            >
-              Back to Mission Control
-            </button>
-          </div>
-        </div>
-      )}
       <header className="topbar">
         <div className="page topbar-inner">
           <Link className="wordmark" to="/" aria-label="Orb, go to Today">
-            Orb
+            Orb<span className="wordmark-plus">+</span>
           </Link>
           <nav className="nav" aria-label="Main">
-            {NAV.map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.to === '/'}>
-                {n.label}
-              </NavLink>
+            {navItems.map((n) => (
+              <NavLink key={n.to} to={n.to} end={n.to === '/'}>{n.label}</NavLink>
             ))}
           </nav>
-          <label className="crew-pick">
-            <span className="visually-hidden">Crew member</span>
-            <select value={crewId} onChange={(e) => setCrew(e.target.value)}>
-              {CREW.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
         </div>
       </header>
 
@@ -113,7 +80,7 @@ export function Shell() {
       <div className="page">
         <div className="statusline">
           <span>
-            <strong>Day {dayOf(t)}</strong> of {MISSION_DAYS} to Mars, ship time {formatClock(minuteOfDay(t))}
+            <strong>Day {dayOf(t)}</strong> of {MISSION_DAYS} to Mars, ship time <ClockText time={formatClock(minuteOfDay(t))} />
             {sleepShift ? ', sleep shift' : ''}
           </span>
           <span>
@@ -126,7 +93,6 @@ export function Shell() {
         </main>
 
         <footer className="footer">
-          <span>Simulated data for a NASA Space Apps entry. Not a medical device. Not affiliated with NASA.</span>
           <span className="footer-actions">
             <Link className="link" to="/sources">
               Sources

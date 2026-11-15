@@ -68,6 +68,19 @@ export function Readout({ label, value, unit, note, level, big, children }: Read
   )
 }
 
+/** A clock time whose colon pulses, so a still frame still reads as live time. */
+export function ClockText({ time }: { time: string }) {
+  const at = time.indexOf(':')
+  if (at < 0) return <>{time}</>
+  return (
+    <>
+      {time.slice(0, at)}
+      <span className="clock-colon">:</span>
+      {time.slice(at + 1)}
+    </>
+  )
+}
+
 export function Section({ title, note, children }: { title: string; note?: ReactNode; children: ReactNode }) {
   return (
     <section className="section">

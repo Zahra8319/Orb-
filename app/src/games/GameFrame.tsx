@@ -10,7 +10,7 @@ export function GameFrame({ id }: { id: string }) {
       title={game.title}
       src={url}
       className="h-full w-full border-0"
-      sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-fullscreen"
+      sandbox="allow-scripts allow-same-origin allow-pointer-lock"
       allow="fullscreen; gamepad"
       loading="lazy"
     />

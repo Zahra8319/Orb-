@@ -118,7 +118,9 @@ export function DayRing({ crew, t, scenarios }: Props) {
         Ship time
       </text>
       <text className="ring-time" x={C} y={C + 14} textAnchor="middle">
-        {formatClock(now)}
+        {formatClock(now).slice(0, 2)}
+        <tspan className="clock-colon">:</tspan>
+        {formatClock(now).slice(3)}
       </text>
       <text className="ring-state" x={C} y={C + 46} textAnchor="middle">
         {STATE[activity]}

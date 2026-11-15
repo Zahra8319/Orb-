@@ -3,7 +3,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Orbit } from 'lucide-react'
 
 import { LoginForm } from '@/components/login-form'
-import { ShootingStars, type HoleCamera } from '@/components/ShootingStars'
+import { ShootingStars } from '@/components/ShootingStars'
 import { BlackHoleHeroSection } from '@/components/ui/blackhole-hero-section'
 import { useSession } from '@/store/session'
 
@@ -30,39 +30,31 @@ function useNarrow(query = '(max-width: 767px)') {
  */
 export function Login() {
   const narrow = useNarrow()
-  const role = useSession((s) => s.role)
+  const signedIn = useSession((s) => s.crewId)
   const signIn = useSession((s) => s.signIn)
   const navigate = useNavigate()
   const from = (useLocation().state as { from?: string } | null)?.from ?? '/'
 
   useEffect(() => {
     document.documentElement.dataset.theme = 'sleep'
-    document.title = 'Sign in · Orb'
+    document.title = 'Sign in · Orb+'
     return () => {
-      document.title = 'Orb'
+      document.title = 'Orb+'
     }
   }, [])
 
-  if (role === 'flight-surgeon') return <Navigate to="/admin" replace />
-  if (role === 'crew') return <Navigate to={from} replace />
-
-  // One camera for the black hole and the meteors it bends, so they line up.
-  const camera: HoleCamera = {
-    focus: narrow ? [0.5, 0.9] : [0.7, 0.48],
-    fov: narrow ? 60 : 42,
-    distance: 24,
-  }
+  if (signedIn) return <Navigate to={from} replace />
 
   return (
     <div className="orb-ui orb-night fixed inset-0 overflow-y-auto bg-black font-sans text-foreground">
       <BlackHoleHeroSection
         className="fixed! inset-0"
-        focus={camera.focus}
+        focus={narrow ? [0.5, 0.9] : [0.7, 0.48]}
         scrim={narrow ? 'top' : 'left'}
         scrimStrength={0.88}
-        distance={camera.distance}
+        distance={24}
         elevation={narrow ? -7 : -5.5}
-        fov={camera.fov}
+        fov={narrow ? 60 : 42}
         glow={narrow ? 0.85 : 1}
         steps={narrow ? 200 : 300}
         resolution={narrow ? 0.6 : 0.7}
@@ -70,7 +62,7 @@ export function Login() {
         spinSpeed={0.09}
       />
 
-      <ShootingStars className="z-[1]" every={0.7} hole={camera} />
+      <ShootingStars className="z-[1]" every={0.7} />
 
       <main className="relative z-10 flex min-h-svh flex-col items-center justify-start gap-6 p-6 pt-12 pb-40 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)] md:items-start md:justify-center md:p-10 lg:pl-24">
         <div className="flex w-full max-w-sm flex-col gap-6">
@@ -82,12 +74,12 @@ export function Login() {
             <span className="flex size-7 items-center justify-center rounded-full bg-nasa-blue text-white ring-1 ring-white/25">
               <Orbit className="size-4" aria-hidden="true" />
             </span>
-            Orb
+            Orb<span className="wordmark-plus">+</span>
           </a>
           <LoginForm
-            onSignIn={(account) => {
-              signIn(account)
-              navigate(account.role === 'flight-surgeon' ? '/admin' : from, { replace: true })
+            onSignIn={(crewId) => {
+              signIn(crewId)
+              navigate(from, { replace: true })
             }}
           />
         </div>

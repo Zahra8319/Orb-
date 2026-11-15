@@ -1,37 +1,26 @@
 import type { ReactNode } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { AdminShell } from './components/AdminShell'
 import { Shell } from './components/Shell'
 import { useSession } from './store/session'
-import { CrewDetail } from './screens/admin/CrewDetail'
-import { Inbox } from './screens/admin/Inbox'
-import { Overview } from './screens/admin/Overview'
-import { Ship } from './screens/admin/Ship'
-import { Simulation } from './screens/admin/Simulation'
+import { Admin } from './screens/Admin'
 import { Body } from './screens/Body'
+import { Command } from './screens/Command'
+import { Consult } from './screens/Consult'
+import { EVA } from './screens/EVA'
+import { GamePlay, Games } from './screens/Games'
 import { Login } from './screens/Login'
 import { Radiation } from './screens/Radiation'
+import { ScenariosScreen } from './screens/Scenarios'
 import { ShipEarth } from './screens/ShipEarth'
 import { SleepMind } from './screens/SleepMind'
 import { Sources } from './screens/Sources'
 import { Today } from './screens/Today'
 
-/** A crew member's own view: for that crew member, or the flight surgeon viewing as them. */
+/** Sends anyone not signed in to the sign-in screen, then back where they were going. */
 function RequireCrew({ children }: { children: ReactNode }) {
-  const role = useSession((s) => s.role)
   const crewId = useSession((s) => s.crewId)
   const location = useLocation()
-  if (!role) return <Navigate to="/login" replace state={{ from: location.pathname }} />
-  if (!crewId) return <Navigate to="/admin" replace />
-  return children
-}
-
-/** Mission Control: the flight surgeon only. */
-function RequireSurgeon({ children }: { children: ReactNode }) {
-  const role = useSession((s) => s.role)
-  const location = useLocation()
-  if (!role) return <Navigate to="/login" replace state={{ from: location.pathname }} />
-  if (role !== 'flight-surgeon') return <Navigate to="/" replace />
+  if (!crewId) return <Navigate to="/login" replace state={{ from: location.pathname }} />
   return children
 }
 
@@ -40,21 +29,7 @@ export default function App() {
     <HashRouter>
       <Routes>
         <Route path="login" element={<Login />} />
-        <Route
-          path="admin"
-          element={
-            <RequireSurgeon>
-              <AdminShell />
-            </RequireSurgeon>
-          }
-        >
-          <Route index element={<Overview />} />
-          <Route path="crew/:id" element={<CrewDetail />} />
-          <Route path="ship" element={<Ship />} />
-          <Route path="messages" element={<Inbox />} />
-          <Route path="simulation" element={<Simulation />} />
-          <Route path="*" element={<Navigate to="/admin" replace />} />
-        </Route>
+        <Route path="admin" element={<Admin />} />
         <Route
           element={
             <RequireCrew>
@@ -67,6 +42,12 @@ export default function App() {
           <Route path="sleep" element={<SleepMind />} />
           <Route path="radiation" element={<Radiation />} />
           <Route path="ship" element={<ShipEarth />} />
+          <Route path="consult" element={<Consult />} />
+          <Route path="eva" element={<EVA />} />
+          <Route path="scenarios" element={<ScenariosScreen />} />
+          <Route path="games" element={<Games />} />
+          <Route path="games/:id" element={<GamePlay />} />
+          <Route path="command" element={<Command />} />
           <Route path="sources" element={<Sources />} />
           <Route path="*" element={<Today />} />
         </Route>
