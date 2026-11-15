@@ -189,6 +189,34 @@ input {
   }
 }
 
+/* ECG strip: a regular rhythm scrolls left at real speed, like a bedside monitor.
+   Entrance: draw the trace from left to right on first load, then start scrolling. */
+@media (prefers-reduced-motion: no-preference) {
+  .ecg-scroll {
+    animation: ecg-scroll var(--ecg-dur, 1s) linear infinite;
+  }
+  .ecg path {
+    stroke-dasharray: var(--ecg-pathlen, 1);
+    stroke-dashoffset: var(--ecg-pathlen, 1);
+    animation: ecg-draw-in 0.6s ease-out forwards, ecg-scroll var(--ecg-dur, 1s) linear infinite 0.6s;
+  }
+}
+
+@keyframes ecg-draw-in {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ecg-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--ecg-shift, 0px));
+  }
+}
+
 main {
   padding: var(--s-7) 0 var(--s-8);
 }
@@ -570,20 +598,69 @@ main {
   font-size: 13px;
 }
 
-/* ECG strip: a regular rhythm scrolls left at real speed, like a bedside monitor. */
-@media (prefers-reduced-motion: no-preference) {
-  .ecg-scroll {
-    animation: ecg-scroll var(--ecg-dur, 1s) linear infinite;
+/* More-menu dropdown for overflow tabs */
+.more-menu {
+  position: relative;
+}
+
+.more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+
+.more-btn:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.more-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: var(--s-1);
+  min-width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--s-1);
+  z-index: 100;
+  animation: more-rise 0.12s ease-out;
+}
+
+@keyframes more-rise {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@keyframes ecg-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(var(--ecg-shift, 0px));
-  }
+.more-panel a {
+  display: block;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  color: var(--ink-soft);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.more-panel a:hover,
+.more-panel a.active {
+  color: var(--ink);
+  background: var(--surface-2);
 }
 
 .axis-line {
@@ -1080,10 +1157,6 @@ main {
 
   .nav a {
     padding: 12px 0 10px;
-  }
-
-  .crew-pick {
-    margin-left: auto;
   }
 
   main {

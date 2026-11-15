@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useWidth } from './useWidth'
 
 interface Props {
@@ -36,6 +37,8 @@ function beat(x: number, w: number, amp: number, y0: number): string {
 /** A hospital-monitor rhythm strip: the ECG drawn at this person's heart rate. */
 export function ECGStrip({ bpm, irregular = false, abnormal = false, height = 44 }: Props) {
   const [ref, width] = useWidth<HTMLDivElement>(240)
+  const pathRef = useRef<SVGPathElement>(null)
+  const [pathLen, setPathLen] = useState(0)
   const rate = Math.max(30, Math.min(220, bpm))
   const pxPerSec = width / 5 // a five-second strip, like a bedside monitor
   const interval = (60 / rate) * pxPerSec
@@ -51,20 +54,31 @@ export function ECGStrip({ bpm, irregular = false, abnormal = false, height = 44
     x += w
     beats += 1
   }
+  const d = parts.join(' ')
+
+  // Measure the path length once the SVG is in the DOM for the entrance animation.
+  useEffect(() => {
+    if (pathRef.current) setPathLen(pathRef.current.getTotalLength())
+  }, [])
 
   // A regular rhythm scrolls left at real speed, the way a monitor redraws.
   const scrolling = !irregular && beats > 2
   const style: CSSProperties | undefined = scrolling
-    ? ({ '--ecg-shift': `${r(-interval)}px`, '--ecg-dur': `${r((interval / pxPerSec) * 1000) / 1000}s` } as CSSProperties)
-    : undefined
+    ? ({
+        '--ecg-shift': `${r(-interval)}px`,
+        '--ecg-dur': `${r((interval / pxPerSec) * 1000) / 1000}s`,
+        '--ecg-pathlen': pathLen || undefined,
+      } as CSSProperties)
+    : { '--ecg-pathlen': pathLen || undefined } as CSSProperties
 
   return (
     <div className="chart ecg" ref={ref} aria-hidden="true">
       <svg width={width} height={height}>
         <path
+          ref={pathRef}
           className={scrolling ? 'ecg-scroll' : undefined}
           style={style}
-          d={parts.join(' ')}
+          d={d}
           fill="none"
           stroke={abnormal ? 'var(--urgent)' : 'var(--series-1)'}
           strokeWidth={2}

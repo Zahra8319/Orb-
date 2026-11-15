@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { CREW } from '../sim/crew'
 import { MISSION_DAYS, commsDelaySec, dayOf, formatClock, formatDelay, minuteOfDay } from '../sim/mission'
@@ -8,7 +8,7 @@ import { useStore } from '../store/store'
 import { ClockText } from './bits'
 import { DemoDrawer } from './DemoDrawer'
 
-const NAV = [
+const CREW_NAV = [
   { to: '/', label: 'Today' },
   { to: '/body', label: 'Body' },
   { to: '/sleep', label: 'Sleep and mind' },
@@ -17,14 +17,44 @@ const NAV = [
   { to: '/consult', label: 'Consult Earth' },
   { to: '/eva', label: 'EVA Monitor' },
   { to: '/scenarios', label: 'Scenarios' },
-  { to: '/command', label: 'Command' },
 ]
+
+const COMMANDER_NAV = [...CREW_NAV, { to: '/command', label: 'Command' }]
+
+function MoreMenu({ items }: { items: typeof CREW_NAV }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [])
+  if (items.length === 0) return null
+  return (
+    <div className="more-menu" ref={ref}>
+      <button className="more-btn" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="1.5" fill="currentColor" /><circle cx="12" cy="5" r="1.5" fill="currentColor" /><circle cx="12" cy="19" r="1.5" fill="currentColor" /></svg>
+        <span className="visually-hidden">More sections</span>
+      </button>
+      {open && (
+        <div className="more-panel" role="menu">
+          {items.map((n) => (
+            <NavLink key={n.to} to={n.to} role="menuitem" className={({ isActive }) => (isActive ? 'active' : '')}>
+              {n.label}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function Shell() {
   useSimClock()
   const t = useStore((s) => s.t)
   const crewId = useStore((s) => s.crewId)
-  const setCrew = useStore((s) => s.setCrew)
   const sheltered = useStore((s) => s.sheltered)
   const setSheltered = useStore((s) => s.setSheltered)
   const alerts = useAlerts()
@@ -36,6 +66,10 @@ export function Shell() {
     document.documentElement.dataset.theme = sleepShift ? 'sleep' : 'day'
   }, [sleepShift])
 
+  const crew = CREW.find((c) => c.id === crewId) ?? CREW[0]
+  const isCommander = crew.role === 'Commander'
+  const navItems = isCommander ? COMMANDER_NAV : CREW_NAV
+
   const top = alerts.find((a) => a.level !== 'watch')
 
   return (
@@ -46,20 +80,11 @@ export function Shell() {
             Orb<span className="wordmark-plus">+</span>
           </Link>
           <nav className="nav" aria-label="Main">
-            {NAV.map((n) => (
+            {navItems.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.to === '/'}>{n.label}</NavLink>
             ))}
+            <MoreMenu items={navItems} />
           </nav>
-          <label className="crew-pick">
-            <span className="visually-hidden">Crew member</span>
-            <select value={crewId} onChange={(e) => setCrew(e.target.value)}>
-              {CREW.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
         </div>
       </header>
 
