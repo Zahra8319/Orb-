@@ -55,7 +55,10 @@ export function DemoDrawer({ onClose }: { onClose: () => void }) {
             <li key={sc.id} className="scenario">
               <div>
                 <b>{sc.name}</b>
-                <span>{sc.description}</span>
+                <span>
+                  {sc.description}
+                  {!sc.live && ' Case file only: readings do not change.'}
+                </span>
               </div>
               <button className="btn btn-quiet btn-small" type="button" aria-pressed={on} onClick={() => toggleScenario(sc.id as any)}>
                 {on ? 'Stop' : 'Start'}

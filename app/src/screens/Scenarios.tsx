@@ -3,6 +3,7 @@ import { Section } from '../components/bits'
 import { useStore } from '../store/store'
 import { getAvailableScenarios, getScenarioById, type MedicalScenario } from '../sim/scenarios'
 import { dayOf } from '../sim/mission'
+import { crewById } from '../sim/crew'
 
 const SEVERITY_LABEL: Record<string, string> = {
   critical: 'Critical',
@@ -65,8 +66,8 @@ export function ScenariosScreen() {
       <header className="page-header">
         <h1 className="page-title">Scenario injector</h1>
         <p className="page-intro">
-          Inject clinical and environmental scenarios to test crew responses. Active scenarios change simulation parameters and
-          trigger alerts — use them for training, evaluation, or a demo narrative.
+          Inject clinical and environmental scenarios to test crew responses. Live scenarios change Orb&rsquo;s readings and
+          trigger alerts; case files give the crew a full clinical write-up to train on without changing the readings.
         </p>
       </header>
 
@@ -142,9 +143,13 @@ export function ScenariosScreen() {
                   <span>{scenario.category}</span>
                 </div>
                 <div className="scenario-tags">
-                  {scenario.triggersAlerts.map((alertId) => (
-                    <span key={alertId} className="alert-tag">{alertId}</span>
-                  ))}
+                  {scenario.live ? (
+                    scenario.triggersAlerts.map((alertId) => (
+                      <span key={alertId} className="alert-tag">{alertId}</span>
+                    ))
+                  ) : (
+                    <span className="alert-tag">case file, readings unchanged</span>
+                  )}
                 </div>
                 <span className="scenario-open">Open case file →</span>
               </article>
@@ -271,7 +276,7 @@ export function ScenariosScreen() {
               <div className="detail-section">
                 <h4>Patient</h4>
                 <p>
-                  Crew member: <strong>{(currentScenario as MedicalScenario).patientId}</strong>
+                  Crew member: <strong>{crewById((currentScenario as MedicalScenario).patientId).name}</strong>
                 </p>
               </div>
             )}

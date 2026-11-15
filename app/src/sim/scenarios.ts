@@ -16,7 +16,12 @@ export interface Scenario {
   narrative: string
   /** Clinical guidance for the crew. */
   guidance: string[]
-  /** Which alerts this scenario should activate. */
+  /**
+   * True when starting it changes Orb's live readings and alerts. False for a
+   * case file the crew trains on: the write-up shows, the readings do not move.
+   */
+  live: boolean
+  /** Which alerts this scenario activates (empty for a case file). */
   triggersAlerts: string[]
   /** Callback to apply scenario effects to the simulation state. */
   apply?: (crew: any, day: number) => void
@@ -56,6 +61,7 @@ export const SCENARIOS: Scenario[] = [
       'Take potassium iodide 130 mg if thyroid dose projected > 50 mSv.',
       'Delay all EVA operations until all-clear.',
     ],
+    live: true,
     triggersAlerts: ['solar-storm'],
   },
   {
@@ -73,6 +79,7 @@ export const SCENARIOS: Scenario[] = [
       'Avoid heavy exercise until CO₂ < 3 mmHg.',
       'Monitor for headache, dyspnea, cognitive slowing.',
     ],
+    live: true,
     triggersAlerts: ['co2'],
   },
   {
@@ -83,14 +90,50 @@ export const SCENARIOS: Scenario[] = [
     duration: 7,
     severity: 'major',
     category: 'medical',
-    narrative: 'MEDICAL EVENT: Commander Okafor reports palpitations. ECG shows Afib with RVR.',
+    narrative: 'MEDICAL EVENT: The signed-in crew member reports palpitations. ECG shows Afib with RVR.',
     guidance: [
       'Record 30-second ECG strip immediately.',
       'If hemodynamically stable: metoprolol 5 mg IV, recheck in 15 min.',
       'If unstable: synchronized cardioversion 50 J.',
       'Anticoagulation decision requires Earth consult (CHA₂DS₂-VASc).',
     ],
-    triggersAlerts: ['rhythm', 'heart-rate'],
+    live: true,
+    triggersAlerts: ['rhythm'],
+  },
+  {
+    id: 'short-sleep',
+    name: 'A Week of Short Sleep',
+    description: 'Seven nights of short, broken sleep before today.',
+    triggerDay: null,
+    duration: 7,
+    severity: 'moderate',
+    category: 'behavioral',
+    narrative: 'SLEEP: The last seven nights were cut short by schedule pressure and noise. Sleep debt is building.',
+    guidance: [
+      'Protect an 8.5-hour sleep opportunity tonight.',
+      'Dim cabin lights two hours before bed.',
+      'Take the reaction-time test before any robotics or EVA work.',
+      'Tell the commander if critical tasks fall in your low-alertness window.',
+    ],
+    live: true,
+    triggersAlerts: ['sleep'],
+  },
+  {
+    id: 'missed-exercise',
+    name: 'Missed Exercise',
+    description: 'Four days in a row without a full exercise session.',
+    triggerDay: null,
+    duration: 4,
+    severity: 'moderate',
+    category: 'medical',
+    narrative: 'EXERCISE: No full cardio and resistance session for four days. Bone and muscle loss speed up without loading.',
+    guidance: [
+      'Resume the full plan today: cardio and resistance.',
+      'Ramp resistance load back up over two sessions.',
+      'Log any pain or equipment faults so the plan can be adjusted.',
+    ],
+    live: true,
+    triggersAlerts: ['exercise'],
   },
   {
     id: 'behavioral-crisis',
@@ -112,7 +155,8 @@ export const SCENARIOS: Scenario[] = [
       'Private medical conference with flight surgeon',
       'Structured crew debrief (facilitated, no mission business)',
     ],
-    triggersAlerts: ['sleep', 'exercise', 'reaction'],
+    live: false,
+    triggersAlerts: [],
   },
 ]
 
@@ -163,6 +207,7 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
       'Emergency laparoscopic appendectomy (if perforated, abscess, or failing medical mgmt)',
       'Medical evacuation to Earth (not feasible in transit — must treat onboard)',
     ],
+    live: false,
     triggersAlerts: [],
     guidance: [
       'This is the most common surgical emergency in space analog studies.',
@@ -217,6 +262,7 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
       'Stones > 10 mm: usually require intervention',
       'Recurrence risk: 50% at 5 years — implement prevention for all crew',
     ],
+    live: false,
     triggersAlerts: [],
     guidance: [
       'Microgravity increases stone risk: bone demineralization → hypercalciuria, dehydration, stasis.',
@@ -274,7 +320,9 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
       'CHA₂DS₂-VASc score determines long-term anticoagulation',
       'Commander may need temporary command transfer if symptomatic',
     ],
-    triggersAlerts: ['rhythm', 'heart-rate'],
+    // Drives the irregular rhythm for the patient (Okafor) only.
+    live: true,
+    triggersAlerts: ['rhythm'],
     guidance: [
       'Afib is the most common sustained arrhythmia in spaceflight.',
       'Triggers: dehydration, stress, alcohol, thyroid, structural heart disease.',
@@ -330,7 +378,8 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
       '> 4 Gy: LD50/60, requires aggressive support + possible transplant',
       'Long-term: cancer risk, cataract monitoring',
     ],
-    triggersAlerts: ['solar-storm', 'career-dose'],
+    live: false,
+    triggersAlerts: [],
     guidance: [
       'Time to vomiting is key triage: < 1 hr = > 2 Gy, 1-2 hr = 1-2 Gy, > 2 hr = < 1 Gy.',
       'Lymphocyte count at 24h predicts severity: > 1500 = mild, 500-1500 = moderate, < 500 = severe.',

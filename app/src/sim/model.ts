@@ -273,7 +273,9 @@ export function vitalsAt(crew: Crew, t: number, sc: Scenarios): Vitals {
     breathing = 14.5 + smoothNoise(s + 22, t, 5) * 1.5
   }
 
-  const irregular = sc['irregular-heart'] !== null && t >= (sc['irregular-heart'] as number)
+  // 'irregular-heart' affects whoever is signed in; the 'arrhythmia' case is the commander's.
+  const started = (at: number | null) => at !== null && t >= at
+  const irregular = started(sc['irregular-heart']) || (crew.id === 'okafor' && started(sc.arrhythmia))
   if (irregular) {
     // Erratic beat-to-beat jumps, re-rolled every nine seconds.
     heartRate += 14 + (hash01(s + 23, t / 0.15) * 2 - 1) * 26
