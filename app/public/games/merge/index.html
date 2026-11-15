@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Merge</title>
+<style>html,body{margin:0;min-height:100%;background:#061f4a;color:#fff;font:16px system-ui,sans-serif}
+body{display:grid;place-items:center;padding:12px;box-sizing:border-box;touch-action:none}main{text-align:center}
+#g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:min(88vw,380px);margin:10px auto}
+.t{aspect-ratio:1;display:grid;place-items:center;border-radius:6px;font-weight:700;font-size:1.4rem;background:#0b2a63;color:#061f4a}
+#r{padding:8px 16px;border:0;border-radius:6px;background:#fc3d21;color:#fff;cursor:pointer}</style></head><body>
+<main><div id="m" aria-live="polite">Score 0. Arrow keys or swipe.</div><div id="g"></div><button id="r">New game</button></main>
+<script>
+const g=document.getElementById('g'),m=document.getElementById('m');let b,score,over;
+function add(){const e=b.map((v,i)=>v?-1:i).filter(i=>i>=0);if(e.length)b[e[Math.random()*e.length|0]]=Math.random()<.9?2:4}
+function lines(d){const o=[];for(let i=0;i<4;i++){let l=[0,1,2,3].map(k=>d==='L'||d==='R'?i*4+k:i+k*4);if(d==='R'||d==='D')l.reverse();o.push(l)}return o}
+function slide(v){const a=v.filter(Boolean),r=[];for(let i=0;i<a.length;i++){if(a[i]===a[i+1]){r.push(a[i]*2);score+=a[i]*2;i++}else r.push(a[i])}while(r.length<4)r.push(0);return r}
+function stuck(){if(b.includes(0))return false;for(let i=0;i<16;i++){if(i%4<3&&b[i]===b[i+1])return false;if(i<12&&b[i]===b[i+4])return false}return true}
+function move(d){if(over)return;let ch=false;for(const l of lines(d)){const n=slide(l.map(k=>b[k]));l.forEach((k,j)=>{if(b[k]!==n[j]){ch=true;b[k]=n[j]}})}
+ if(ch){add();if(stuck())over=true}draw()}
+function draw(){g.innerHTML='';b.forEach(v=>{const t=document.createElement('div');t.className='t';t.textContent=v||'';
+ if(v)t.style.background='hsl('+(200+Math.log2(v)*14)+',80%,'+(80-Math.log2(v)*4)+'%)';g.appendChild(t)});
+ m.textContent=over?'Game over. Score '+score:'Score '+score+'. Arrow keys or swipe.'}
+function start(){b=Array(16).fill(0);score=0;over=false;add();add();draw()}
+addEventListener('keydown',e=>{const d={ArrowLeft:'L',ArrowRight:'R',ArrowUp:'U',ArrowDown:'D'}[e.key];if(d){e.preventDefault();move(d)}});
+let sx,sy;addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY});
+addEventListener('pointerup',e=>{const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.max(Math.abs(dx),Math.abs(dy))<30)return;
+ move(Math.abs(dx)>Math.abs(dy)?(dx>0?'R':'L'):(dy>0?'D':'U'))});
+document.getElementById('r').onclick=start;start();
+</script></body></html>
