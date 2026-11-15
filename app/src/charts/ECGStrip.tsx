@@ -85,6 +85,18 @@ export function ECGStrip({ bpm, irregular = false, abnormal = false, height = 44
           strokeLinecap="round"
           strokeLinejoin="round"
         />
+        {/* Pen-tip dot: rides the leading edge while the trace is written. */}
+        {pathLen > 0 && (
+          <circle
+            className="ecg-pen"
+            r={3}
+            fill={abnormal ? 'var(--urgent)' : 'var(--series-1)'}
+            style={{
+              offsetPath: `path('${d}')`,
+              offsetRotate: '0deg',
+            } as CSSProperties}
+          />
+        )}
       </svg>
     </div>
   )

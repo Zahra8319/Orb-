@@ -189,8 +189,13 @@ input {
   }
 }
 
+/* Pen-tip dot: hidden until the write-in animation runs. */
+.ecg-pen {
+  opacity: 0;
+}
+
 /* ECG strip: a regular rhythm scrolls left at real speed, like a bedside monitor.
-   Entrance: draw the trace from left to right on first load, then start scrolling. */
+   Entrance: the pen writes the trace beat by beat over 2.5s, then scrolls. */
 @media (prefers-reduced-motion: no-preference) {
   .ecg-scroll {
     animation: ecg-scroll var(--ecg-dur, 1s) linear infinite;
@@ -198,13 +203,31 @@ input {
   .ecg path {
     stroke-dasharray: var(--ecg-pathlen, 1);
     stroke-dashoffset: var(--ecg-pathlen, 1);
-    animation: ecg-draw-in 0.6s ease-out forwards, ecg-scroll var(--ecg-dur, 1s) linear infinite 0.6s;
+    animation: ecg-draw-in 2.5s linear forwards, ecg-scroll var(--ecg-dur, 1s) linear infinite 2.5s;
+  }
+  /* A bright pen-tip dot rides the leading edge while the trace is written. */
+  .ecg-pen {
+    animation: ecg-pen-travel 2.5s linear forwards;
   }
 }
 
 @keyframes ecg-draw-in {
   to {
     stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ecg-pen-travel {
+  0% {
+    opacity: 1;
+    offset-distance: 0%;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    offset-distance: 100%;
   }
 }
 
@@ -614,11 +637,25 @@ main {
   color: var(--ink-soft);
   cursor: pointer;
   border-radius: var(--r-sm);
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .more-btn:hover {
   color: var(--ink);
   background: var(--surface-2);
+}
+
+.more-btn[aria-expanded='true'] {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.more-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.more-btn[aria-expanded='true'] svg {
+  transform: rotate(90deg);
 }
 
 .more-panel {
