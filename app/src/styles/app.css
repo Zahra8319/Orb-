@@ -156,6 +156,66 @@ input {
   font-weight: 650;
 }
 
+<<<<<<< HEAD
+=======
+/* The colon pulses so a still clock reads as running time. */
+@media (prefers-reduced-motion: no-preference) {
+  .clock-colon {
+    animation: clock-pulse 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes clock-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+
+/* Pen-tip dot: hidden until the write-in animation runs. */
+.ecg-pen {
+  opacity: 0;
+}
+
+/* ECG strip: the right quarter is a flat baseline, waiting. The pen writes
+   the waveform across the left three-quarters at real speed — 3.75s for
+   3.75s of a five-second window — then rests. */
+@media (prefers-reduced-motion: no-preference) {
+  .ecg-wave {
+    stroke-dasharray: var(--ecg-pathlen, 1);
+    stroke-dashoffset: var(--ecg-pathlen, 1);
+    animation: ecg-draw-in 3.75s linear forwards;
+  }
+  /* A bright pen-tip dot rides the leading edge while the trace is written. */
+  .ecg-pen {
+    animation: ecg-pen-travel 3.75s linear forwards;
+  }
+}
+
+@keyframes ecg-draw-in {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ecg-pen-travel {
+  0% {
+    opacity: 1;
+    offset-distance: 0%;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    offset-distance: 100%;
+  }
+}
+
+>>>>>>> 47fbfe56a4b4b18413135723d6f3e8221797cbbf
 main {
   padding: var(--s-7) 0 var(--s-8);
 }

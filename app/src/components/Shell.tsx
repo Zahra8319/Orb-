@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
+<<<<<<< HEAD
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+=======
+import { Link, NavLink, Outlet } from 'react-router-dom'
+>>>>>>> 47fbfe56a4b4b18413135723d6f3e8221797cbbf
 import { CREW } from '../sim/crew'
 import { MISSION_DAYS, commsDelaySec, dayOf, formatClock, formatDelay, minuteOfDay } from '../sim/mission'
 import { useAlerts, useCrew, useSimClock, useSleepShift } from '../store/hooks'
@@ -15,6 +19,11 @@ const NAV = [
   { to: '/ship', label: 'Ship and Earth' },
 ]
 
+<<<<<<< HEAD
+=======
+const COMMANDER_NAV = [...CREW_NAV, { to: '/command', label: 'Command' }]
+
+>>>>>>> 47fbfe56a4b4b18413135723d6f3e8221797cbbf
 export function Shell() {
   useSimClock()
   const t = useStore((s) => s.t)
