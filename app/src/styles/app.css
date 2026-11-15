@@ -175,23 +175,22 @@ input {
   }
 }
 
-/* Pen-tip dot: hidden until the write-in animation runs. */
+/* Pen-tip dot: hidden until the sweep animation runs. */
 .ecg-pen {
   opacity: 0;
 }
 
-/* ECG strip: the right quarter is a flat baseline, waiting. The pen writes
-   the waveform across the left three-quarters at real speed — 3.75s for
-   3.75s of a five-second window — then rests. */
+/* ECG strip, bedside-monitor style: the pen sweeps left to right writing
+   five seconds of rhythm at real speed (5 s per pass), then wraps back to
+   the left edge and keeps sweeping. */
 @media (prefers-reduced-motion: no-preference) {
   .ecg-wave {
     stroke-dasharray: var(--ecg-pathlen, 1);
     stroke-dashoffset: var(--ecg-pathlen, 1);
-    animation: ecg-draw-in 3.75s linear forwards;
+    animation: ecg-draw-in 5s linear forwards;
   }
-  /* A bright pen-tip dot rides the leading edge while the trace is written. */
   .ecg-pen {
-    animation: ecg-pen-travel 3.75s linear forwards;
+    animation: ecg-pen-travel 5s linear infinite;
   }
 }
 
@@ -206,11 +205,8 @@ input {
     opacity: 1;
     offset-distance: 0%;
   }
-  90% {
-    opacity: 1;
-  }
   100% {
-    opacity: 0;
+    opacity: 1;
     offset-distance: 100%;
   }
 }
@@ -689,19 +685,19 @@ main {
 
 /* ---------- day ring ---------- */
 
-.ring {
+.day-ring {
   display: block;
   width: 100%;
   height: auto;
 }
 
-.ring text {
+.day-ring text {
   font-family: var(--font);
   fill: var(--ink-soft);
   font-size: 13px;
 }
 
-.ring .ring-time {
+.day-ring .ring-time {
   fill: var(--ink);
   font-size: 58px;
   font-weight: 750;
@@ -709,7 +705,7 @@ main {
   letter-spacing: -0.03em;
 }
 
-.ring .ring-state {
+.day-ring .ring-state {
   fill: var(--ink);
   font-size: 16px;
   font-weight: 600;

@@ -45,7 +45,7 @@ export function DayRing({ crew, t, scenarios }: Props) {
   const label = `Your day at ${formatClock(now)} ship time. ${STATE[activity]}. ${Math.round(exerciseMin)} minutes of exercise done and ${lightHours.toFixed(1)} hours of bright light so far.`
 
   return (
-    <svg className="ring" viewBox="0 0 440 440" role="img" aria-label={label}>
+    <svg className="day-ring" viewBox="0 0 440 440" role="img" aria-label={label}>
       <defs>
         <mask id="ring-reveal" maskUnits="userSpaceOnUse" x={-200} y={-200} width={400} height={400}>
           <circle className="ring-reveal" cx={0} cy={0} r={152} fill="none" stroke="#fff" strokeWidth={90} pathLength={1} transform="rotate(-90)" />

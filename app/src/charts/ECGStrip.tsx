@@ -35,9 +35,9 @@ function beat(x: number, w: number, amp: number, y0: number): string {
 }
 
 /**
- * A hospital-monitor rhythm strip. The pen writes the waveform across the left
- * three-quarters of the strip at real speed (3.75 s of a 5-second window); the
- * right quarter stays a flat baseline, the way a monitor looks mid-sweep.
+ * A hospital-monitor rhythm strip. Like a bedside monitor in sweep mode, the
+ * pen sweeps across the full width writing five seconds of rhythm at real
+ * speed (5 s per pass), then wraps back to the left edge and keeps sweeping.
  */
 export function ECGStrip({ bpm, irregular = false, abnormal = false, height = 44 }: Props) {
   const [ref, width] = useWidth<HTMLDivElement>(240)
@@ -48,16 +48,15 @@ export function ECGStrip({ bpm, irregular = false, abnormal = false, height = 44
   const interval = (60 / rate) * pxPerSec
   const y0 = height * 0.72
   const amp = Math.min(y0 - 4, (height - 4 - y0) / 0.24)
-  const writeEnd = r(width * 0.75) // the pen stops here; right quarter stays flat
 
   const parts = [`M0 ${r(y0)}`]
   let x = 0
   let beats = 0
   if (irregular) {
-    while (x < writeEnd) {
+    while (x < width) {
       const w = interval * (0.72 + 0.56 * hash(beats))
-      if (x + w > writeEnd) {
-        if (writeEnd - x > 6) parts.push(`L${writeEnd} ${r(y0)}`)
+      if (x + w > width) {
+        parts.push(`L${r(width)} ${r(y0)}`)
         break
       }
       parts.push(beat(x, w, amp, y0))
@@ -65,9 +64,9 @@ export function ECGStrip({ bpm, irregular = false, abnormal = false, height = 44
       beats += 1
     }
   } else {
-    // Whole beats that fit exactly, so the waveform ends flush at writeEnd.
-    const n = Math.max(2, Math.round(writeEnd / interval))
-    const w = writeEnd / n
+    // Whole beats that fit exactly, so the trace fills the strip edge to edge.
+    const n = Math.max(2, Math.round(width / interval))
+    const w = width / n
     for (let i = 0; i < n; i += 1) {
       parts.push(beat(x, w, amp, y0))
       x += w
@@ -75,13 +74,11 @@ export function ECGStrip({ bpm, irregular = false, abnormal = false, height = 44
     }
   }
   const wave = parts.join(' ')
-  // Flat baseline: the right quarter, waiting before the pen starts.
-  const flat = `M${writeEnd} ${r(y0)} L${r(width)} ${r(y0)}`
 
-  // Measure the waveform path once in the DOM for the write-in animation.
+  // Measure the path for the write-in animation.
   useEffect(() => {
     if (pathRef.current) setPathLen(pathRef.current.getTotalLength())
-  }, [])
+  }, [wave])
 
   const stroke = abnormal ? 'var(--urgent)' : 'var(--series-1)'
   const style = { '--ecg-pathlen': pathLen || undefined } as CSSProperties
@@ -89,14 +86,6 @@ export function ECGStrip({ bpm, irregular = false, abnormal = false, height = 44
   return (
     <div className="chart ecg" ref={ref} aria-hidden="true">
       <svg width={width} height={height}>
-        <path
-          className="ecg-flat"
-          d={flat}
-          fill="none"
-          stroke={stroke}
-          strokeWidth={2}
-          strokeLinecap="round"
-        />
         <path
           ref={pathRef}
           className="ecg-wave"
@@ -108,7 +97,7 @@ export function ECGStrip({ bpm, irregular = false, abnormal = false, height = 44
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        {/* Pen-tip dot: rides the waveform's leading edge while it is written. */}
+        {/* Pen tip: sweeps the strip like a monitor cursor, wrapping with it. */}
         {pathLen > 0 && (
           <circle
             className="ecg-pen"
