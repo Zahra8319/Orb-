@@ -1000,6 +1000,7 @@ main {
   width: min(380px, 100vw);
   padding: var(--s-5);
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--bg);
   border-left: 2px solid var(--rule-strong);
 }

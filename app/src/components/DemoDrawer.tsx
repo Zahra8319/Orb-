@@ -18,6 +18,22 @@ export function DemoDrawer({ onClose }: { onClose: () => void }) {
   const setThemeMode = useStore((s) => s.setThemeMode)
   const resetDemo = useStore((s) => s.resetDemo)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const drawerRef = useRef<HTMLElement>(null)
+  const scrollPosRef = useRef(0)
+
+  // Preserve scroll position across re-renders
+  useEffect(() => {
+    const drawer = drawerRef.current
+    if (drawer) {
+      drawer.scrollTop = scrollPosRef.current
+    }
+  })
+
+  const handleScroll = () => {
+    if (drawerRef.current) {
+      scrollPosRef.current = drawerRef.current.scrollTop
+    }
+  }
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -29,7 +45,18 @@ export function DemoDrawer({ onClose }: { onClose: () => void }) {
   }, [onClose])
 
   return (
-    <aside className="drawer" role="dialog" aria-label="Demo controls">
+    <aside
+      ref={drawerRef}
+      className="drawer"
+      role="dialog"
+      aria-label="Demo controls"
+      onScroll={handleScroll}
+      onMouseDown={(e) => {
+        if ((e.target as HTMLElement).tagName === 'BUTTON') {
+          e.preventDefault()
+        }
+      }}
+    >
       <div className="drawer-head">
         <h2>Demo controls</h2>
         <button ref={closeRef} className="btn btn-quiet btn-small" type="button" onClick={onClose}>

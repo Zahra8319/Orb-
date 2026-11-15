@@ -100,7 +100,7 @@ function seedMessages(): Message[] {
       id: id++,
       crewId: crew.id,
       from: 'me',
-      text: 'Left knee is sore after yesterday’s squats. No swelling. OK to keep the resistance plan?',
+      text: 'Left knee is sore after yesterday\'s squats. No swelling. OK to keep the resistance plan?',
       sentAt: asked,
       arrivesAt: asked + d,
     })
@@ -122,7 +122,7 @@ function replyTo(text: string): string {
     return 'Copy. We see the same particle flux from here. Stay sheltered until Orb shows the rate under 5 times normal, then log your dose.'
   }
   if (/(sleep|tired|fatigue|insomnia)/.test(q)) {
-    return 'Understood. We are moving tomorrow’s robotics block to the afternoon. Keep lights dim from two hours before bed.'
+    return 'Understood. We are moving tomorrow\'s robotics block to the afternoon. Keep lights dim from two hours before bed.'
   }
   if (/(heart|chest|rhythm|ecg|pulse)/.test(q)) {
     return 'Received. Send the 30-second ECG when you can. Rest until the medical officer has looked at it, and no exercise today.'
@@ -157,83 +157,83 @@ const VERSION = 1
  * member is not saved here (the session handles that), and "Reset demo" clears it all.
  * If storage is blocked the demo still runs; it just starts fresh on reload.
  */
-export const useStore = create<State>()(
+const store = create<State>()(
   persist(
     (set, get) => ({
-  ...initial(),
-  crewId: CREW[0].id,
-  themeMode: 'auto',
+      ...initial(),
+      crewId: CREW[0].id,
+      themeMode: 'auto',
 
-  tick: (realSeconds) => {
-    const { speed, t } = get()
-    if (speed > 0) set({ t: t + speed * realSeconds })
-  },
-  setSpeed: (speed) => set({ speed }),
-  setCrew: (crewId) => set({ crewId }),
-  toggleScenario: (id) =>
-    set((s) => ({
-      scenarios: { ...s.scenarios, [id]: s.scenarios[id] === null ? s.t : null },
-      sheltered: id === 'solar-storm' ? false : s.sheltered,
-    })),
-  resetDemo: () => set(initial()),
-  setThemeMode: (themeMode) => set({ themeMode }),
-  setSheltered: (sheltered) => set({ sheltered }),
-  setMood: (mood) => set((s) => ({ moods: { ...s.moods, [dayKey(s.crewId, dayOf(s.t))]: mood } })),
-  addReaction: (ms, falseStarts) =>
-    set((s) => ({ reactions: [...s.reactions, { crewId: s.crewId, day: dayOf(s.t), ms, falseStarts }] })),
-  addGamePlay: (gameId, value, detail) =>
-    set((s) => ({ gamePlays: [...s.gamePlays, { crewId: s.crewId, gameId, day: dayOf(s.t), t: s.t, value, detail }] })),
-  logEyeCheck: () => set((s) => ({ eyeChecks: { ...s.eyeChecks, [dayKey(s.crewId, dayOf(s.t))]: true } })),
-  sendMessage: (text) =>
-    set((s) => {
-      const trimmed = text.trim()
-      if (!trimmed) return s
-      const nextId = s.messages.reduce((m, x) => Math.max(m, x.id), 0) + 1
-      const out = delayMin(s.t)
-      const replySent = s.t + out + 4
-      return {
-        messages: [
-          ...s.messages,
-          { id: nextId, crewId: s.crewId, from: 'me', text: trimmed, sentAt: s.t, arrivesAt: s.t + out },
-          {
-            id: nextId + 1,
-            crewId: s.crewId,
-            from: 'earth',
-            text: replyTo(trimmed),
-            sentAt: replySent,
-            arrivesAt: replySent + delayMin(replySent),
-          },
-        ],
-      }
-    }),
-  sendAdminMessage: (text: string, toCrewId?: string) =>
-    set((s) => {
-      const trimmed = text.trim()
-      if (!trimmed) return s
-      const nextId = s.messages.reduce((m, x) => Math.max(m, x.id), 0) + 1
-      return {
-        messages: [
-          ...s.messages,
-          {
-            id: nextId,
-            crewId: toCrewId || s.crewId,
-            from: 'admin',
-            text: trimmed,
-            sentAt: s.t,
-            arrivesAt: s.t, // Instant for admin
-            toCrewId,
-          },
-        ],
-      }
-    }),
-  addGlucose: (reading) =>
-    set((s) => ({
-      glucose: [...s.glucose, { ...reading, crewId: s.crewId, day: dayOf(s.t) }],
-    })),
-  addNutrition: (log) =>
-    set((s) => ({
-      nutrition: [...s.nutrition, { ...log, crewId: s.crewId, day: dayOf(s.t) }],
-    })),
+      tick: (realSeconds) => {
+        const { speed, t } = get()
+        if (speed > 0) set({ t: t + speed * realSeconds })
+      },
+      setSpeed: (speed) => set({ speed }),
+      setCrew: (crewId) => set({ crewId }),
+      toggleScenario: (id: ScenarioId) =>
+        set((s) => ({
+          scenarios: { ...s.scenarios, [id]: s.scenarios[id] === null ? s.t : null },
+          sheltered: id === 'solar-storm' ? false : s.sheltered,
+        })),
+      resetDemo: () => set(initial()),
+      setThemeMode: (themeMode) => set({ themeMode }),
+      setSheltered: (sheltered) => set({ sheltered }),
+      setMood: (mood) => set((s) => ({ moods: { ...s.moods, [dayKey(s.crewId, dayOf(s.t))]: mood } })),
+      addReaction: (ms, falseStarts) =>
+        set((s) => ({ reactions: [...s.reactions, { crewId: s.crewId, day: dayOf(s.t), ms, falseStarts }] })),
+      addGamePlay: (gameId, value, detail) =>
+        set((s) => ({ gamePlays: [...s.gamePlays, { crewId: s.crewId, gameId, day: dayOf(s.t), t: s.t, value, detail }] })),
+      logEyeCheck: () => set((s) => ({ eyeChecks: { ...s.eyeChecks, [dayKey(s.crewId, dayOf(s.t))]: true } })),
+      sendMessage: (text) =>
+        set((s) => {
+          const trimmed = text.trim()
+          if (!trimmed) return s
+          const nextId = s.messages.reduce((m, x) => Math.max(m, x.id), 0) + 1
+          const out = delayMin(s.t)
+          const replySent = s.t + out + 4
+          return {
+            messages: [
+              ...s.messages,
+              { id: nextId, crewId: s.crewId, from: 'me', text: trimmed, sentAt: s.t, arrivesAt: s.t + out },
+              {
+                id: nextId + 1,
+                crewId: s.crewId,
+                from: 'earth',
+                text: replyTo(trimmed),
+                sentAt: replySent,
+                arrivesAt: replySent + delayMin(replySent),
+              },
+            ],
+          }
+        }),
+      sendAdminMessage: (text: string, toCrewId?: string) =>
+        set((s) => {
+          const trimmed = text.trim()
+          if (!trimmed) return s
+          const nextId = s.messages.reduce((m, x) => Math.max(m, x.id), 0) + 1
+          return {
+            messages: [
+              ...s.messages,
+              {
+                id: nextId,
+                crewId: toCrewId || s.crewId,
+                from: 'admin',
+                text: trimmed,
+                sentAt: s.t,
+                arrivesAt: s.t, // Instant for admin
+                toCrewId,
+              },
+            ],
+          }
+        }),
+      addGlucose: (reading) =>
+        set((s) => ({
+          glucose: [...s.glucose, { ...reading, crewId: s.crewId, day: dayOf(s.t) }],
+        })),
+      addNutrition: (log) =>
+        set((s) => ({
+          nutrition: [...s.nutrition, { ...log, crewId: s.crewId, day: dayOf(s.t) }],
+        })),
     }),
     {
       name: STORE_KEY,
@@ -256,3 +256,5 @@ export const useStore = create<State>()(
     },
   ),
 )
+
+export const useStore = store
