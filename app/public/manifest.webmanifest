@@ -1,7 +1,7 @@
 {
   "name": "Orb+",
   "short_name": "Orb+",
-  "description": "Personal health monitor for astronauts on Mars transit",
+  "description": "Personal health monitor for astronauts in deep space",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#020816",

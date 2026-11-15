@@ -374,7 +374,7 @@ export function Consult() {
         )}
       </Section>
 
-      <Section title="Why this matters for Mars" note="Communication delay fundamentally changes medical operations.">
+      <Section title="Why this matters in deep space" note="Communication delay fundamentally changes medical operations.">
         <div className="mars-context">
           <div className="mars-card">
             <h4>Earth orbit (ISS)</h4>
@@ -385,7 +385,7 @@ export function Consult() {
             <p>Delay: <strong>about 1.3 seconds</strong> each way. Near-real-time. Earth stays in the loop for major decisions.</p>
           </div>
           <div className="mars-card current">
-            <h4>Mars transit (this mission)</h4>
+            <h4>Deep-space transit (this mission)</h4>
             <p>Delay: <strong>{formatDelay(commsDelaySec(t))}</strong> one way. <strong>{formatDelay(roundTrip)}</strong> round trip.</p>
             <p className="mars-emphasis">Crew must decide autonomously. Earth advises, does not direct.</p>
           </div>
