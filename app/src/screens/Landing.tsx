@@ -8,8 +8,12 @@ import { useSession } from '@/store/session'
 const FOCUS_X = 0.68
 /** The clip finishes a little before the end of the scroll, so the last beat holds on a still frame. */
 const FRAMES_END = 0.92
-/** How quickly the picture catches up with the scrollbar. 1 would be instant. */
-const EASE = 0.14
+/** How quickly the picture catches up with the scrollbar, per 60 Hz frame. 1 would be instant. */
+const EASE = 0.18
+/** Frames downloading at once. */
+const PARALLEL = 8
+/** Frames either side of the current position that are fetched before anything else. */
+const AHEAD = 6
 
 const FRAME_SETS = {
   lg: { dir: 'lg', count: 121 },
@@ -28,6 +32,27 @@ const clamp01 = (n: number) => Math.min(1, Math.max(0, n))
 const ramp = (p: number, from: number, to: number) => {
   const t = clamp01((p - from) / (to - from))
   return t * t * (3 - 2 * t)
+}
+
+/**
+ * Download order for the clip: a frame from every part of it first (every 16th,
+ * then every 8th, 4th, 2nd), then the rest. Wherever the visitor scrolls, a frame
+ * close to that point arrives within the first second or two, so the picture
+ * follows the scrollbar from the start and only gets smoother as the gaps fill.
+ */
+function coarseToFine(count: number): number[] {
+  const order: number[] = []
+  const seen = new Set<number>()
+  for (const step of [16, 8, 4, 2, 1]) {
+    for (let i = 0; i < count; i += step) {
+      if (!seen.has(i)) {
+        seen.add(i)
+        order.push(i)
+      }
+    }
+  }
+  if (!seen.has(count - 1)) order.splice(1, 0, count - 1)
+  return order
 }
 
 const frameSrc = (dir: string, i: number) =>
@@ -123,18 +148,32 @@ export function Landing() {
       }
     }
 
-    const tick = () => {
+    // Eases towards the scroll position at the same pace on 60 Hz and 120 Hz screens.
+    let lastTime = 0
+    const tick = (now: number) => {
+      const dt = lastTime ? Math.min(now - lastTime, 100) : 16.7
+      lastTime = now
       const gap = target - current
-      current = reduced || Math.abs(gap) < 0.0005 ? target : current + gap * EASE
+      const step = 1 - Math.pow(1 - EASE, dt / 16.7)
+      current = reduced || Math.abs(gap) < 0.0005 ? target : current + gap * step
       render()
-      raf = current === target ? 0 : requestAnimationFrame(tick)
+      if (current === target) {
+        raf = 0
+        lastTime = 0
+      } else {
+        raf = requestAnimationFrame(tick)
+      }
     }
 
     const onScroll = () => {
       const rect = track.getBoundingClientRect()
-      const span = rect.height - window.innerHeight
+      // The stage, not the window: on phones the window grows and shrinks as the
+      // address bar slides, which would make the picture jump.
+      const span = rect.height - stage.clientHeight
       target = span > 0 ? clamp01(-rect.top / span) : 0
       if (!raf) raf = requestAnimationFrame(tick)
+      // Fetch the frames around where the visitor is now before anything else.
+      if (!reduced) pump()
     }
 
     const resize = new ResizeObserver(() => {
@@ -146,24 +185,46 @@ export function Landing() {
     })
     resize.observe(stage)
 
-    // Frames load in order, a few at a time. With reduced motion only the first is needed.
-    const total = reduced ? 1 : count
-    let next = 0
-    const loadNext = () => {
-      if (cancelled || next >= total) return
-      const i = next++
-      const img = new Image()
-      img.decoding = 'async'
-      img.onload = () => {
-        if (cancelled) return
-        frames[i] = img
-        if (drawn < 0 || Math.abs(i - wanted) <= Math.abs(drawn - wanted)) draw()
-        loadNext()
+    // Frames load coarse to fine, the ones near the current position first. With
+    // reduced motion only the first is needed.
+    const order = reduced ? [0] : coarseToFine(count)
+    const requested = new Set<number>()
+    let inFlight = 0
+    let cursor = 0
+
+    const nextFrame = (): number | undefined => {
+      const at = Math.round(clamp01(target / FRAMES_END) * (count - 1))
+      for (let d = 0; d <= AHEAD; d++) {
+        for (const i of d ? [at + d, at - d] : [at]) {
+          if (i >= 0 && i < count && !requested.has(i)) return i
+        }
       }
-      img.onerror = loadNext
-      img.src = frameSrc(dir, i)
+      while (cursor < order.length && requested.has(order[cursor])) cursor++
+      return order[cursor]
     }
-    for (let k = 0; k < 6; k++) loadNext()
+
+    const pump = () => {
+      while (!cancelled && inFlight < PARALLEL) {
+        const i = reduced ? (requested.has(0) ? undefined : 0) : nextFrame()
+        if (i === undefined) return
+        requested.add(i)
+        inFlight++
+        const img = new Image()
+        img.decoding = 'async'
+        const done = () => {
+          inFlight--
+          pump()
+        }
+        img.onload = () => {
+          if (cancelled) return
+          frames[i] = img
+          if (drawn < 0 || Math.abs(i - wanted) < Math.abs(drawn - wanted)) draw()
+          done()
+        }
+        img.onerror = done
+        img.src = frameSrc(dir, i)
+      }
+    }
 
     window.addEventListener('scroll', onScroll, { passive: true })
     onScroll()
