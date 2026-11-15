@@ -44,13 +44,10 @@ export function Login() {
 
   if (signedIn) return <Navigate to={from} replace />
 
-  // Mobile slideshow frames (your 4 images)
-  const mobileFrames = [
-    '/hero/mobile/mobile-astro.jpg',
-    '/hero/mobile/dyson.png',
-    '/hero/mobile/iss069e018537-1.jpg',
-    '/hero/mobile/cipher-spacewalk.png',
-  ]
+  // Mobile slideshow frames, compressed to WebP in public/hero/mobile/
+  const mobileFrames = ['mobile-astro', 'dyson', 'iss069e018537-1', 'cipher-spacewalk'].map(
+    (name) => `${import.meta.env.BASE_URL}hero/mobile/${name}.webp`,
+  )
 
   // Desktop black hole camera
   const camera: HoleCamera = {
