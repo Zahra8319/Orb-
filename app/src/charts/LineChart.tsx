@@ -54,7 +54,9 @@ export function LineChart({
   const [ref, width] = useWidth<HTMLDivElement>()
   const [hover, setHover] = useState<number | null>(null)
 
-  const m = { top: 14, right: directLabels ? 132 : 14, bottom: 28, left: 46 }
+  // End-of-line labels need about 130 px. On a phone the legend above names the lines instead.
+  const showDirect = directLabels && width >= 520
+  const m = { top: 14, right: showDirect ? 132 : 14, bottom: 28, left: 46 }
   const innerW = Math.max(60, width - m.left - m.right)
   const innerH = height - m.top - m.bottom
 
@@ -96,6 +98,17 @@ export function LineChart({
     if (ends[i].y - ends[i - 1].y < 16) ends[i].y = ends[i - 1].y + 16
   }
 
+  // Reference labels sit above their line; one that would collide with the label
+  // above it moves below its own line.
+  const refLabelDy = new Map<string, number>()
+  let lastLabelY = -Infinity
+  for (const r of [...refs].sort((a, b) => y(a.y) - y(b.y))) {
+    const at = y(r.y)
+    const below = at - 5 - lastLabelY < 13
+    refLabelDy.set(r.label, below ? 13 : -5)
+    lastLabelY = at + (below ? 13 : -5)
+  }
+
   const color = (s: Series) => (s.tone === 2 ? 'var(--series-2)' : 'var(--series-1)')
 
   return (
@@ -133,7 +146,7 @@ export function LineChart({
             {refs.map((r) => (
               <g key={r.label} transform={`translate(0,${y(r.y)})`}>
                 <line x1={0} x2={innerW} stroke={REF_COLOR[r.tone ?? 'neutral']} strokeWidth={1.5} strokeDasharray="1 4" strokeLinecap="round" />
-                <text className="ref-label" x={4} y={-5}>
+                <text className="ref-label" x={4} y={refLabelDy.get(r.label) ?? -5}>
                   {r.label}
                 </text>
               </g>
@@ -154,7 +167,7 @@ export function LineChart({
               ))}
             </g>
 
-            {directLabels &&
+            {showDirect &&
               ends.map((e) => (
                 <text key={e.name} className="direct-label" x={innerW + 10} y={e.y} dy="0.32em">
                   {e.name}
