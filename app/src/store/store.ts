@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import type { GamePlay } from '../games/types'
 import { CREW } from '../sim/crew'
 import { START_MIN, commsDelaySec, dayOf } from '../sim/mission'
@@ -118,7 +119,19 @@ const initial = () => ({
   messages: seedMessages(),
 })
 
-export const useStore = create<State>((set, get) => ({
+/** Where the demo is saved in this browser. Bump VERSION when the saved shape changes. */
+export const STORE_KEY = 'orb.demo'
+const VERSION = 1
+
+/**
+ * The demo is saved in this browser, so a reload keeps the mission clock,
+ * scenarios, test results, game rounds, moods and messages. The signed-in crew
+ * member is not saved here (the session handles that), and "Reset demo" clears it all.
+ * If storage is blocked the demo still runs; it just starts fresh on reload.
+ */
+export const useStore = create<State>()(
+  persist(
+    (set, get) => ({
   ...initial(),
   crewId: CREW[0].id,
   themeMode: 'auto',
@@ -165,4 +178,23 @@ export const useStore = create<State>((set, get) => ({
         ],
       }
     }),
-}))
+    }),
+    {
+      name: STORE_KEY,
+      version: VERSION,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (s) => ({
+        t: s.t,
+        speed: s.speed,
+        scenarios: s.scenarios,
+        themeMode: s.themeMode,
+        sheltered: s.sheltered,
+        moods: s.moods,
+        reactions: s.reactions,
+        gamePlays: s.gamePlays,
+        eyeChecks: s.eyeChecks,
+        messages: s.messages,
+      }),
+    },
+  ),
+)
