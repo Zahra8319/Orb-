@@ -34,7 +34,11 @@ function beat(x: number, w: number, amp: number, y0: number): string {
   ].join(' ')
 }
 
-/** A hospital-monitor rhythm strip: the ECG drawn at this person's heart rate. */
+/**
+ * A hospital-monitor rhythm strip. The pen writes the waveform across the left
+ * three-quarters of the strip at real speed (3.75 s of a 5-second window); the
+ * right quarter stays a flat baseline, the way a monitor looks mid-sweep.
+ */
 export function ECGStrip({ bpm, irregular = false, abnormal = false, height = 44 }: Props) {
   const [ref, width] = useWidth<HTMLDivElement>(240)
   const pathRef = useRef<SVGPathElement>(null)
@@ -44,55 +48,74 @@ export function ECGStrip({ bpm, irregular = false, abnormal = false, height = 44
   const interval = (60 / rate) * pxPerSec
   const y0 = height * 0.72
   const amp = Math.min(y0 - 4, (height - 4 - y0) / 0.24)
+  const writeEnd = r(width * 0.75) // the pen stops here; right quarter stays flat
 
   const parts = [`M0 ${r(y0)}`]
   let x = 0
   let beats = 0
-  while (x < width + interval) {
-    const w = irregular ? interval * (0.72 + 0.56 * hash(beats)) : interval
-    parts.push(beat(x, w, amp, y0))
-    x += w
-    beats += 1
+  if (irregular) {
+    while (x < writeEnd) {
+      const w = interval * (0.72 + 0.56 * hash(beats))
+      if (x + w > writeEnd) {
+        if (writeEnd - x > 6) parts.push(`L${writeEnd} ${r(y0)}`)
+        break
+      }
+      parts.push(beat(x, w, amp, y0))
+      x += w
+      beats += 1
+    }
+  } else {
+    // Whole beats that fit exactly, so the waveform ends flush at writeEnd.
+    const n = Math.max(2, Math.round(writeEnd / interval))
+    const w = writeEnd / n
+    for (let i = 0; i < n; i += 1) {
+      parts.push(beat(x, w, amp, y0))
+      x += w
+      beats += 1
+    }
   }
-  const d = parts.join(' ')
+  const wave = parts.join(' ')
+  // Flat baseline: the right quarter, waiting before the pen starts.
+  const flat = `M${writeEnd} ${r(y0)} L${r(width)} ${r(y0)}`
 
-  // Measure the path length once the SVG is in the DOM for the entrance animation.
+  // Measure the waveform path once in the DOM for the write-in animation.
   useEffect(() => {
     if (pathRef.current) setPathLen(pathRef.current.getTotalLength())
   }, [])
 
-  // A regular rhythm scrolls left at real speed, the way a monitor redraws.
-  const scrolling = !irregular && beats > 2
-  const style: CSSProperties | undefined = scrolling
-    ? ({
-        '--ecg-shift': `${r(-interval)}px`,
-        '--ecg-dur': `${r((interval / pxPerSec) * 1000) / 1000}s`,
-        '--ecg-pathlen': pathLen || undefined,
-      } as CSSProperties)
-    : { '--ecg-pathlen': pathLen || undefined } as CSSProperties
+  const stroke = abnormal ? 'var(--urgent)' : 'var(--series-1)'
+  const style = { '--ecg-pathlen': pathLen || undefined } as CSSProperties
 
   return (
     <div className="chart ecg" ref={ref} aria-hidden="true">
       <svg width={width} height={height}>
         <path
-          ref={pathRef}
-          className={scrolling ? 'ecg-scroll' : undefined}
-          style={style}
-          d={d}
+          className="ecg-flat"
+          d={flat}
           fill="none"
-          stroke={abnormal ? 'var(--urgent)' : 'var(--series-1)'}
+          stroke={stroke}
+          strokeWidth={2}
+          strokeLinecap="round"
+        />
+        <path
+          ref={pathRef}
+          className="ecg-wave"
+          style={style}
+          d={wave}
+          fill="none"
+          stroke={stroke}
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        {/* Pen-tip dot: rides the leading edge while the trace is written. */}
+        {/* Pen-tip dot: rides the waveform's leading edge while it is written. */}
         {pathLen > 0 && (
           <circle
             className="ecg-pen"
             r={3}
-            fill={abnormal ? 'var(--urgent)' : 'var(--series-1)'}
+            fill={stroke}
             style={{
-              offsetPath: `path('${d}')`,
+              offsetPath: `path('${wave}')`,
               offsetRotate: '0deg',
             } as CSSProperties}
           />

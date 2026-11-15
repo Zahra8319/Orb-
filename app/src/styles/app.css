@@ -194,20 +194,18 @@ input {
   opacity: 0;
 }
 
-/* ECG strip: a regular rhythm scrolls left at real speed, like a bedside monitor.
-   Entrance: the pen writes the trace beat by beat over 2.5s, then scrolls. */
+/* ECG strip: the right quarter is a flat baseline, waiting. The pen writes
+   the waveform across the left three-quarters at real speed — 3.75s for
+   3.75s of a five-second window — then rests. */
 @media (prefers-reduced-motion: no-preference) {
-  .ecg-scroll {
-    animation: ecg-scroll var(--ecg-dur, 1s) linear infinite;
-  }
-  .ecg path {
+  .ecg-wave {
     stroke-dasharray: var(--ecg-pathlen, 1);
     stroke-dashoffset: var(--ecg-pathlen, 1);
-    animation: ecg-draw-in 2.5s linear forwards, ecg-scroll var(--ecg-dur, 1s) linear infinite 2.5s;
+    animation: ecg-draw-in 3.75s linear forwards;
   }
   /* A bright pen-tip dot rides the leading edge while the trace is written. */
   .ecg-pen {
-    animation: ecg-pen-travel 2.5s linear forwards;
+    animation: ecg-pen-travel 3.75s linear forwards;
   }
 }
 
@@ -228,15 +226,6 @@ input {
   100% {
     opacity: 0;
     offset-distance: 100%;
-  }
-}
-
-@keyframes ecg-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(var(--ecg-shift, 0px));
   }
 }
 
@@ -619,85 +608,6 @@ main {
   fill: var(--ink);
   font-weight: 650;
   font-size: 13px;
-}
-
-/* More-menu dropdown for overflow tabs */
-.more-menu {
-  position: relative;
-}
-
-.more-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: transparent;
-  color: var(--ink-soft);
-  cursor: pointer;
-  border-radius: var(--r-sm);
-  transition: color 0.15s ease, background 0.15s ease;
-}
-
-.more-btn:hover {
-  color: var(--ink);
-  background: var(--surface-2);
-}
-
-.more-btn[aria-expanded='true'] {
-  color: var(--ink);
-  background: var(--surface-2);
-}
-
-.more-btn svg {
-  transition: transform 0.2s ease;
-}
-
-.more-btn[aria-expanded='true'] svg {
-  transform: rotate(90deg);
-}
-
-.more-panel {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: var(--s-1);
-  min-width: 180px;
-  background: var(--surface);
-  border: 1px solid var(--rule);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-lg);
-  padding: var(--s-1);
-  z-index: 100;
-  animation: more-rise 0.12s ease-out;
-}
-
-@keyframes more-rise {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.more-panel a {
-  display: block;
-  padding: var(--s-2) var(--s-3);
-  border-radius: var(--r-sm);
-  text-decoration: none;
-  color: var(--ink-soft);
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.more-panel a:hover,
-.more-panel a.active {
-  color: var(--ink);
-  background: var(--surface-2);
 }
 
 .axis-line {
