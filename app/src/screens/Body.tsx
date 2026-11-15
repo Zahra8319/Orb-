@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { BarChart } from '../charts/BarChart'
 import { LineChart } from '../charts/LineChart'
 import { Readout, Section } from '../components/bits'
-import { BodyDiagram } from '../components/BodyDiagram'
 import { formatClock, minuteOfDay, MISSION_DAYS } from '../sim/mission'
 import { bodySeries, dayRecord, exerciseSoFar, eyeCheckDue, nextEyeCheck, vitalsAt, projectedBodySeries, projectBodyAtMissionEnd, projectedNoExerciseSeries, averageAdherence } from '../sim/model'
 import { useCrew, useSnapshot, useTodayGlucose, useLatestGlucose, useNutritionTotals, useAddGlucose, useAddNutrition } from '../store/hooks'
@@ -110,36 +109,6 @@ export function Body() {
           tracks what you have done and what it is saving.
         </p>
       </header>
-
-      {/* Body Diagram */}
-      <Section title="Body systems" note="Tap a system to navigate. Colored rings show current status.">
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--s-4)' }}>
-          <BodyDiagram />
-        </div>
-        <div className="mini-body-diagram" style={{ justifyContent: 'center', gap: 'var(--s-4)', flexWrap: 'wrap' }}>
-          {[
-            { id: 'heart', label: 'Cardio' },
-            { id: 'brain', label: 'Cognitive' },
-            { id: 'lungs', label: 'Respiratory' },
-            { id: 'bones', label: 'Musculoskeletal' },
-            { id: 'radiation', label: 'Radiation' },
-            { id: 'hydration', label: 'Nutrition' },
-          ].map((sys) => (
-            <a key={sys.id} href={`/${sys.id === 'heart' ? 'body' : sys.id === 'brain' ? 'sleep' : sys.id === 'lungs' ? 'body' : sys.id === 'bones' ? 'body' : sys.id === 'radiation' ? 'radiation' : 'body'}`} className="mini-legend-item">
-              <span className="mini-dot" style={{
-                background:
-                  sys.id === 'heart' ? 'var(--urgent)' :
-                  sys.id === 'brain' ? 'var(--primary)' :
-                  sys.id === 'lungs' ? 'var(--live)' :
-                  sys.id === 'bones' ? 'var(--watch)' :
-                  sys.id === 'radiation' ? 'var(--nasa-orange)' :
-                  'var(--nasa-cyan)'
-              }} />
-              <span style={{ fontSize: 'var(--t-xs)', color: 'var(--ink-soft)' }}>{sys.label}</span>
-            </a>
-          ))}
-        </div>
-      </Section>
 
       {/* Glucose Tracking */}
       <Section title="Blood glucose" note="Normal fasting: 70-99 mg/dL. Post-meal (2hr): under 140 mg/dL. Log readings throughout the day.">

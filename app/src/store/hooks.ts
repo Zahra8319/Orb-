@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useCallback } from 'react'
 import { reactionForDay, type DayReaction } from '../games/health'
 import type { GamePlay } from '../games/types'
 import { evaluate, type Alert } from '../rules/alerts'
@@ -144,4 +144,56 @@ export function useAddGlucose() {
 /** Add a nutrition log (convenience hook). */
 export function useAddNutrition() {
   return useStore((s) => s.addNutrition)
+}
+
+/** Messages for a specific crew member (for admin view). */
+export function useCrewMessages(crewId: string) {
+  const messages = useStore((s) => s.messages)
+  const t = useStore((s) => s.t)
+  return useMemo(
+    () =>
+      messages
+        .filter((m) => m.crewId === crewId && m.arrivesAt <= t)
+        .sort((a, b) => a.sentAt - b.sentAt),
+    [messages, crewId, t]
+  )
+}
+
+/** All messages for admin (with crew names). */
+export function useAllMessages() {
+  const messages = useStore((s) => s.messages)
+  const t = useStore((s) => s.t)
+  return useMemo(
+    () =>
+      messages
+        .filter((m) => m.arrivesAt <= t)
+        .sort((a, b) => a.sentAt - b.sentAt),
+    [messages, t]
+  )
+}
+
+/** Send a message from admin to crew. */
+export function useSendAdminMessage() {
+  return useStore((s) => s.sendAdminMessage)
+}
+
+/** Send a message from crew to admin (for crew). */
+export function useSendToAdmin() {
+  const crewId = useStore((s) => s.crewId)
+  return useCallback((text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    const t = useStore.getState().t
+    const nextId = useStore.getState().messages.reduce((m, x) => Math.max(m, x.id), 0) + 1
+    const msg = {
+      id: nextId,
+      crewId,
+      from: 'me' as const,
+      text: trimmed,
+      sentAt: t,
+      arrivesAt: t,
+      toCrewId: 'admin',
+    }
+    useStore.setState((s) => ({ messages: [...s.messages, msg] }))
+  }, [])
 }
