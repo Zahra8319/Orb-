@@ -1,4 +1,6 @@
 import { useEffect, useMemo } from 'react'
+import { reactionForDay, type DayReaction } from '../games/health'
+import type { GamePlay } from '../games/types'
 import { evaluate, type Alert } from '../rules/alerts'
 import { crewById, type Crew } from '../sim/crew'
 import { dayOf, minuteOfDay } from '../sim/mission'
@@ -9,15 +11,20 @@ export function useCrew(): Crew {
   return crewById(useStore((s) => s.crewId))
 }
 
-/** Latest reaction test this crew member took today, if any. */
-export function useTodayReaction(): number | undefined {
+/** Today's reaction reading: the reaction test if taken, else enough Reaction Rush taps. */
+export function useTodayReaction(): DayReaction | undefined {
   const crewId = useStore((s) => s.crewId)
   const day = useStore((s) => dayOf(s.t))
   const reactions = useStore((s) => s.reactions)
-  return useMemo(() => {
-    const mine = reactions.filter((r) => r.crewId === crewId && r.day === day)
-    return mine.length ? mine[mine.length - 1].ms : undefined
-  }, [reactions, crewId, day])
+  const plays = useStore((s) => s.gamePlays)
+  return useMemo(() => reactionForDay(reactions, plays, crewId, day), [reactions, plays, crewId, day])
+}
+
+/** This crew member's rounds, oldest first. */
+export function useMyGamePlays(): GamePlay[] {
+  const crewId = useStore((s) => s.crewId)
+  const plays = useStore((s) => s.gamePlays)
+  return useMemo(() => plays.filter((p) => p.crewId === crewId), [plays, crewId])
 }
 
 export function useSnapshot(): Snapshot {
@@ -26,7 +33,7 @@ export function useSnapshot(): Snapshot {
   const scenarios = useStore((s) => s.scenarios)
   const sheltered = useStore((s) => s.sheltered)
   const eyeCheckDone = useStore((s) => Boolean(s.eyeChecks[dayKey(s.crewId, dayOf(s.t))]))
-  const reactionMs = useTodayReaction()
+  const reactionMs = useTodayReaction()?.ms
   return useMemo(
     () => snapshot(crew, t, scenarios, { sheltered, eyeCheckDone, reactionMs }),
     [crew, t, scenarios, sheltered, eyeCheckDone, reactionMs],

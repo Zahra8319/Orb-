@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom'
 import { BarChart } from '../charts/BarChart'
+import { gameTaps, memoryForDay, MIN_GAME_TAPS, reactionForDay } from '../games/health'
 import { LineChart } from '../charts/LineChart'
 import { Section } from '../components/bits'
 import { ReactionTest } from '../components/ReactionTest'
@@ -15,6 +17,7 @@ export function SleepMind() {
   const moods = useStore((s) => s.moods)
   const setMood = useStore((s) => s.setMood)
   const reactions = useStore((s) => s.reactions)
+  const gamePlays = useStore((s) => s.gamePlays)
   const addReaction = useStore((s) => s.addReaction)
   const snap = useSnapshot()
   const day = snap.day
@@ -36,9 +39,17 @@ export function SleepMind() {
 
   const reactionDays = Array.from({ length: 14 }, (_, i) => {
     const d = Math.max(1, day - 13 + i)
-    const mine = reactions.filter((r) => r.crewId === crew.id && r.day === d)
-    return { x: d, y: mine.length ? mine[mine.length - 1].ms : dayRecord(crew, d, scenarios).reactionMs, own: mine.length > 0 }
+    const own = reactionForDay(reactions, gamePlays, crew.id, d)
+    return { x: d, y: own?.ms ?? dayRecord(crew, d, scenarios).reactionMs, own: own !== undefined }
   }).filter((p) => p.x !== day || p.own)
+
+  const today = reactionForDay(reactions, gamePlays, crew.id, day)
+  const tapsToday = gameTaps(gamePlays, crew.id, day).length
+  const spanToday = memoryForDay(gamePlays, crew.id, day)
+  const spanWeek = Array.from({ length: 7 }, (_, i) => memoryForDay(gamePlays, crew.id, day - i)).reduce<number | undefined>(
+    (m, v) => (v === undefined ? m : Math.max(m ?? 0, v)),
+    undefined,
+  )
 
   const shift = stats.clockShiftMin
   const clockText =
@@ -159,6 +170,44 @@ export function SleepMind() {
           </div>
         </Section>
       </div>
+
+      <Section
+        title="From your games"
+        note="Breaks count too. The reaction test above wins on days you take it, because it is the calibrated measure."
+      >
+        <dl className="facts">
+          <div>
+            <dt>Reaction Rush today</dt>
+            <dd>
+              {today?.source === 'game' ? (
+                <>
+                  {today.ms} ms <small>median of {today.taps} taps, counted above</small>
+                </>
+              ) : today?.source === 'test' ? (
+                <>
+                  {tapsToday} {tapsToday === 1 ? 'tap' : 'taps'} <small>today's reading is from the test</small>
+                </>
+              ) : (
+                <>
+                  {tapsToday} of {MIN_GAME_TAPS} taps <small>needed for a reading</small>
+                </>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>Simon Says today</dt>
+            <dd>
+              {spanToday !== undefined ? `Sequence of ${spanToday}` : 'Not played'}{' '}
+              {spanWeek !== undefined && <small>best this week {spanWeek}</small>}
+            </dd>
+          </div>
+        </dl>
+        <p style={{ marginTop: 16 }}>
+          <Link className="link" to="/games/reaction">Play Reaction Rush</Link>
+          {'  ·  '}
+          <Link className="link" to="/games/simon-says">Play Simon Says</Link>
+        </p>
+      </Section>
     </>
   )
 }

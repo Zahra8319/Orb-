@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { GamePlay } from '../games/types'
 import { CREW } from '../sim/crew'
 import { START_MIN, commsDelaySec, dayOf } from '../sim/mission'
 import { NO_SCENARIOS, type ScenarioId, type Scenarios } from '../sim/scenarios'
@@ -40,6 +41,8 @@ interface State {
   sheltered: boolean
   moods: Record<string, number>
   reactions: ReactionResult[]
+  /** Every round finished in a game, for every crew member. */
+  gamePlays: GamePlay[]
   eyeChecks: Record<string, boolean>
   messages: Message[]
   tick: (realSeconds: number) => void
@@ -51,6 +54,7 @@ interface State {
   setSheltered: (value: boolean) => void
   setMood: (mood: number) => void
   addReaction: (ms: number, falseStarts: number) => void
+  addGamePlay: (gameId: string, value: number, detail?: string) => void
   logEyeCheck: () => void
   sendMessage: (text: string) => void
 }
@@ -109,6 +113,7 @@ const initial = () => ({
   sheltered: false,
   moods: {} as Record<string, number>,
   reactions: [] as ReactionResult[],
+  gamePlays: [] as GamePlay[],
   eyeChecks: {} as Record<string, boolean>,
   messages: seedMessages(),
 })
@@ -135,6 +140,8 @@ export const useStore = create<State>((set, get) => ({
   setMood: (mood) => set((s) => ({ moods: { ...s.moods, [dayKey(s.crewId, dayOf(s.t))]: mood } })),
   addReaction: (ms, falseStarts) =>
     set((s) => ({ reactions: [...s.reactions, { crewId: s.crewId, day: dayOf(s.t), ms, falseStarts }] })),
+  addGamePlay: (gameId, value, detail) =>
+    set((s) => ({ gamePlays: [...s.gamePlays, { crewId: s.crewId, gameId, day: dayOf(s.t), t: s.t, value, detail }] })),
   logEyeCheck: () => set((s) => ({ eyeChecks: { ...s.eyeChecks, [dayKey(s.crewId, dayOf(s.t))]: true } })),
   sendMessage: (text) =>
     set((s) => {
