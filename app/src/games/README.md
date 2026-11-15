@@ -12,8 +12,9 @@ They talk to Orb through `public/games/orb-bridge.js`:
 - `rules`: how to play, shown beside the game.
 - `scoring`: what `value` means. `max` higher is better, `min` lower is better,
   `wins` 1 win / 0.5 draw / 0 loss, `count` one per puzzle solved. `format` uses `{v}`.
-- `assist`: only on games you can lose. See `assist.ts`: two losses in a row raise the
-  level (0 to 3) and two wins in a row lower it. `lossBelow` marks a weak points round as a loss.
+- `assist`: only on games you can lose. The second loss in a row raises the level (0 to 3)
+  and two wins in a row lower it. `lossBelow` marks a weak points round as a loss. Full
+  explanation in [ASSIST.md](ASSIST.md).
 - `health`: results feed Sleep and mind (`health.ts`). `reaction`: five or more Reaction Rush
   taps in a day give a reaction reading (median), unless the reaction test was taken that day.
   `memory`: longest Simon Says sequence. Health games never get an assist.
