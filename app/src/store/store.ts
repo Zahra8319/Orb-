@@ -18,14 +18,13 @@ export const SPEEDS = [
 export interface Message {
   id: number
   crewId: string
+  /** 'me' is the crew member, 'earth' the flight surgeon, 'admin' Mission Control. */
   from: 'me' | 'earth' | 'admin'
   text: string
   /** Mission minute it was sent. */
   sentAt: number
   /** Mission minute it reaches the other end. */
   arrivesAt: number
-  /** For admin messages: which crew member it's addressed to (or 'all') */
-  toCrewId?: string
 }
 
 export interface ReactionResult {
@@ -81,7 +80,8 @@ interface State {
   addGamePlay: (gameId: string, value: number, detail?: string) => void
   logEyeCheck: () => void
   sendMessage: (text: string) => void
-  sendAdminMessage: (text: string, toCrewId?: string) => void
+  /** Mission Control writes to one crew member; it reaches the ship after the radio delay. */
+  sendAdminMessage: (text: string, toCrewId: string) => void
   addGlucose: (reading: Omit<GlucoseReading, 'crewId' | 'day'>) => void
   addNutrition: (log: Omit<NutritionLog, 'crewId' | 'day'>) => void
 }
@@ -147,6 +147,21 @@ const initial = () => ({
   messages: seedMessages(),
 })
 
+/** Sent on window when the demo resets, for screens that keep their own saved state. */
+export const DEMO_RESET_EVENT = 'orb:demo-reset'
+
+/** Saved outside this store (Consult Earth keeps one key per crew member). */
+function clearOtherDemoKeys() {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('orb-consultations')) localStorage.removeItem(key)
+    }
+  } catch {
+    // Blocked storage: nothing was saved.
+  }
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(DEMO_RESET_EVENT))
+}
+
 /** Where the demo is saved in this browser. Bump VERSION when the saved shape changes. */
 export const STORE_KEY = 'orb.demo'
 const VERSION = 1
@@ -175,7 +190,10 @@ const store = create<State>()(
           scenarios: { ...s.scenarios, [id]: s.scenarios[id] === null ? s.t : null },
           sheltered: id === 'solar-storm' ? false : s.sheltered,
         })),
-      resetDemo: () => set(initial()),
+      resetDemo: () => {
+        clearOtherDemoKeys()
+        set(initial())
+      },
       setThemeMode: (themeMode) => set({ themeMode }),
       setSheltered: (sheltered) => set({ sheltered }),
       setMood: (mood) => set((s) => ({ moods: { ...s.moods, [dayKey(s.crewId, dayOf(s.t))]: mood } })),
@@ -206,7 +224,7 @@ const store = create<State>()(
             ],
           }
         }),
-      sendAdminMessage: (text: string, toCrewId?: string) =>
+      sendAdminMessage: (text, toCrewId) =>
         set((s) => {
           const trimmed = text.trim()
           if (!trimmed) return s
@@ -216,12 +234,12 @@ const store = create<State>()(
               ...s.messages,
               {
                 id: nextId,
-                crewId: toCrewId || s.crewId,
+                crewId: toCrewId,
                 from: 'admin',
                 text: trimmed,
                 sentAt: s.t,
-                arrivesAt: s.t, // Instant for admin
-                toCrewId,
+                // Earth is as far from the ship as the ship is from Earth.
+                arrivesAt: s.t + delayMin(s.t),
               },
             ],
           }
