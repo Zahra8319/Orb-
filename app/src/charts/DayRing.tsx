@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { arc as d3arc } from 'd3-shape'
 import type { Crew } from '../sim/crew'
 import { MIN_PER_DAY, formatClock } from '../sim/mission'
 import { activityAt } from '../sim/model'
+import { shortestTurn } from './angle'
 import type { Scenarios } from '../sim/scenarios'
 import { dayBlocks, type Block } from './dayBlocks'
 
@@ -33,6 +35,20 @@ function arcPath(track: { inner: number; outer: number }, from: number, to: numb
 
 const STATE = { sleep: 'Asleep', cardio: 'Cardio session', resistance: 'Resistance session', awake: 'Awake' } as const
 
+/**
+ * A rotation that never winds backwards to catch up. The hand's angle comes from
+ * the minute of the day, which drops from 1439 to 0 at midnight; animated as is,
+ * the hand would sweep a full turn backwards. Adding the short-way step each time
+ * keeps it moving forward through midnight.
+ */
+function useContinuousAngle(deg: number): number {
+  const [state, setState] = useState({ raw: deg, total: deg })
+  if (state.raw === deg) return state.total
+  const total = state.total + shortestTurn(state.raw, deg)
+  setState({ raw: deg, total })
+  return total
+}
+
 /** Hover text for a block, for example "Sleep, 00:00 to 05:34". */
 const span = (name: string, b: Block) => `${name}, ${formatClock(b.from)} to ${formatClock(b.to)}`
 
@@ -42,6 +58,7 @@ export function DayRing({ crew, t, scenarios }: Props) {
   const activity = activityAt(crew, t, scenarios)
   const lightHours = light.reduce((sum, b) => sum + (b.done - b.from), 0) / 60
   const exerciseMin = exercise.reduce((sum, b) => sum + (b.done - b.from), 0)
+  const handDeg = useContinuousAngle((now / MIN_PER_DAY) * 360)
   const label = `Your day at ${formatClock(now)} ship time. ${STATE[activity]}. ${Math.round(exerciseMin)} minutes of exercise done and ${lightHours.toFixed(1)} hours of bright light so far.`
 
   return (
@@ -109,7 +126,7 @@ export function DayRing({ crew, t, scenarios }: Props) {
       </g>
 
       {/* now hand */}
-      <g className="ring-hand" style={{ transform: `rotate(${(now / MIN_PER_DAY) * 360}deg)`, transformOrigin: `${C}px ${C}px` }}>
+      <g className="ring-hand" style={{ transform: `rotate(${handDeg}deg)`, transformOrigin: `${C}px ${C}px` }}>
         <line x1={C} y1={C - 108} x2={C} y2={C - 194} stroke="var(--ink)" strokeWidth={2.5} strokeLinecap="round" />
         <circle cx={C} cy={C - 194} r={5} fill="var(--ink)" />
       </g>
