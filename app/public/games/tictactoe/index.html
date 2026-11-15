@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tic-Tac-Toe</title>
+<style>html,body{margin:0;min-height:100%;background:#061f4a;color:#fff;font:16px system-ui,sans-serif}
+body{display:grid;place-items:center;padding:12px;box-sizing:border-box}main{text-align:center}
+#b{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(86vw,360px);margin:10px auto}
+.c{aspect-ratio:1;font-size:3rem;border:0;border-radius:6px;background:#0b3d91;color:#fff;cursor:pointer}
+.c:focus-visible{outline:3px solid #ff9d1e}.c.x{color:#02bfe7}.c.o{color:#ff9d1e}
+#r{padding:8px 16px;border:0;border-radius:6px;background:#fc3d21;color:#fff;cursor:pointer}</style></head><body>
+<main><div id="m" aria-live="polite">Your turn (X)</div><div id="b"></div><button id="r">New game</button></main>
+<script>
+const W=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]],bd=document.getElementById('b'),m=document.getElementById('m');
+let s,done,btns=[];
+function win(p){for(const w of W)if(w.every(i=>p[i]&&p[i]===p[w[0]]))return p[w[0]];return p.includes(null)?null:'T'}
+function mm(p,t){const r=win(p);if(r)return r==='O'?1:r==='X'?-1:0;let best=t==='O'?-2:2;
+ for(let i=0;i<9;i++)if(!p[i]){p[i]=t;const v=mm(p,t==='O'?'X':'O');p[i]=null;best=t==='O'?Math.max(best,v):Math.min(best,v)}return best}
+function ai(){const e=s.map((v,i)=>v?-1:i).filter(i=>i>=0);if(Math.random()<.25)return e[Math.random()*e.length|0];
+ let bi=e[0],bv=-2;for(const i of e){s[i]='O';const v=mm(s,'X');s[i]=null;if(v>bv){bv=v;bi=i}}return bi}
+function draw(){btns.forEach((b,i)=>{b.textContent=s[i]||'';b.className='c '+(s[i]||'').toLowerCase();b.setAttribute('aria-label',s[i]||'Empty cell '+(i+1))})}
+function end(){const r=win(s);if(!r)return false;done=true;m.textContent=r==='T'?'Draw.':r==='X'?'You win!':'Computer wins.';return true}
+function play(i){if(done||s[i])return;s[i]='X';draw();if(end())return;s[ai()]='O';draw();if(!end())m.textContent='Your turn (X)'}
+function start(){s=Array(9).fill(null);done=false;m.textContent='Your turn (X)';bd.innerHTML='';btns=[];
+ for(let i=0;i<9;i++){const b=document.createElement('button');b.onclick=()=>play(i);bd.appendChild(b);btns.push(b)}draw()}
+document.getElementById('r').onclick=start;start();
+</script></body></html>
