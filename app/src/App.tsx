@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { Shell } from './components/Shell'
 import { useSession } from './store/session'
 import { Admin } from './screens/Admin'
@@ -29,6 +29,12 @@ function RequireCrew({ children }: { children: ReactNode }) {
   return children
 }
 
+/** Links saved before game pages moved under /games/play/. */
+function OldGameLink() {
+  const { id = '' } = useParams()
+  return <Navigate to={`/games/play/${id}`} replace />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -52,7 +58,9 @@ export default function App() {
           <Route path="eva" element={<EVA />} />
           <Route path="scenarios" element={<ScenariosScreen />} />
           <Route path="games" element={<Games />} />
-          <Route path="games/:id" element={<GamePlay />} />
+          {/* Not /games/:id, which would share a URL with the static folders in public/games. */}
+          <Route path="games/play/:id" element={<GamePlay />} />
+          <Route path="games/:id" element={<OldGameLink />} />
           <Route path="command" element={<Command />} />
           <Route path="sources" element={<Sources />} />
           <Route path="*" element={<Today />} />
