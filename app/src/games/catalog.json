@@ -64,6 +64,71 @@
       },
       "license": "Original work, Orb project",
       "credit": "Made for Orb"
+    },
+    {
+      "source": {
+        "kind": "local",
+        "path": "lights-out/index.html"
+      },
+      "title": "Lights Out",
+      "description": "Tap a light to flip it and its four neighbors; switch every light off.",
+      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/lights-out",
+      "thumbnail": "",
+      "license": "MIT",
+      "id": "lights-out",
+      "category": "puzzle"
+    },
+    {
+      "source": {
+        "kind": "local",
+        "path": "simon-says/index.html"
+      },
+      "title": "Simon Says",
+      "description": "Watch the four lights and repeat the sequence as it grows.",
+      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/simon-says",
+      "thumbnail": "",
+      "license": "MIT",
+      "id": "simon-says",
+      "category": "arcade"
+    },
+    {
+      "source": {
+        "kind": "local",
+        "path": "hanoi/index.html"
+      },
+      "title": "Tower of Hanoi",
+      "description": "Move each disk to the last peg without placing a larger disk on a smaller one.",
+      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/hanoi",
+      "thumbnail": "",
+      "license": "MIT",
+      "id": "hanoi",
+      "category": "puzzle"
+    },
+    {
+      "source": {
+        "kind": "local",
+        "path": "connect-four/index.html"
+      },
+      "title": "Connect Four",
+      "description": "Drop discs and line up four against the computer.",
+      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/connect-four",
+      "thumbnail": "",
+      "license": "MIT",
+      "id": "connect-four",
+      "category": "classic"
+    },
+    {
+      "source": {
+        "kind": "local",
+        "path": "nonogram/index.html"
+      },
+      "title": "Nonogram",
+      "description": "Use the number clues to fill the grid in this logic puzzle.",
+      "credit": "mashukui - https://github.com/mashukui/web-games/tree/main/nonogram",
+      "thumbnail": "",
+      "license": "MIT",
+      "id": "nonogram",
+      "category": "puzzle"
     }
   ]
 }
