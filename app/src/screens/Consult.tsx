@@ -240,7 +240,7 @@ export function Consult() {
               />
             </label>
             <div className="consult-submit">
-              <button className="btn" onClick={handleSubmit} disabled={!question.trim()}>
+              <button className="btn" type="button" onClick={handleSubmit} disabled={!question.trim()}>
                 Transmit to Mission Control
               </button>
               <span className="consult-submit-note">

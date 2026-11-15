@@ -177,15 +177,15 @@ export function ScenariosScreen() {
               </div>
               <div className="scenario-detail-actions">
                 {currentIsActive ? (
-                  <button className="btn btn-quiet" onClick={() => handleResolve(currentScenario.id)}>
+                  <button className="btn btn-quiet" type="button" onClick={() => handleResolve(currentScenario.id)}>
                     Resolve scenario
                   </button>
                 ) : (
-                  <button className="btn" onClick={() => handleInject(currentScenario.id)}>
+                  <button className="btn" type="button" onClick={() => handleInject(currentScenario.id)}>
                     Inject scenario
                   </button>
                 )}
-                <button className="btn btn-quiet" onClick={() => setSelectedId(null)}>
+                <button className="btn btn-quiet" type="button" onClick={() => setSelectedId(null)}>
                   Close
                 </button>
               </div>

@@ -485,7 +485,7 @@ export function EVA() {
 
           {postError && <p className="eva-notice" role="alert" style={{ marginTop: 16, marginBottom: 0 }}>{postError}</p>}
 
-          <button className="btn" style={{ marginTop: 16 }} onClick={logPostEva}>
+          <button className="btn" type="button" style={{ marginTop: 16 }} onClick={logPostEva}>
             Log post-EVA assessment
           </button>
 

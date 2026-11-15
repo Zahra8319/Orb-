@@ -32,7 +32,7 @@ export function DemoDrawer({ onClose }: { onClose: () => void }) {
     <aside className="drawer" role="dialog" aria-label="Demo controls">
       <div className="drawer-head">
         <h2>Demo controls</h2>
-        <button ref={closeRef} className="btn btn-quiet btn-small" onClick={onClose}>
+        <button ref={closeRef} className="btn btn-quiet btn-small" type="button" onClick={onClose}>
           Close
         </button>
       </div>
@@ -41,7 +41,7 @@ export function DemoDrawer({ onClose }: { onClose: () => void }) {
       <h3>Time</h3>
       <div className="seg">
         {SPEEDS.map((s) => (
-          <button key={s.label} className="btn btn-quiet btn-small" aria-pressed={speed === s.value} onClick={() => setSpeed(s.value)}>
+          <button key={s.label} className="btn btn-quiet btn-small" type="button" aria-pressed={speed === s.value} onClick={() => setSpeed(s.value)}>
             {s.label}
           </button>
         ))}
@@ -57,7 +57,7 @@ export function DemoDrawer({ onClose }: { onClose: () => void }) {
                 <b>{sc.name}</b>
                 <span>{sc.description}</span>
               </div>
-              <button className="btn btn-quiet btn-small" aria-pressed={on} onClick={() => toggleScenario(sc.id as any)}>
+              <button className="btn btn-quiet btn-small" type="button" aria-pressed={on} onClick={() => toggleScenario(sc.id as any)}>
                 {on ? 'Stop' : 'Start'}
               </button>
             </li>
@@ -68,14 +68,14 @@ export function DemoDrawer({ onClose }: { onClose: () => void }) {
       <h3>Cabin lighting theme</h3>
       <div className="seg" style={{ gridTemplateColumns: '1fr' }}>
         {THEMES.map((th) => (
-          <button key={th.value} className="btn btn-quiet btn-small" aria-pressed={themeMode === th.value} onClick={() => setThemeMode(th.value)}>
+          <button key={th.value} className="btn btn-quiet btn-small" type="button" aria-pressed={themeMode === th.value} onClick={() => setThemeMode(th.value)}>
             {th.label}
           </button>
         ))}
       </div>
 
       <h3>Start over</h3>
-      <button className="btn btn-small" onClick={resetDemo}>
+      <button className="btn btn-small" type="button" onClick={resetDemo}>
         Reset to day 143, 09:40
       </button>
     </aside>

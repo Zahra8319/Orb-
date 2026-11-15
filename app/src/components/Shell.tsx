@@ -124,7 +124,7 @@ export function Shell() {
               <div className="alert-band-action">{top.action}</div>
             </div>
             {top.id === 'solar-storm' && (
-              <button className="btn" onClick={() => setSheltered(!sheltered)}>
+              <button className="btn" type="button" onClick={() => setSheltered(!sheltered)}>
                 {sheltered ? 'I have left the shelter' : 'I am in the shelter'}
               </button>
             )}
@@ -158,10 +158,10 @@ export function Shell() {
             <Link className="link" to="/sources">
               Sources
             </Link>
-            <button className="btn btn-quiet btn-small" onClick={() => setDrawer(true)} aria-expanded={drawer}>
+            <button className="btn btn-quiet btn-small" type="button" onClick={() => setDrawer(true)} aria-expanded={drawer}>
               Demo controls
             </button>
-            <button className="btn btn-quiet btn-small" onClick={signOut}>
+            <button className="btn btn-quiet btn-small" type="button" onClick={signOut}>
               Sign out
             </button>
           </span>

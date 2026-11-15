@@ -91,7 +91,7 @@ export function Radiation() {
             </dl>
             {storm && (
               <p style={{ marginTop: 24 }}>
-                <button className="btn" onClick={() => setSheltered(!sheltered)}>
+                <button className="btn" type="button" onClick={() => setSheltered(!sheltered)}>
                   {sheltered ? 'I have left the shelter' : 'I am in the shelter'}
                 </button>
                 <span className="muted" style={{ display: 'block', marginTop: 8 }}>

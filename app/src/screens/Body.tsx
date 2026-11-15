@@ -391,7 +391,7 @@ export function Body() {
           </dl>
           <p style={{ marginTop: 16 }}>
             {dueToday && !eyeDone ? (
-              <button className="btn" onClick={logEyeCheck}>
+              <button className="btn" type="button" onClick={logEyeCheck}>
                 Log eye check as done
               </button>
             ) : dueToday ? (
