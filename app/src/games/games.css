@@ -1,0 +1,9 @@
+.games-cat { font-size: var(--t-md); margin: var(--s-5) 0 var(--s-3); text-transform: capitalize; }
+.games-grid { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s-4);
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.game-card a { display: grid; gap: var(--s-2); padding: var(--s-4); background: var(--surface);
+  border: 1px solid var(--rule); color: var(--ink); text-decoration: none; }
+.game-card a:hover, .game-card a:focus-visible { border-color: var(--primary); }
+.game-card span { color: var(--ink-soft); font-size: var(--t-sm); }
+.game-stage { width: 100%; max-width: 720px; aspect-ratio: 1 / 1; border: 1px solid var(--rule); background: var(--surface); }
+.game-credit { color: var(--ink-soft); font-size: var(--t-xs); margin-top: var(--s-3); }
