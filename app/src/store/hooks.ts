@@ -5,7 +5,8 @@ import { evaluate, type Alert } from '../rules/alerts'
 import { crewById, type Crew } from '../sim/crew'
 import { dayOf, minuteOfDay } from '../sim/mission'
 import { dayRecord, snapshot, usualWake, type Snapshot } from '../sim/model'
-import { dayKey, useStore } from './store'
+import { useStore } from './store'
+import { userInputFor } from './userInput'
 
 export function useCrew(): Crew {
   return crewById(useStore((s) => s.crewId))
@@ -32,11 +33,13 @@ export function useSnapshot(): Snapshot {
   const t = useStore((s) => s.t)
   const scenarios = useStore((s) => s.scenarios)
   const sheltered = useStore((s) => s.sheltered)
-  const eyeCheckDone = useStore((s) => Boolean(s.eyeChecks[dayKey(s.crewId, dayOf(s.t))]))
-  const reactionMs = useTodayReaction()?.ms
+  const eyeChecks = useStore((s) => s.eyeChecks)
+  const reactions = useStore((s) => s.reactions)
+  const gamePlays = useStore((s) => s.gamePlays)
   return useMemo(
-    () => snapshot(crew, t, scenarios, { sheltered, eyeCheckDone, reactionMs }),
-    [crew, t, scenarios, sheltered, eyeCheckDone, reactionMs],
+    () =>
+      snapshot(crew, t, scenarios, userInputFor({ t, crewId: crew.id, sheltered, eyeChecks, reactions, gamePlays }, crew.id)),
+    [crew, t, scenarios, sheltered, eyeChecks, reactions, gamePlays],
   )
 }
 

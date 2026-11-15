@@ -6,6 +6,7 @@ import { nextEyeCheck, snapshot } from '../sim/model'
 import { CREW } from '../sim/crew'
 import { dayOf, formatClock, minuteOfDay } from '../sim/mission'
 import { useStore } from '../store/store'
+import { userInputFor } from '../store/userInput'
 
 const LEVEL_RANK: Record<string, number> = { urgent: 0, act: 1, watch: 2, nominal: 3 }
 
@@ -19,16 +20,23 @@ export function Command() {
   const t = useStore((s) => s.t)
   const scenarios = useStore((s) => s.scenarios)
   const crewId = useStore((s) => s.crewId)
+  const sheltered = useStore((s) => s.sheltered)
+  const eyeChecks = useStore((s) => s.eyeChecks)
+  const reactions = useStore((s) => s.reactions)
+  const gamePlays = useStore((s) => s.gamePlays)
   const [openCrew, setOpenCrew] = useState<string | null>(null)
 
-  // Snapshot every crew member, then rank the most urgent first.
+  // Snapshot every crew member with what they have logged themselves (reaction
+  // reading, eye check), so Command shows the same alerts each person sees.
+  // Then rank the most urgent first.
   const allSnapshots = useMemo(() => {
+    const input = { t, crewId, sheltered, eyeChecks, reactions, gamePlays }
     return CREW.map((crew) => {
-      const snap = snapshot(crew, t, scenarios)
+      const snap = snapshot(crew, t, scenarios, userInputFor(input, crew.id))
       const alerts = evaluate(snap)
       return { crew, snap, alerts, rank: LEVEL_RANK[statusOf(alerts)] }
     }).sort((a, b) => a.rank - b.rank || a.crew.name.localeCompare(b.crew.name))
-  }, [t, scenarios])
+  }, [t, scenarios, crewId, sheltered, eyeChecks, reactions, gamePlays])
 
   const currentCrew = CREW.find((c) => c.id === crewId) ?? CREW[0]
   const day = dayOf(t)
