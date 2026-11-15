@@ -4,7 +4,7 @@ import { Section } from '../components/bits'
 import { commsDelaySec, dayOf, formatDelay, formatClock, MIN_PER_DAY } from '../sim/mission'
 import { evaluate } from '../rules/alerts'
 import { useSnapshot } from '../store/hooks'
-import { useStore } from '../store/store'
+import { DEMO_RESET_EVENT, useStore } from '../store/store'
 
 interface Consultation {
   id: string
@@ -78,16 +78,27 @@ const REPLY_LAG_SEC = 30
 /** The exchange plays 60× faster than real light-time so the demo fits a minute. */
 const COMPRESSION = 60
 
+/** Each crew member's consultations are their own. "Reset demo" clears them all. */
+const CONSULT_KEY_PREFIX = 'orb-consultations-v3:'
+
+function loadConsultations(crewId: string): Consultation[] {
+  try {
+    const saved = localStorage.getItem(CONSULT_KEY_PREFIX + crewId)
+    const parsed = saved ? JSON.parse(saved) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
 export function Consult() {
   const t = useStore((s) => s.t)
+  const crewId = useStore((s) => s.crewId)
   const snap = useSnapshot()
   const alerts = evaluate(snap)
   const formRef = useRef<HTMLElement | null>(null)
 
-  const [consultations, setConsultations] = useState<Consultation[]>(() => {
-    const saved = localStorage.getItem('orb-consultations-v2')
-    return saved ? JSON.parse(saved) : []
-  })
+  const [consultations, setConsultations] = useState<Consultation[]>(() => loadConsultations(crewId))
   const [question, setQuestion] = useState('')
   const [category, setCategory] = useState('cardiac')
   const [urgency, setUrgency] = useState<'routine' | 'urgent' | 'emergency'>('routine')
@@ -103,8 +114,19 @@ export function Consult() {
 
   // Persist consultations
   useEffect(() => {
-    localStorage.setItem('orb-consultations-v2', JSON.stringify(consultations))
-  }, [consultations])
+    try {
+      localStorage.setItem(CONSULT_KEY_PREFIX + crewId, JSON.stringify(consultations))
+    } catch {
+      // Blocked storage: they last until reload.
+    }
+  }, [consultations, crewId])
+
+  // "Reset demo" clears the saved consultations; clear the ones on screen too.
+  useEffect(() => {
+    const clear = () => setConsultations([])
+    window.addEventListener(DEMO_RESET_EVENT, clear)
+    return () => window.removeEventListener(DEMO_RESET_EVENT, clear)
+  }, [])
 
   // Advance each transmission. Light-time seconds are compressed 60×.
   useEffect(() => {

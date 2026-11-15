@@ -32,6 +32,14 @@ describe('saved demo', () => {
     expect(saved()!.state).not.toHaveProperty('crewId')
   })
 
+  it('reset demo clears Consult Earth for every crew member', () => {
+    localStorage.setItem('orb-consultations-v3:reyes', '[{"id":"a"}]')
+    localStorage.setItem('orb-consultations-v2', '[]')
+    useStore.getState().resetDemo()
+    expect(localStorage.getItem('orb-consultations-v3:reyes')).toBeNull()
+    expect(localStorage.getItem('orb-consultations-v2')).toBeNull()
+  })
+
   it('reset demo clears the saved results too', () => {
     useStore.getState().addReaction(300, 0)
     useStore.getState().resetDemo()

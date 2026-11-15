@@ -147,6 +147,21 @@ const initial = () => ({
   messages: seedMessages(),
 })
 
+/** Sent on window when the demo resets, for screens that keep their own saved state. */
+export const DEMO_RESET_EVENT = 'orb:demo-reset'
+
+/** Saved outside this store (Consult Earth keeps one key per crew member). */
+function clearOtherDemoKeys() {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('orb-consultations')) localStorage.removeItem(key)
+    }
+  } catch {
+    // Blocked storage: nothing was saved.
+  }
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(DEMO_RESET_EVENT))
+}
+
 /** Where the demo is saved in this browser. Bump VERSION when the saved shape changes. */
 export const STORE_KEY = 'orb.demo'
 const VERSION = 1
@@ -175,7 +190,10 @@ export const useStore = create<State>()(
       scenarios: { ...s.scenarios, [id]: s.scenarios[id] === null ? s.t : null },
       sheltered: id === 'solar-storm' ? false : s.sheltered,
     })),
-  resetDemo: () => set(initial()),
+  resetDemo: () => {
+    clearOtherDemoKeys()
+    set(initial())
+  },
   setThemeMode: (themeMode) => set({ themeMode }),
   setSheltered: (sheltered) => set({ sheltered }),
   setMood: (mood) => set((s) => ({ moods: { ...s.moods, [dayKey(s.crewId, dayOf(s.t))]: mood } })),
