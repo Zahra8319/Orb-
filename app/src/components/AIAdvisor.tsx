@@ -104,11 +104,11 @@ const PROTOCOLS: Protocol[] = [
     autonomous: [
       'If SPE forecast: pre-position in storm shelter 30 min early.',
       'Stay in shielded bunk for sleep. Minimize EVA.',
-      'If thyroid dose projected > 50 mSv: potassium iodide 130 mg now.',
+      'Stay in the shelter until the dose rate falls below 5 times normal, then log your dose.',
       'Track cumulative career dose against 600 mSv limit.',
     ],
     earthQuestions: [
-      'Career dose 520 mSv (87% limit). 67 days remaining. Confirm shelter protocol?',
+      'Confirm the shelter plan and my remaining career dose budget against the 600 mSv limit?',
     ],
     redFlags: ['dose rate > 10× normal', 'career dose > 550 mSv', 'nausea/vomiting'],
   },

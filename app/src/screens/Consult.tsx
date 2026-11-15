@@ -48,8 +48,8 @@ const EARTH_RESPONSES: Record<string, string[]> = {
     "Flight Surgeon: Back pain after deadlifts. Discogenic pattern? Avoid flexion under load. McKenzie extension × 10 q2h. Continue cardio. If radiculopathy, gabapentin 100 mg TID. We'll review exercise logs.",
   ],
   radiation: [
-    "Flight Surgeon: Career dose at 520 mSv (87% of limit). Remaining mission: 67 days. Stay in shielded bunk for sleep. Minimize EVA. If SPE forecast, pre-position in storm shelter 30 min early. We're tracking cumulative risk.",
-    "Flight Surgeon: Solar storm ongoing. Dose rate 6× normal. Remain in shelter until rate <2× background. Take potassium iodide 130 mg now if thyroid dose projected >50 mSv. We'll update when storm decays.",
+    "Flight Surgeon: We have your career dose projection from the Radiation page and it stays under the 600 mSv limit if you keep to plan. Stay in shielded bunk for sleep. Minimize EVA. If SPE forecast, pre-position in storm shelter 30 min early. We're tracking cumulative risk.",
+    "Flight Surgeon: Solar storm ongoing. Dose rate 6× normal. Remain in shelter until the rate falls below 5× normal, then log your dose. We'll update when the storm decays.",
   ],
   behavioral: [
     "Flight Surgeon: Sleep debt 14 h over 7 days, mood 2/5. This is a medical issue, not personal. Commander: move non-critical tasks off this crew member for 48 h. Protected 8.5 h sleep opportunity. Melatonin 3 mg at bedtime. Daily check-ins with medical officer.",

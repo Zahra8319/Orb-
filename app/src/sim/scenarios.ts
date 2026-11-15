@@ -57,8 +57,8 @@ export const SCENARIOS: Scenario[] = [
     narrative: 'SOLAR STORM WARNING: X-class flare detected. Proton flux rising. Storm shelter protocol initiated.',
     guidance: [
       'Move to storm shelter immediately (water wall or dedicated shelter).',
-      'Remain sheltered until dose rate falls below 5x background.',
-      'Take potassium iodide 130 mg if thyroid dose projected > 50 mSv.',
+      'Remain sheltered until dose rate falls below 5x normal.',
+      'Log your personal dosimeter reading once the storm has passed.',
       'Delay all EVA operations until all-clear.',
     ],
     live: true,
@@ -360,7 +360,6 @@ export const MEDICAL_SCENARIOS: MedicalScenario[] = [
           'Granisetron 1 mg IV q24h (if available, longer-acting)',
           'G-CSF (filgrastim) 5 mcg/kg/day SC starting Day 1 (if available)',
           'Supportive: fluids, nutrition, infection prophylaxis',
-          'Potassium iodide 130 mg (if thyroid dose > 50 mSv)',
         ],
         earthConsult: [
           'Confirm dose estimate with biodosimetry',
