@@ -6,7 +6,10 @@
       "description": "Eat, grow, do not hit the wall. Arrow keys or swipe.",
       "category": "arcade",
       "thumbnail": "",
-      "source": { "kind": "local", "path": "snake/index.html" },
+      "source": {
+        "kind": "local",
+        "path": "snake/index.html"
+      },
       "license": "Original work, Orb project",
       "credit": "Made for Orb"
     },
@@ -16,7 +19,49 @@
       "description": "Flip cards and find all the pairs.",
       "category": "puzzle",
       "thumbnail": "",
-      "source": { "kind": "local", "path": "memory/index.html" },
+      "source": {
+        "kind": "local",
+        "path": "memory/index.html"
+      },
+      "license": "Original work, Orb project",
+      "credit": "Made for Orb"
+    },
+    {
+      "id": "tictactoe",
+      "title": "Tic-Tac-Toe",
+      "description": "Beat the computer. It is not perfect.",
+      "category": "puzzle",
+      "thumbnail": "",
+      "source": {
+        "kind": "local",
+        "path": "tictactoe/index.html"
+      },
+      "license": "Original work, Orb project",
+      "credit": "Made for Orb"
+    },
+    {
+      "id": "merge",
+      "title": "Merge",
+      "description": "Slide tiles, join equal numbers, chase a high score.",
+      "category": "puzzle",
+      "thumbnail": "",
+      "source": {
+        "kind": "local",
+        "path": "merge/index.html"
+      },
+      "license": "Original work, Orb project",
+      "credit": "Made for Orb"
+    },
+    {
+      "id": "reaction",
+      "title": "Reaction Rush",
+      "description": "Wait for green, tap fast. Beat your best time.",
+      "category": "arcade",
+      "thumbnail": "",
+      "source": {
+        "kind": "local",
+        "path": "reaction/index.html"
+      },
       "license": "Original work, Orb project",
       "credit": "Made for Orb"
     }
