@@ -4,7 +4,7 @@ import { Section } from '../components/bits'
 import { commsDelaySec, dayOf, formatDelay, formatClock, MIN_PER_DAY } from '../sim/mission'
 import { evaluate } from '../rules/alerts'
 import { useSnapshot } from '../store/hooks'
-import { DEMO_RESET_EVENT, useStore } from '../store/store'
+import { useStore } from '../store/store'
 
 interface Consultation {
   id: string
@@ -120,13 +120,6 @@ export function Consult() {
       // Blocked storage: they last until reload.
     }
   }, [consultations, crewId])
-
-  // "Reset demo" clears the saved consultations; clear the ones on screen too.
-  useEffect(() => {
-    const clear = () => setConsultations([])
-    window.addEventListener(DEMO_RESET_EVENT, clear)
-    return () => window.removeEventListener(DEMO_RESET_EVENT, clear)
-  }, [])
 
   // Advance each transmission. Light-time seconds are compressed 60×.
   useEffect(() => {
