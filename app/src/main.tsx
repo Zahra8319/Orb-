@@ -5,6 +5,7 @@ import App from './App.tsx'
 import './styles/tokens.css'
 import './styles/tailwind.css'
 import './styles/admin.css'
+import './styles/landing.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

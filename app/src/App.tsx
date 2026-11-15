@@ -8,6 +8,7 @@ import { Command } from './screens/Command'
 import { Consult } from './screens/Consult'
 import { EVA } from './screens/EVA'
 import { GamePlay, Games } from './screens/Games'
+import { Landing } from './screens/Landing'
 import { Login } from './screens/Login'
 import { Radiation } from './screens/Radiation'
 import { ScenariosScreen } from './screens/Scenarios'
@@ -16,10 +17,14 @@ import { SleepMind } from './screens/SleepMind'
 import { Sources } from './screens/Sources'
 import { Today } from './screens/Today'
 
-/** Sends anyone not signed in to the sign-in screen, then back where they were going. */
+/**
+ * Anyone not signed in who opens the app lands on the front page. A deeper link goes
+ * to the sign-in screen instead, then back where they were going.
+ */
 function RequireCrew({ children }: { children: ReactNode }) {
   const crewId = useSession((s) => s.crewId)
   const location = useLocation()
+  if (!crewId && location.pathname === '/') return <Navigate to="/welcome" replace />
   if (!crewId) return <Navigate to="/login" replace state={{ from: location.pathname }} />
   return children
 }
@@ -28,6 +33,7 @@ export default function App() {
   return (
     <HashRouter>
       <Routes>
+        <Route path="welcome" element={<Landing />} />
         <Route path="login" element={<Login />} />
         <Route path="admin" element={<Admin />} />
         <Route
