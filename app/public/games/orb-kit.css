@@ -1,0 +1,82 @@
+/* Shared look for the games made for Orb, matching the bundled MIT games:
+   glass panel, stat bar, start and game-over overlays, chunky buttons. */
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: linear-gradient(160deg, #0f1a2e 0%, #14305a 55%, #1d2342 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  justify-content: safe center;
+  min-height: 100vh; min-height: 100svh; padding: 12px 12px 4px; user-select: none; color: #fff;
+}
+button { font-family: inherit; }
+button:focus-visible { outline: 3px solid #6fd7ff; outline-offset: 2px; }
+/* Boards are square, so the panel is as wide as the height allows once the stat bar,
+   buttons and footer (--chrome) and any status line (--extra) are taken off. */
+.panel {
+  --chrome: 200px; --extra: 0px;
+  position: relative; width: min(100%, 440px, max(180px, calc(100vh - var(--chrome) - var(--extra))));
+  width: min(100%, 440px, max(180px, calc(100svh - var(--chrome) - var(--extra))));
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 18px; padding: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+.topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.stat {
+  flex: 1; background: rgba(255,255,255,.07); border-radius: 10px;
+  padding: 4px 8px; text-align: center; min-width: 0;
+}
+.stat small { display: block; font-size: 9px; font-weight: 700; letter-spacing: 1px; opacity: .55; white-space: nowrap; }
+.stat span { font-size: 15px; font-weight: 800; letter-spacing: .5px; font-variant-numeric: tabular-nums; }
+.mute-btn {
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: 10px; padding: 0;
+  background: rgba(255,255,255,.07); border: none; color: #fff; font-size: 17px; cursor: pointer;
+}
+.status {
+  min-height: 22px; margin-bottom: 10px; text-align: center;
+  font-size: 13px; font-weight: 800; letter-spacing: 1px; color: rgba(255,255,255,.8);
+}
+.board-area { width: 100%; border-radius: 12px; }
+.actions { display: flex; gap: 8px; margin-top: 12px; }
+.actions button, .over-btns button {
+  flex: 1; min-height: 48px; border-radius: 12px; border: none; cursor: pointer;
+  font-size: 14px; font-weight: 800; letter-spacing: .5px;
+  transition: transform .12s ease;
+}
+.actions button:active, .over-btns button:active { transform: scale(.96); }
+.btn-primary { background: #4a90ff; color: #fff; box-shadow: 0 4px 0 #2a63bd; }
+.btn-ghost { background: rgba(255,255,255,.14); color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.25); }
+.overlay {
+  position: absolute; inset: 0; border-radius: 18px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; text-align: center; padding: 18px;
+  background: rgba(10, 20, 32, .86); backdrop-filter: blur(3px); z-index: 6;
+}
+.hidden { display: none !important; }
+.icon-big { font-size: 40px; }
+.over-title { font-size: 22px; font-weight: 800; letter-spacing: 2px; }
+.over-sub { font-size: 13px; opacity: .78; line-height: 1.65; max-width: 320px; }
+.final-line { font-size: 15px; font-weight: 700; }
+.new-record {
+  background: #ffd76e; color: #5a3e00; font-size: 12px; font-weight: 800;
+  padding: 4px 14px; border-radius: 999px; animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { transform: scale(1) } 50% { transform: scale(1.08) } }
+.over-btns { display: flex; gap: 8px; margin-top: 6px; width: 100%; max-width: 320px; }
+.start-btn { margin-top: 6px; padding: 12px 28px; min-height: 48px; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 800; letter-spacing: 1px; cursor: pointer; }
+.footer { margin-top: 10px; color: rgba(255,255,255,.5); font-size: 12px; text-align: center; line-height: 1.9; }
+/* Short frames, such as a phone: drop the footer and tighten the gaps. */
+@media (max-height: 480px) {
+  body { padding: 6px 6px 2px; }
+  .panel { --chrome: 160px; padding: 8px; }
+  .topbar { margin-bottom: 6px; }
+  .actions { margin-top: 8px; }
+  .status { margin-bottom: 6px; }
+  .footer { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .new-record { animation: none; }
+  .actions button, .over-btns button { transition: none; }
+}

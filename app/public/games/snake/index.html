@@ -1,25 +1,207 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Snake</title>
-<style>html,body{margin:0;height:100%;background:#061f4a;color:#fff;font:16px system-ui,sans-serif;display:grid;place-items:center}
-canvas{width:min(100vw,100vh);height:min(100vw,100vh);touch-action:none;background:#0b2a63}
-#s{position:fixed;top:8px;left:12px}</style></head><body>
-<div id="s">Score 0</div><canvas id="c" width="400" height="400"></canvas>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Snake</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+<link rel="stylesheet" href="../orb-kit.css">
+<style>
+  #c { display: block; width: 100%; aspect-ratio: 1; border-radius: 12px; background: #0a1c3d; touch-action: none; }
+</style>
+<script src="../orb-kit.js"></script>
+<script src="../orb-bridge.js"></script>
+</head>
+<body>
+
+<div class="panel">
+  <div class="topbar">
+    <div class="stat"><small>SCORE</small><span id="hud-score">0</span></div>
+    <div class="stat"><small>BEST</small><span id="hud-best">—</span></div>
+    <div class="stat"><small>LENGTH</small><span id="hud-len">3</span></div>
+    <button class="mute-btn" id="mute-btn"></button>
+  </div>
+
+  <div class="board-area"><canvas id="c" role="img" aria-label="Snake board"></canvas></div>
+
+  <div class="actions">
+    <button class="btn-ghost" id="btn-pause">PAUSE</button>
+    <button class="btn-ghost" id="btn-restart">RESTART</button>
+  </div>
+
+  <div class="overlay hidden" id="pause-overlay">
+    <div class="over-title">PAUSED</div>
+    <div class="over-sub">Press Space or tap Resume.</div>
+    <button class="start-btn btn-primary" id="btn-resume">RESUME</button>
+  </div>
+
+  <div class="overlay hidden" id="over-overlay">
+    <div class="icon-big">💥</div>
+    <div class="over-title">GAME OVER</div>
+    <div class="final-line" id="final-line"></div>
+    <div class="new-record hidden" id="new-record">🏆 NEW RECORD!</div>
+    <div class="over-sub" id="over-best"></div>
+    <div class="over-btns"><button class="btn-primary" id="btn-again">PLAY AGAIN</button></div>
+  </div>
+
+  <div class="overlay" id="start-overlay">
+    <div class="icon-big">🐍</div>
+    <div class="over-title">SNAKE</div>
+    <div class="over-sub">Eat the gold squares to grow.<br>Do not hit the wall or your own tail.<br>Steer with the <b>arrow keys</b> or <b>WASD</b>, or <b>swipe</b> on the board. <b>Space</b> pauses.</div>
+    <div class="over-sub" id="start-best"></div>
+    <button class="start-btn btn-primary" id="btn-start">START</button>
+  </div>
+</div>
+
+<div class="footer">Made for Orb</div>
+
 <script>
-const c=document.getElementById('c'),x=c.getContext('2d'),N=20,S=20,sc=document.getElementById('s');
-let sn,d,nd,f,score,t,over;
-function reset(){sn=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];d=nd={x:1,y:0};score=0;over=false;food();sc.textContent='Score 0'}
-function food(){do{f={x:Math.random()*N|0,y:Math.random()*N|0}}while(sn.some(p=>p.x==f.x&&p.y==f.y))}
-function turn(n){if(n.x!==-d.x||n.y!==-d.y)nd=n}
-addEventListener('keydown',e=>{const m={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0}}[e.key];
- if(m){e.preventDefault();turn(m)}else if(over&&e.key==' ')reset()});
-let sx,sy;c.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;if(over)reset()});
-c.addEventListener('pointerup',e=>{const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.max(Math.abs(dx),Math.abs(dy))<20)return;
- turn(Math.abs(dx)>Math.abs(dy)?{x:Math.sign(dx),y:0}:{x:0,y:Math.sign(dy)})});
-function step(){if(over)return;d=nd;const h={x:sn[0].x+d.x,y:sn[0].y+d.y};
- if(h.x<0||h.y<0||h.x>=N||h.y>=N||sn.some(p=>p.x==h.x&&p.y==h.y)){over=true;return}
- sn.unshift(h);if(h.x==f.x&&h.y==f.y){score++;sc.textContent='Score '+score;food()}else sn.pop()}
-function draw(){x.clearRect(0,0,400,400);x.fillStyle='#fc3d21';x.fillRect(f.x*S,f.y*S,S-2,S-2);
- x.fillStyle='#02bfe7';sn.forEach(p=>x.fillRect(p.x*S,p.y*S,S-2,S-2));
- if(over){x.fillStyle='rgba(0,0,0,.6)';x.fillRect(0,0,400,400);x.fillStyle='#fff';x.font='24px system-ui';x.textAlign='center';
- x.fillText('Game over. Tap or press Space',200,205)}}
-reset();setInterval(()=>{step();draw()},110);
-</script></body></html>
+(function () {
+  'use strict';
+  var N = 20;
+  var K = OrbKit, sfx = K.sfx;
+  var best = K.best('orb_snake_best', function (a, b) { return a > b; });
+  var c = document.getElementById('c'), x = c.getContext('2d');
+  var $ = function (id) { return document.getElementById(id); };
+  var startOv = $('start-overlay'), overOv = $('over-overlay'), pauseOv = $('pause-overlay');
+
+  var snake, dir, queue, food, score, state = 'idle', timer = 0;
+
+  function reset() {
+    snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+    dir = { x: 1, y: 0 }; queue = []; score = 0;
+    placeFood(); hud(); draw();
+  }
+  function placeFood() {
+    do { food = { x: Math.random() * N | 0, y: Math.random() * N | 0 }; }
+    while (snake.some(function (p) { return p.x === food.x && p.y === food.y; }));
+  }
+  function hud() {
+    $('hud-score').textContent = score;
+    $('hud-len').textContent = snake.length;
+    var b = best.get();
+    $('hud-best').textContent = b === null ? '—' : b;
+    $('start-best').textContent = b === null ? '' : 'Best: ' + b + ' points';
+  }
+
+  // Up to two turns can be queued so quick double turns are not lost.
+  function turn(n) {
+    var last = queue.length ? queue[queue.length - 1] : dir;
+    if ((n.x === -last.x && n.y === -last.y) || (n.x === last.x && n.y === last.y)) return;
+    if (queue.length < 2) queue.push(n);
+  }
+
+  // Orb assist (0-3) slows the snake: 110 ms a step normally, up to 200 ms.
+  function stepMs() { return 110 + 30 * (window.OrbBridge ? OrbBridge.assist : 0); }
+
+  function loop() {
+    if (state !== 'run') return;
+    step(); draw();
+    if (state === 'run') timer = setTimeout(loop, stepMs());
+  }
+
+  function step() {
+    if (queue.length) dir = queue.shift();
+    var h = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+    var hitsTail = snake.slice(0, -1).some(function (p) { return p.x === h.x && p.y === h.y; });
+    if (h.x < 0 || h.y < 0 || h.x >= N || h.y >= N || hitsTail) { die(); return; }
+    snake.unshift(h);
+    if (h.x === food.x && h.y === food.y) { score++; sfx.good(); placeFood(); }
+    else snake.pop();
+    hud();
+  }
+
+  function die() {
+    state = 'over';
+    clearTimeout(timer);
+    sfx.bad();
+    var rec = best.offer(score);
+    if (window.OrbBridge) OrbBridge.result(score, 'Score ' + score);
+    hud();
+    $('final-line').textContent = score + (score === 1 ? ' point' : ' points') + ', length ' + snake.length;
+    $('new-record').classList.toggle('hidden', !rec || score === 0);
+    $('over-best').textContent = 'Best: ' + best.get() + ' points';
+    K.show(overOv);
+  }
+
+  function start() {
+    clearTimeout(timer);
+    reset();
+    K.hide(startOv); K.hide(overOv); K.hide(pauseOv);
+    state = 'run';
+    $('btn-pause').textContent = 'PAUSE';
+    sfx.tap();
+    timer = setTimeout(loop, stepMs());
+  }
+  function togglePause() {
+    if (state === 'run') {
+      state = 'pause'; clearTimeout(timer);
+      $('btn-pause').textContent = 'RESUME'; K.show(pauseOv);
+    } else if (state === 'pause') {
+      state = 'run'; K.hide(pauseOv);
+      $('btn-pause').textContent = 'PAUSE';
+      timer = setTimeout(loop, stepMs());
+    }
+  }
+
+  function draw() {
+    var w = c.width, s = w / N;
+    x.clearRect(0, 0, w, w);
+    x.fillStyle = 'rgba(255,255,255,.035)';
+    for (var i = 0; i < N; i++) for (var j = (i % 2); j < N; j += 2) x.fillRect(i * s, j * s, s, s);
+    x.fillStyle = '#ffd76e';
+    x.shadowColor = 'rgba(255,215,110,.7)'; x.shadowBlur = s * 0.6;
+    roundRect(food.x * s + s * 0.15, food.y * s + s * 0.15, s * 0.7, s * 0.7, s * 0.25);
+    x.shadowBlur = 0;
+    snake.forEach(function (p, k) {
+      var t = k / Math.max(1, snake.length - 1);
+      x.fillStyle = k === 0 ? '#bff0ff' : 'rgb(' + Math.round(111 - 60 * t) + ',' + Math.round(215 - 80 * t) + ',255)';
+      roundRect(p.x * s + 1, p.y * s + 1, s - 2, s - 2, s * 0.28);
+    });
+  }
+  function roundRect(px, py, w, h, r) {
+    x.beginPath();
+    x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r);
+    x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.fill();
+  }
+
+  function fit() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var size = Math.round(c.clientWidth * dpr);
+    if (size && c.width !== size) { c.width = c.height = size; draw(); }
+  }
+  new ResizeObserver(fit).observe(c);
+
+  var KEYS = {
+    ArrowUp: { x: 0, y: -1 }, ArrowDown: { x: 0, y: 1 }, ArrowLeft: { x: -1, y: 0 }, ArrowRight: { x: 1, y: 0 },
+    w: { x: 0, y: -1 }, s: { x: 0, y: 1 }, a: { x: -1, y: 0 }, d: { x: 1, y: 0 },
+  };
+  window.addEventListener('keydown', function (e) {
+    var m = KEYS[e.key] || KEYS[String(e.key).toLowerCase()];
+    if (m) { e.preventDefault(); if (state === 'run') turn(m); return; }
+    if (e.key === ' ' || e.key === 'p' || e.key === 'P') {
+      if (e.target && e.target.tagName === 'BUTTON' && e.key === ' ') return;
+      e.preventDefault();
+      if (state === 'idle' || state === 'over') start(); else togglePause();
+    }
+  });
+  var sx = 0, sy = 0;
+  c.addEventListener('pointerdown', function (e) { sx = e.clientX; sy = e.clientY; });
+  c.addEventListener('pointerup', function (e) {
+    var dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 20 || state !== 'run') return;
+    turn(Math.abs(dx) > Math.abs(dy) ? { x: Math.sign(dx), y: 0 } : { x: 0, y: Math.sign(dy) });
+  });
+
+  $('btn-start').addEventListener('click', start);
+  $('btn-again').addEventListener('click', start);
+  $('btn-restart').addEventListener('click', start);
+  $('btn-pause').addEventListener('click', function () { if (state === 'run' || state === 'pause') togglePause(); });
+  $('btn-resume').addEventListener('click', togglePause);
+  K.bindMute($('mute-btn'));
+
+  reset();
+})();
+</script>
+</body>
+</html>

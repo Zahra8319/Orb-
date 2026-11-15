@@ -1,15 +1,140 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reaction Rush</title>
-<style>html,body{margin:0;height:100%;font:18px system-ui,sans-serif;color:#fff}
-#p{width:100%;height:100%;border:0;font:inherit;color:inherit;background:#0b3d91;cursor:pointer;padding:24px}
-#p.go{background:#0a8f4a}#p.bad{background:#fc3d21}#p:focus-visible{outline:4px solid #ff9d1e;outline-offset:-4px}</style></head><body>
-<button id="p" aria-live="polite">Tap to start. Wait for green, then tap fast.</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Reaction Rush</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<link rel="stylesheet" href="../orb-kit.css">
+<style>
+  #pad {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; aspect-ratio: 1; border: none; border-radius: 14px; cursor: pointer; padding: 20px;
+    color: #fff; background: #1b3a6b; touch-action: manipulation;
+    box-shadow: inset 0 4px 0 rgba(255,255,255,.08), inset 0 -6px 0 rgba(0,0,0,.25);
+  }
+  #pad[data-phase="wait"] { background: #26304a; }
+  #pad[data-phase="go"] { background: #2fbf71; box-shadow: 0 0 40px rgba(47,191,113,.55), inset 0 -6px 0 rgba(0,0,0,.2); }
+  #pad[data-phase="early"] { background: #b8661a; }
+  .pad-big { font-size: clamp(28px, 11vw, 52px); font-weight: 800; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+  .pad-small { font-size: 14px; font-weight: 600; opacity: .8; line-height: 1.5; max-width: 260px; }
+</style>
+<script src="../orb-kit.js"></script>
+<script src="../orb-bridge.js"></script>
+</head>
+<body>
+
+<div class="panel">
+  <div class="topbar">
+    <div class="stat"><small>LAST</small><span id="hud-last">—</span></div>
+    <div class="stat"><small>BEST</small><span id="hud-best">—</span></div>
+    <div class="stat"><small>AVG OF 5</small><span id="hud-avg">—</span></div>
+    <button class="mute-btn" id="mute-btn"></button>
+  </div>
+
+  <div class="board-area">
+    <button id="pad" data-phase="idle">
+      <span class="pad-big" id="pad-big" aria-live="assertive">READY</span>
+      <span class="pad-small" id="pad-small">Tap to start a round.</span>
+    </button>
+  </div>
+
+  <div class="actions">
+    <button class="btn-ghost" id="btn-reset">CLEAR ROUNDS</button>
+  </div>
+
+  <div class="overlay" id="start-overlay">
+    <div class="icon-big">⚡</div>
+    <div class="over-title">REACTION RUSH</div>
+    <div class="over-sub">Wait for the panel to turn <b>green</b>, then tap as fast as you can.<br>Tapping early is a false start.<br>Tap, or press <b>Space</b> or <b>Enter</b>.</div>
+    <div class="over-sub" id="start-best"></div>
+    <button class="start-btn btn-primary" id="btn-start">START</button>
+  </div>
+</div>
+
+<div class="footer">Made for Orb</div>
+
 <script>
-const p=document.getElementById('p');let st='idle',t0,to,best=null;
-try{best=Number(localStorage.getItem('reactionBest'))||null}catch(e){}
-function msg(t,c){p.textContent=t;p.className=c||''}
-p.onclick=()=>{
- if(st==='idle'){st='wait';msg('Wait for green...');to=setTimeout(()=>{st='go';t0=performance.now();msg('TAP NOW!','go')},1000+Math.random()*3000)}
- else if(st==='wait'){clearTimeout(to);st='idle';msg('Too soon! Tap to try again.','bad')}
- else{const ms=Math.round(performance.now()-t0);st='idle';if(!best||ms<best){best=ms;try{localStorage.setItem('reactionBest',ms)}catch(e){}}
-  msg(ms+' ms. Best '+best+' ms. Tap to play again.')}}
-</script></body></html>
+(function () {
+  'use strict';
+  // Timed on press (pointerdown / key down), not click: click fires on release and would
+  // add about 100 ms, which matters because Orb counts these taps toward Sleep and mind.
+  // The 1.8 to 5 s wait matches Orb's own reaction test.
+  var K = OrbKit, sfx = K.sfx;
+  var best = K.best('orb_reaction_best', function (a, b) { return a < b; });
+  var $ = function (id) { return document.getElementById(id); };
+  var pad = $('pad');
+  var phase = 'idle', t0 = 0, timer = 0, rounds = [];
+
+  function show(p, big, small) {
+    phase = p;
+    pad.dataset.phase = p;
+    $('pad-big').textContent = big;
+    $('pad-small').textContent = small;
+  }
+  function hud() {
+    var b = best.get();
+    $('hud-best').textContent = b === null ? '—' : b;
+    $('hud-last').textContent = rounds.length ? rounds[rounds.length - 1] : '—';
+    var last5 = rounds.slice(-5);
+    $('hud-avg').textContent = last5.length ? Math.round(last5.reduce(function (a, v) { return a + v; }, 0) / last5.length) : '—';
+    $('start-best').textContent = b === null ? '' : 'Best: ' + b + ' ms';
+  }
+
+  function arm() {
+    clearTimeout(timer);
+    show('wait', 'WAIT…', 'Tap the moment it turns green.');
+    timer = setTimeout(function () {
+      t0 = performance.now();
+      show('go', 'TAP!', '');
+    }, 1800 + Math.random() * 3200);
+  }
+
+  function press() {
+    if (!$('start-overlay').classList.contains('hidden')) return;
+    if (phase === 'idle' || phase === 'done' || phase === 'early') { sfx.tap(); arm(); return; }
+    if (phase === 'wait') {
+      clearTimeout(timer);
+      sfx.bad();
+      show('early', 'TOO SOON', 'Wait for green. Tap to try again.');
+      return;
+    }
+    if (phase === 'go') {
+      var ms = Math.round(performance.now() - t0);
+      rounds.push(ms);
+      var rec = best.offer(ms);
+      if (rec) sfx.win(); else sfx.good();
+      if (window.OrbBridge) OrbBridge.result(ms, ms + ' ms');
+      hud();
+      show('done', ms + ' ms', (rec ? 'New best! ' : '') + 'Tap for the next round.');
+    }
+  }
+
+  pad.addEventListener('pointerdown', function (e) { e.preventDefault(); press(); });
+  pad.addEventListener('click', function (e) { e.preventDefault(); });
+  window.addEventListener('keydown', function (e) {
+    if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+      if (e.target && e.target !== pad && e.target.tagName === 'BUTTON') return;
+      e.preventDefault();
+      press();
+    }
+  });
+
+  $('btn-start').addEventListener('click', function () {
+    K.hide($('start-overlay'));
+    pad.focus({ preventScroll: true });
+    sfx.tap();
+    arm();
+  });
+  $('btn-reset').addEventListener('click', function () {
+    clearTimeout(timer);
+    rounds = [];
+    hud();
+    show('idle', 'READY', 'Tap to start a round.');
+  });
+  K.bindMute($('mute-btn'));
+  hud();
+})();
+</script>
+</body>
+</html>

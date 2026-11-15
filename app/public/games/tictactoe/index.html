@@ -1,23 +1,173 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tic-Tac-Toe</title>
-<style>html,body{margin:0;min-height:100%;background:#061f4a;color:#fff;font:16px system-ui,sans-serif}
-body{display:grid;place-items:center;padding:12px;box-sizing:border-box}main{text-align:center}
-#b{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(86vw,360px);margin:10px auto}
-.c{aspect-ratio:1;font-size:3rem;border:0;border-radius:6px;background:#0b3d91;color:#fff;cursor:pointer}
-.c:focus-visible{outline:3px solid #ff9d1e}.c.x{color:#02bfe7}.c.o{color:#ff9d1e}
-#r{padding:8px 16px;border:0;border-radius:6px;background:#fc3d21;color:#fff;cursor:pointer}</style></head><body>
-<main><div id="m" aria-live="polite">Your turn (X)</div><div id="b"></div><button id="r">New game</button></main>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Tic-Tac-Toe</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭕</text></svg>">
+<link rel="stylesheet" href="../orb-kit.css">
+<style>
+  .panel { --extra: 32px; }
+  .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .cell {
+    aspect-ratio: 1; border: none; border-radius: 12px; cursor: pointer; padding: 0;
+    font-size: clamp(40px, 16vw, 72px); font-weight: 800; color: #fff;
+    background: rgba(255,255,255,.09);
+    box-shadow: inset 0 3px 0 rgba(255,255,255,.10), inset 0 -3px 0 rgba(0,0,0,.30);
+    transition: background .15s ease, transform .1s ease;
+  }
+  .cell:active { transform: scale(.95); }
+  .cell.x { color: #6fd7ff; }
+  .cell.o { color: #ffd76e; }
+  .cell.win { background: rgba(111,215,255,.22); box-shadow: 0 0 18px rgba(111,215,255,.45); }
+  .cell.win.o { background: rgba(255,215,110,.22); box-shadow: 0 0 18px rgba(255,215,110,.45); }
+</style>
+<script src="../orb-kit.js"></script>
+<script src="../orb-bridge.js"></script>
+</head>
+<body>
+
+<div class="panel">
+  <div class="topbar">
+    <div class="stat"><small>YOU</small><span id="hud-you">0</span></div>
+    <div class="stat"><small>DRAWS</small><span id="hud-draw">0</span></div>
+    <div class="stat"><small>COMPUTER</small><span id="hud-cpu">0</span></div>
+    <button class="mute-btn" id="mute-btn"></button>
+  </div>
+  <div class="status" id="status" aria-live="polite">YOUR TURN (X)</div>
+
+  <div class="board-area"><div class="board" id="board"></div></div>
+
+  <div class="actions">
+    <button class="btn-ghost" id="btn-new">NEW ROUND</button>
+    <button class="btn-ghost" id="btn-reset">RESET SCORE</button>
+  </div>
+
+  <div class="overlay hidden" id="over-overlay">
+    <div class="icon-big" id="over-icon">🎉</div>
+    <div class="over-title" id="over-title"></div>
+    <div class="over-sub" id="over-score"></div>
+    <div class="over-btns"><button class="btn-primary" id="btn-again">NEXT ROUND</button></div>
+  </div>
+
+  <div class="overlay" id="start-overlay">
+    <div class="icon-big">⭕</div>
+    <div class="over-title">TIC-TAC-TOE</div>
+    <div class="over-sub">You are <b>X</b> and go first.<br>Get three in a row, column or diagonal to win.<br>Tap a square, or press <b>1 to 9</b>.</div>
+    <button class="start-btn btn-primary" id="btn-start">START</button>
+  </div>
+</div>
+
+<div class="footer">Made for Orb</div>
+
 <script>
-const W=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]],bd=document.getElementById('b'),m=document.getElementById('m');
-let s,done,btns=[];
-function win(p){for(const w of W)if(w.every(i=>p[i]&&p[i]===p[w[0]]))return p[w[0]];return p.includes(null)?null:'T'}
-function mm(p,t){const r=win(p);if(r)return r==='O'?1:r==='X'?-1:0;let best=t==='O'?-2:2;
- for(let i=0;i<9;i++)if(!p[i]){p[i]=t;const v=mm(p,t==='O'?'X':'O');p[i]=null;best=t==='O'?Math.max(best,v):Math.min(best,v)}return best}
-function ai(){const e=s.map((v,i)=>v?-1:i).filter(i=>i>=0);if(Math.random()<.25)return e[Math.random()*e.length|0];
- let bi=e[0],bv=-2;for(const i of e){s[i]='O';const v=mm(s,'X');s[i]=null;if(v>bv){bv=v;bi=i}}return bi}
-function draw(){btns.forEach((b,i)=>{b.textContent=s[i]||'';b.className='c '+(s[i]||'').toLowerCase();b.setAttribute('aria-label',s[i]||'Empty cell '+(i+1))})}
-function end(){const r=win(s);if(!r)return false;done=true;m.textContent=r==='T'?'Draw.':r==='X'?'You win!':'Computer wins.';return true}
-function play(i){if(done||s[i])return;s[i]='X';draw();if(end())return;s[ai()]='O';draw();if(!end())m.textContent='Your turn (X)'}
-function start(){s=Array(9).fill(null);done=false;m.textContent='Your turn (X)';bd.innerHTML='';btns=[];
- for(let i=0;i<9;i++){const b=document.createElement('button');b.onclick=()=>play(i);bd.appendChild(b);btns.push(b)}draw()}
-document.getElementById('r').onclick=start;start();
-</script></body></html>
+(function () {
+  'use strict';
+  var LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  var SCORE_KEY = 'orb_tictactoe_score';
+  var K = OrbKit, sfx = K.sfx;
+  var $ = function (id) { return document.getElementById(id); };
+  var board = $('board'), cells = [], s, done = false, busy = false;
+  var score = { you: 0, d: 0, cpu: 0 };
+  try { var raw = JSON.parse(localStorage.getItem(SCORE_KEY) || 'null'); if (raw) score = raw; } catch (e) {}
+
+  function winner(p) {
+    for (var i = 0; i < LINES.length; i++) {
+      var w = LINES[i];
+      if (p[w[0]] && p[w[0]] === p[w[1]] && p[w[0]] === p[w[2]]) return { p: p[w[0]], line: w };
+    }
+    return p.indexOf(null) === -1 ? { p: 'T', line: [] } : null;
+  }
+  function minimax(p, t) {
+    var r = winner(p);
+    if (r) return r.p === 'O' ? 1 : r.p === 'X' ? -1 : 0;
+    var bestV = t === 'O' ? -2 : 2;
+    for (var i = 0; i < 9; i++) if (!p[i]) {
+      p[i] = t; var v = minimax(p, t === 'O' ? 'X' : 'O'); p[i] = null;
+      bestV = t === 'O' ? Math.max(bestV, v) : Math.min(bestV, v);
+    }
+    return bestV;
+  }
+  // Orb assist (0-3) raises the computer's chance of a random move from 25% up to 85%.
+  function aiMove() {
+    var empty = []; for (var i = 0; i < 9; i++) if (!s[i]) empty.push(i);
+    var assist = window.OrbBridge ? OrbBridge.assist : 0;
+    if (Math.random() < 0.25 + 0.2 * assist) return empty[Math.random() * empty.length | 0];
+    var bi = empty[0], bv = -2;
+    empty.forEach(function (k) { s[k] = 'O'; var v = minimax(s, 'X'); s[k] = null; if (v > bv) { bv = v; bi = k; } });
+    return bi;
+  }
+
+  function paint(line) {
+    cells.forEach(function (b, i) {
+      b.textContent = s[i] || '';
+      b.className = 'cell' + (s[i] ? ' ' + s[i].toLowerCase() : '') + (line && line.indexOf(i) >= 0 ? ' win' : '');
+      b.setAttribute('aria-label', 'Square ' + (i + 1) + ', ' + (s[i] || 'empty'));
+    });
+  }
+  function hud() {
+    $('hud-you').textContent = score.you; $('hud-draw').textContent = score.d; $('hud-cpu').textContent = score.cpu;
+  }
+
+  function finish(r) {
+    done = true;
+    paint(r.line);
+    var you = r.p === 'X', draw = r.p === 'T';
+    if (you) { score.you++; sfx.win(); } else if (draw) { score.d++; sfx.tap(); } else { score.cpu++; sfx.bad(); }
+    try { localStorage.setItem(SCORE_KEY, JSON.stringify(score)); } catch (e) {}
+    if (window.OrbBridge) OrbBridge.result(you ? 1 : draw ? 0.5 : 0, you ? 'Win' : draw ? 'Draw' : 'Loss');
+    hud();
+    var title = you ? 'YOU WIN!' : draw ? 'DRAW' : 'COMPUTER WINS';
+    $('status').textContent = title;
+    $('over-icon').textContent = you ? '🎉' : draw ? '🤝' : '🤖';
+    $('over-title').textContent = title;
+    $('over-score').textContent = 'You ' + score.you + ' · Draws ' + score.d + ' · Computer ' + score.cpu;
+    setTimeout(function () { K.show($('over-overlay')); }, 700);
+  }
+
+  function play(i) {
+    if (done || busy || s[i]) return;
+    s[i] = 'X'; sfx.tap(); paint();
+    var r = winner(s); if (r) { finish(r); return; }
+    busy = true;
+    $('status').textContent = 'COMPUTER IS THINKING…';
+    setTimeout(function () {
+      s[aiMove()] = 'O'; busy = false; paint();
+      var r2 = winner(s);
+      if (r2) finish(r2); else $('status').textContent = 'YOUR TURN (X)';
+    }, 380);
+  }
+
+  function newRound() {
+    s = new Array(9).fill(null); done = false; busy = false;
+    $('status').textContent = 'YOUR TURN (X)';
+    K.hide($('over-overlay')); K.hide($('start-overlay'));
+    paint();
+  }
+
+  for (var i = 0; i < 9; i++) {
+    (function (k) {
+      var b = document.createElement('button');
+      b.addEventListener('click', function () { play(k); });
+      board.appendChild(b); cells.push(b);
+    })(i);
+  }
+  window.addEventListener('keydown', function (e) {
+    var n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 9 && $('start-overlay').classList.contains('hidden')) { e.preventDefault(); play(n - 1); }
+  });
+  $('btn-start').addEventListener('click', newRound);
+  $('btn-again').addEventListener('click', newRound);
+  $('btn-new').addEventListener('click', newRound);
+  $('btn-reset').addEventListener('click', function () {
+    score = { you: 0, d: 0, cpu: 0 };
+    try { localStorage.setItem(SCORE_KEY, JSON.stringify(score)); } catch (e) {}
+    hud();
+  });
+  K.bindMute($('mute-btn'));
+  s = new Array(9).fill(null);
+  paint(); hud();
+})();
+</script>
+</body>
+</html>

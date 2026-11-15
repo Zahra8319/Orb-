@@ -1,25 +1,192 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Merge</title>
-<style>html,body{margin:0;min-height:100%;background:#061f4a;color:#fff;font:16px system-ui,sans-serif}
-body{display:grid;place-items:center;padding:12px;box-sizing:border-box;touch-action:none}main{text-align:center}
-#g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:min(88vw,380px);margin:10px auto}
-.t{aspect-ratio:1;display:grid;place-items:center;border-radius:6px;font-weight:700;font-size:1.4rem;background:#0b2a63;color:#061f4a}
-#r{padding:8px 16px;border:0;border-radius:6px;background:#fc3d21;color:#fff;cursor:pointer}</style></head><body>
-<main><div id="m" aria-live="polite">Score 0. Arrow keys or swipe.</div><div id="g"></div><button id="r">New game</button></main>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Merge</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔢</text></svg>">
+<link rel="stylesheet" href="../orb-kit.css">
+<style>
+  .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; touch-action: none; }
+  .tile {
+    aspect-ratio: 1; display: grid; place-items: center; border-radius: 12px;
+    font-size: clamp(18px, 7vw, 30px); font-weight: 800; font-variant-numeric: tabular-nums;
+    background: rgba(255,255,255,.07);
+    box-shadow: inset 0 3px 0 rgba(255,255,255,.06), inset 0 -3px 0 rgba(0,0,0,.25);
+  }
+  .tile.pop { animation: pop .14s ease-out; }
+  @keyframes pop { from { transform: scale(.82); } }
+  @media (prefers-reduced-motion: reduce) { .tile.pop { animation: none; } }
+</style>
+<script src="../orb-kit.js"></script>
+<script src="../orb-bridge.js"></script>
+</head>
+<body>
+
+<div class="panel">
+  <div class="topbar">
+    <div class="stat"><small>SCORE</small><span id="hud-score">0</span></div>
+    <div class="stat"><small>BEST</small><span id="hud-best">—</span></div>
+    <div class="stat"><small>TOP TILE</small><span id="hud-top">2</span></div>
+    <button class="mute-btn" id="mute-btn"></button>
+  </div>
+
+  <div class="board-area"><div class="board" id="board" aria-live="polite"></div></div>
+
+  <div class="actions">
+    <button class="btn-ghost" id="btn-undo">UNDO</button>
+    <button class="btn-ghost" id="btn-restart">NEW GAME</button>
+  </div>
+
+  <div class="overlay hidden" id="over-overlay">
+    <div class="icon-big">🧱</div>
+    <div class="over-title">NO MOVES LEFT</div>
+    <div class="final-line" id="final-line"></div>
+    <div class="new-record hidden" id="new-record">🏆 NEW RECORD!</div>
+    <div class="over-sub" id="over-best"></div>
+    <div class="over-btns"><button class="btn-primary" id="btn-again">PLAY AGAIN</button></div>
+  </div>
+
+  <div class="overlay" id="start-overlay">
+    <div class="icon-big">🔢</div>
+    <div class="over-title">MERGE</div>
+    <div class="over-sub">Slide every tile with the <b>arrow keys</b> or a <b>swipe</b>.<br>Equal tiles that meet merge and add to your score.<br>The game ends when no move can merge.</div>
+    <div class="over-sub" id="start-best"></div>
+    <button class="start-btn btn-primary" id="btn-start">START</button>
+  </div>
+</div>
+
+<div class="footer">Made for Orb</div>
+
 <script>
-const g=document.getElementById('g'),m=document.getElementById('m');let b,score,over;
-function add(){const e=b.map((v,i)=>v?-1:i).filter(i=>i>=0);if(e.length)b[e[Math.random()*e.length|0]]=Math.random()<.9?2:4}
-function lines(d){const o=[];for(let i=0;i<4;i++){let l=[0,1,2,3].map(k=>d==='L'||d==='R'?i*4+k:i+k*4);if(d==='R'||d==='D')l.reverse();o.push(l)}return o}
-function slide(v){const a=v.filter(Boolean),r=[];for(let i=0;i<a.length;i++){if(a[i]===a[i+1]){r.push(a[i]*2);score+=a[i]*2;i++}else r.push(a[i])}while(r.length<4)r.push(0);return r}
-function stuck(){if(b.includes(0))return false;for(let i=0;i<16;i++){if(i%4<3&&b[i]===b[i+1])return false;if(i<12&&b[i]===b[i+4])return false}return true}
-function move(d){if(over)return;let ch=false;for(const l of lines(d)){const n=slide(l.map(k=>b[k]));l.forEach((k,j)=>{if(b[k]!==n[j]){ch=true;b[k]=n[j]}})}
- if(ch){add();if(stuck())over=true}draw()}
-function draw(){g.innerHTML='';b.forEach(v=>{const t=document.createElement('div');t.className='t';t.textContent=v||'';
- if(v)t.style.background='hsl('+(200+Math.log2(v)*14)+',80%,'+(80-Math.log2(v)*4)+'%)';g.appendChild(t)});
- m.textContent=over?'Game over. Score '+score:'Score '+score+'. Arrow keys or swipe.'}
-function start(){b=Array(16).fill(0);score=0;over=false;add();add();draw()}
-addEventListener('keydown',e=>{const d={ArrowLeft:'L',ArrowRight:'R',ArrowUp:'U',ArrowDown:'D'}[e.key];if(d){e.preventDefault();move(d)}});
-let sx,sy;addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY});
-addEventListener('pointerup',e=>{const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.max(Math.abs(dx),Math.abs(dy))<30)return;
- move(Math.abs(dx)>Math.abs(dy)?(dx>0?'R':'L'):(dy>0?'D':'U'))});
-document.getElementById('r').onclick=start;start();
-</script></body></html>
+(function () {
+  'use strict';
+  var K = OrbKit, sfx = K.sfx;
+  var best = K.best('orb_merge_best', function (a, b) { return a > b; });
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $('board');
+  var b, score, over = true, undo = null, fresh = -1;
+
+  // Orb assist (0-3): fewer 4s spawn (10% normally, none at level 2+), and at level 3
+  // a new tile lands next to an equal one when it can, so merges come easier.
+  function add() {
+    var e = []; for (var i = 0; i < 16; i++) if (!b[i]) e.push(i);
+    if (!e.length) return;
+    var a = window.OrbBridge ? OrbBridge.assist : 0;
+    var v = Math.random() < [0.9, 0.95, 1, 1][a] ? 2 : 4;
+    var at = e[Math.random() * e.length | 0];
+    if (a >= 3) {
+      var near = e.filter(function (k) {
+        return [k - 4, k + 4, k % 4 ? k - 1 : -1, k % 4 < 3 ? k + 1 : -1].some(function (j) { return j >= 0 && j < 16 && b[j] === v; });
+      });
+      if (near.length) at = near[Math.random() * near.length | 0];
+    }
+    b[at] = v; fresh = at;
+  }
+  function lines(d) {
+    var o = [];
+    for (var i = 0; i < 4; i++) {
+      var l = [0, 1, 2, 3].map(function (k) { return d === 'L' || d === 'R' ? i * 4 + k : i + k * 4; });
+      if (d === 'R' || d === 'D') l.reverse();
+      o.push(l);
+    }
+    return o;
+  }
+  function slide(v) {
+    var a = v.filter(Boolean), r = [], gained = 0;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] === a[i + 1]) { r.push(a[i] * 2); gained += a[i] * 2; i++; } else r.push(a[i]);
+    }
+    while (r.length < 4) r.push(0);
+    return { row: r, gained: gained };
+  }
+  function stuck() {
+    if (b.indexOf(0) >= 0) return false;
+    for (var i = 0; i < 16; i++) {
+      if (i % 4 < 3 && b[i] === b[i + 1]) return false;
+      if (i < 12 && b[i] === b[i + 4]) return false;
+    }
+    return true;
+  }
+  function move(d) {
+    if (over) return;
+    var before = b.slice(), beforeScore = score, changed = false, gained = 0;
+    lines(d).forEach(function (l) {
+      var res = slide(l.map(function (k) { return b[k]; }));
+      gained += res.gained;
+      l.forEach(function (k, j) { if (b[k] !== res.row[j]) { changed = true; b[k] = res.row[j]; } });
+    });
+    if (!changed) return;
+    undo = { b: before, score: beforeScore };
+    score += gained;
+    if (gained) sfx.good(); else sfx.tap();
+    add();
+    if (stuck()) end();
+    draw();
+  }
+  function end() {
+    over = true;
+    sfx.bad();
+    var rec = best.offer(score);
+    if (window.OrbBridge) OrbBridge.result(score, 'Score ' + score);
+    $('final-line').textContent = score + ' points, top tile ' + Math.max.apply(null, b);
+    $('new-record').classList.toggle('hidden', !rec || score === 0);
+    $('over-best').textContent = 'Best: ' + best.get() + ' points';
+    setTimeout(function () { K.show($('over-overlay')); }, 500);
+  }
+  function color(v) {
+    var k = Math.log2(v);
+    return 'hsl(' + (205 - k * 12) + ',' + (70 + k * 2) + '%,' + Math.max(42, 82 - k * 4) + '%)';
+  }
+  function draw() {
+    boardEl.innerHTML = '';
+    b.forEach(function (v, i) {
+      var t = document.createElement('div');
+      t.className = 'tile' + (i === fresh ? ' pop' : '');
+      if (v) {
+        t.textContent = v;
+        t.style.background = color(v);
+        t.style.color = v >= 128 ? '#fff' : '#0f1a2e';
+      }
+      boardEl.appendChild(t);
+    });
+    fresh = -1;
+    $('hud-score').textContent = score;
+    $('hud-top').textContent = Math.max.apply(null, b) || 2;
+    var bb = best.get();
+    $('hud-best').textContent = bb === null ? '—' : bb;
+    $('start-best').textContent = bb === null ? '' : 'Best: ' + bb + ' points';
+    $('btn-undo').disabled = !undo || over;
+  }
+  function start() {
+    b = new Array(16).fill(0); score = 0; over = false; undo = null;
+    add(); add(); draw();
+    K.hide($('start-overlay')); K.hide($('over-overlay'));
+  }
+
+  window.addEventListener('keydown', function (e) {
+    var d = { ArrowLeft: 'L', ArrowRight: 'R', ArrowUp: 'U', ArrowDown: 'D', a: 'L', d: 'R', w: 'U', s: 'D' }[e.key];
+    if (d) { e.preventDefault(); move(d); }
+  });
+  var sx = 0, sy = 0;
+  boardEl.addEventListener('pointerdown', function (e) { sx = e.clientX; sy = e.clientY; });
+  boardEl.addEventListener('pointerup', function (e) {
+    var dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 30) return;
+    move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'R' : 'L') : (dy > 0 ? 'D' : 'U'));
+  });
+  $('btn-undo').addEventListener('click', function () {
+    if (!undo || over) return;
+    b = undo.b; score = undo.score; undo = null; sfx.tap(); draw();
+  });
+  $('btn-start').addEventListener('click', start);
+  $('btn-again').addEventListener('click', start);
+  $('btn-restart').addEventListener('click', start);
+  K.bindMute($('mute-btn'));
+
+  b = new Array(16).fill(0); score = 0;
+  draw();
+})();
+</script>
+</body>
+</html>
