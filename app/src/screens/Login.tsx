@@ -25,7 +25,7 @@ function useNarrow(query = '(max-width: 767px)') {
  * Sign-in: black hole on desktop, lightweight image slideshow on mobile.
  *
  * Desktop: form left under veil, hole right.
- * Mobile: form top, pre-rendered image slideshow below (60fps, no ray-tracing).
+ * Mobile: form centered, pre-rendered image slideshow below (60fps, no ray-tracing).
  */
 export function Login() {
   const narrow = useNarrow()
@@ -44,13 +44,12 @@ export function Login() {
 
   if (signedIn) return <Navigate to={from} replace />
 
-  // Mobile slideshow frames (pre-rendered, lightweight)
+  // Mobile slideshow frames (your 4 images)
   const mobileFrames = [
-    '/hero/sm/f-001.webp',
-    '/hero/sm/f-015.webp',
-    '/hero/sm/f-030.webp',
-    '/hero/sm/f-045.webp',
-    '/hero/sm/f-060.webp',
+    '/hero/mobile/mobile-astro.jpg',
+    '/hero/mobile/dyson.png',
+    '/hero/mobile/iss069e018537-1.jpg',
+    '/hero/mobile/cipher-spacewalk.png',
   ]
 
   // Desktop black hole camera
@@ -93,7 +92,7 @@ export function Login() {
         />
       )}
 
-      <main className="relative z-10 flex min-h-svh flex-col items-center justify-start gap-4 p-4 pt-10 pb-20 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)] md:items-start md:justify-center md:p-8 lg:pl-16">
+      <main className="relative z-10 flex min-h-svh flex-col items-center justify-center gap-4 p-4 [text-shadow:0_1px_12px_rgb(0_0_0/0.9)] md:items-start md:justify-center md:p-8 lg:pl-16">
         <div className="flex w-full max-w-sm flex-col gap-4">
           <a
             href="/"

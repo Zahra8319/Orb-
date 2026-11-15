@@ -13,7 +13,7 @@ interface MobileHeroProps {
 
 export function MobileHeroSlideshow({
   images,
-  interval = 6000,
+  interval = 7000,
   pauseOnHover = true,
   className = '',
 }: MobileHeroProps) {
@@ -76,7 +76,7 @@ export function MobileHeroSlideshow({
           style={{
             opacity: i === index ? 1 : 0,
             transform: i === index ? 'scale(1)' : 'scale(1.02)',
-            transition: 'opacity 1.2s ease-out, transform 1.2s ease-out',
+            transition: 'opacity 1.5s ease-out, transform 1.5s ease-out',
             willChange: 'opacity, transform',
           }}
           aria-hidden={i !== index}
@@ -84,30 +84,15 @@ export function MobileHeroSlideshow({
         >
           <img
             src={src}
-            alt={i === 0 ? 'Astronaut on Mars surface' : ''}
+            alt=""
             loading={i === 0 ? 'eager' : 'lazy'}
             decoding="async"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
           />
           {/* Subtle gradient overlay for text readability */}
           <div className="mobile-hero-overlay" aria-hidden="true" />
         </div>
       ))}
-
-      {/* Dots indicator */}
-      {images.length > 1 && (
-        <nav className="mobile-hero-dots" aria-label="Slide navigation">
-          {images.map((_, i) => (
-            <button
-              key={i}
-              className={`mobile-hero-dot ${i === index ? 'active' : ''}`}
-              onClick={() => setIndex(i)}
-              aria-label={`Slide ${i + 1}`}
-              aria-current={i === index ? 'true' : 'false'}
-            />
-          ))}
-        </nav>
-      )}
     </div>
   )
 }
