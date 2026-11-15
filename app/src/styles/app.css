@@ -3806,3 +3806,46 @@ main {
     bottom: var(--s-4);
   }
 }
+
+/* ---------- AI Advisor: Groq / offline badges ---------- */
+
+.ai-offline-badge {
+  color: var(--ink-soft);
+  opacity: 0.6;
+}
+
+.ai-groq-badge {
+  color: var(--primary);
+}
+
+.ai-offline-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  font-size: var(--t-xs);
+  color: var(--ink-soft);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+.ai-offline-note code {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--t-xs);
+  background: var(--surface);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.ai-bubble-groq {
+  border-top: 2px solid var(--primary);
+  background: rgb(11 61 145 / 0.06);
+}
+
+.ai-bubble-offline {
+  border-top: 2px solid var(--ink-soft);
+  background: var(--bg);
+  opacity: 0.85;
+}

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { X, Stethoscope, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { X, Stethoscope, AlertTriangle, CheckCircle, Loader2, WifiOff, Zap } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { useStore } from '../store/store'
 import { evaluate } from '../rules/alerts'
@@ -149,10 +149,47 @@ function triage(alerts: ReturnType<typeof evaluate>): Protocol | null {
   return matched[0] || null
 }
 
+const NASA_SYSTEM_PROMPT = `You are a NASA flight surgeon assisting a crew member on a Mars transit mission.
+Communication delay to Earth is 20+ minutes. The crew must act autonomously.
+Only reference NASA standards: STD-3001 Vol 2, HRP Evidence Books, JSC Medical Checklists, NASA-STD-3000.
+If a question is outside these documents, say: "Consult flight surgeon on next pass."
+Be concise. Lead with immediate autonomous actions. No markdown unless asked.`
+
 interface Message {
   role: 'user' | 'assistant' | 'system'
   content: string
   protocol?: Protocol
+  source?: 'protocol' | 'groq' | 'offline'
+}
+
+async function askGroq(question: string, alerts: ReturnType<typeof evaluate>): Promise<string> {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY
+  if (!apiKey) throw new Error('No Groq API key')
+
+  const context = alerts.length
+    ? `Current alerts: ${alerts.map((a) => `${a.title} (${a.level})`).join('; ')}.`
+    : 'No active alerts.'
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'llama-3.1-70b-versatile',
+      temperature: 0.2,
+      max_tokens: 500,
+      messages: [
+        { role: 'system', content: NASA_SYSTEM_PROMPT },
+        { role: 'user', content: `${context}\n\nQuestion: ${question}` },
+      ],
+    }),
+  })
+
+  if (!res.ok) throw new Error(`Groq error: ${res.status}`)
+  const data = await res.json()
+  return data.choices[0]?.message?.content ?? 'No response from Groq.'
 }
 
 export function AIAdvisor() {
@@ -166,6 +203,7 @@ export function AIAdvisor() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [thinking, setThinking] = useState(false)
+  const [groqAvailable, setGroqAvailable] = useState(() => !!import.meta.env.VITE_GROQ_API_KEY)
 
   // Auto-open if there's an urgent alert and no messages yet
   useEffect(() => {
@@ -177,30 +215,25 @@ export function AIAdvisor() {
           role: 'system',
           content: `⚠️ Urgent: ${urgentProtocol.title} detected. Here are your immediate autonomous steps:`,
           protocol: urgentProtocol,
+          source: 'protocol',
         },
       ])
     }
   }, [alerts, open, messages.length])
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     if (!input.trim()) return
     const userMsg = input.trim()
     setInput('')
-    setMessages((prev) => [...prev, { role: 'user', content: userMsg }])
+    setMessages((prev) => [...prev, { role: 'user', content: userMsg, source: 'protocol' }])
     setThinking(true)
 
-    // Simulate "thinking" then respond with matched protocols
-    setTimeout(() => {
-      const matched = matchProtocols(alerts, userMsg)
-      if (matched.length === 0) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: 'I don\'t have a specific protocol for that. Describe the symptoms or paste the alert title, and I\'ll match the closest NASA guidance.',
-          },
-        ])
-      } else {
+    // First, try protocol matching (instant, offline)
+    const matched = matchProtocols(alerts, userMsg)
+
+    if (matched.length > 0) {
+      // Protocol matched — respond immediately
+      setTimeout(() => {
         matched.forEach((p, i) => {
           setMessages((prev) => [
             ...prev,
@@ -215,14 +248,60 @@ export function AIAdvisor() {
                 (p.redFlags.length
                   ? `\n\n🔴 **Escalate immediately if:** ${p.redFlags.join(', ')}`
                   : ''),
-            protocol: p,
+              protocol: p,
+              source: 'protocol',
             },
           ])
         })
-      }
-      setThinking(false)
-    }, 600 + Math.random() * 400)
-  }
+        setThinking(false)
+      }, 150)
+      return
+    }
+
+    // No protocol matched — try Groq if available
+    if (groqAvailable) {
+      askGroq(userMsg, alerts)
+        .then((answer) => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: answer + '\n\n*— via Mission Control link (Groq)*',
+              source: 'groq',
+            },
+          ])
+        })
+        .catch(() => {
+          setGroqAvailable(false)
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: 'assistant',
+              content:
+                'Connection to Mission Control lost. I only have onboard protocols.\n\n' +
+                'Describe symptoms or paste an alert title, and I\'ll match NASA guidance.',
+              source: 'offline',
+            },
+          ])
+        })
+        .finally(() => setThinking(false))
+    } else {
+      // Offline fallback
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content:
+              'I\'m running in offline mode (no Groq API key). I only have onboard protocols.\n\n' +
+              'Describe symptoms or paste an alert title, and I\'ll match NASA guidance.',
+            source: 'offline',
+          },
+        ])
+        setThinking(false)
+      }, 150)
+    }
+  }, [alerts, groqAvailable])
 
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -243,6 +322,7 @@ export function AIAdvisor() {
         <Stethoscope size={20} aria-hidden="true" />
         <span className="ai-trigger-text">Orb Medical</span>
         {triage(alerts) && <span className="ai-pulse" aria-hidden="true" />}
+        {!groqAvailable && <WifiOff className="ai-offline-badge" size={12} aria-label="Offline mode" />}
       </button>
 
       {/* Panel */}
@@ -255,6 +335,9 @@ export function AIAdvisor() {
               {triage(alerts) && (
                 <AlertTriangle className="ai-urgent-badge" size={16} aria-label="Urgent protocol active" />
               )}
+              {groqAvailable && (
+                <Zap className="ai-groq-badge" size={14} aria-label="Groq connected" />
+              )}
             </div>
             <button className="ai-close" onClick={() => setOpen(false)} aria-label="Close">
               <X size={18} aria-hidden="true" />
@@ -265,6 +348,12 @@ export function AIAdvisor() {
             {messages.length === 0 && (
               <div className="ai-welcome">
                 <p>Describe the situation or paste an alert title. I'll match NASA medical protocols and give you immediate autonomous steps.</p>
+                {!groqAvailable && (
+                  <p className="ai-offline-note">
+                    <WifiOff size={14} aria-hidden="true" />
+                    Offline mode — add <code>VITE_GROQ_API_KEY</code> to enable Mission Control link.
+                  </p>
+                )}
                 <div className="ai-chips">
                   {['Irregular rhythm at 118', 'SpO₂ dropped to 91%', 'Sleep debt 14 hrs', 'Shoulder pain on ARED', 'Cabin CO₂ 4.5 mmHg'].map((q) => (
                     <button key={q} className="ai-chip" onClick={() => { setInput(q); handleSend(); }}>
@@ -277,7 +366,9 @@ export function AIAdvisor() {
             {messages.map((msg, i) => (
               <div key={i} className={`ai-message ${msg.role}`}>
                 {msg.role === 'system' && <span className="ai-system-badge">URGENT</span>}
-                <div className="ai-bubble">{msg.content}</div>
+                <div className={`ai-bubble ${msg.source === 'groq' ? 'ai-bubble-groq' : msg.source === 'offline' ? 'ai-bubble-offline' : ''}`}>
+                  {msg.content}
+                </div>
                 {msg.protocol && (
                   <div className="ai-protocol-ref">
                     <CheckCircle size={14} aria-hidden="true" />
@@ -289,7 +380,7 @@ export function AIAdvisor() {
             {thinking && (
               <div className="ai-message assistant">
                 <Loader2 className="ai-thinking" size={16} aria-hidden="true" />
-                <span>Matching protocols…</span>
+                <span>{groqAvailable ? 'Contacting Mission Control…' : 'Matching protocols…'}</span>
               </div>
             )}
           </div>

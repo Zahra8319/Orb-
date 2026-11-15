@@ -1,0 +1,43 @@
+{
+  "name": "Orb+",
+  "short_name": "Orb+",
+  "description": "Personal health monitor for astronauts on Mars transit",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020816",
+  "theme_color": "#020816",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["medical", "productivity", "science"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Today",
+      "short_name": "Today",
+      "description": "Your health overview",
+      "url": "/",
+      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Consult Earth",
+      "short_name": "Consult",
+      "description": "Send a medical question to Mission Control",
+      "url": "/consult",
+      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "EVA Monitor",
+      "short_name": "EVA",
+      "description": "Live suit telemetry and checklists",
+      "url": "/eva",
+      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
+    }
+  ]
+}
