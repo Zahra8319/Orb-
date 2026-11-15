@@ -4,6 +4,8 @@
 
 import { CAREER_LIMIT_MSV, formatHours } from '../sim/mission'
 import type { Snapshot } from '../sim/model'
+import { OSDR_ALERT_CITATIONS } from '../services/osdr'
+import { NTRS_ALERT_CITATIONS } from '../services/ntrs'
 
 export type Level = 'watch' | 'act' | 'urgent'
 
@@ -18,6 +20,12 @@ export interface Alert {
   action: string
   /** Screen with the detail. */
   to: string
+  /** Data sources backing this alert */
+  sources?: {
+    osdr?: { accession: string; title: string }
+    ntrs?: { citation: string; query: string }
+    curiosityRad?: { baseline: number; transitRate: number }
+  }
 }
 
 export const THRESHOLDS = {
@@ -48,6 +56,10 @@ const rules: Rule[] = [
           title: `Solar storm: radiation is ${times} times normal`,
           action: 'Stay in the storm shelter until the dose rate falls below 5 times normal.',
           to: '/radiation',
+          sources: {
+            ntrs: NTRS_ALERT_CITATIONS['solar-storm'],
+            curiosityRad: { baseline: 0.64, transitRate: 1.8 },
+          },
         }
       : {
           id: 'solar-storm',
@@ -55,6 +67,10 @@ const rules: Rule[] = [
           title: `Solar storm: radiation is ${times} times normal`,
           action: 'Go to the storm shelter now and stay there. Tell the crew.',
           to: '/radiation',
+          sources: {
+            ntrs: NTRS_ALERT_CITATIONS['solar-storm'],
+            curiosityRad: { baseline: 0.64, transitRate: 1.8 },
+          },
         }
   },
   (s) => {
@@ -65,6 +81,10 @@ const rules: Rule[] = [
       title: 'Your heart rhythm is irregular',
       action: 'Stop what you are doing, sit still, and call the medical officer. Record a 30-second ECG.',
       to: '/body',
+      sources: {
+        osdr: OSDR_ALERT_CITATIONS['rhythm'],
+        ntrs: NTRS_ALERT_CITATIONS['rhythm'],
+      },
     }
   },
   (s) => {
@@ -77,6 +97,10 @@ const rules: Rule[] = [
         title: `Blood oxygen is ${spo2}%`,
         action: 'Put on an oxygen mask and call the medical officer. Check cabin oxygen.',
         to: '/ship',
+        sources: {
+          osdr: OSDR_ALERT_CITATIONS['spo2'],
+          ntrs: NTRS_ALERT_CITATIONS['spo2'],
+        },
       }
     }
     return {
@@ -85,6 +109,10 @@ const rules: Rule[] = [
       title: `Blood oxygen is ${spo2}%, a little low`,
       action: 'Reseat the sensor and take five slow breaths. Check again in 10 minutes.',
       to: '/ship',
+      sources: {
+        osdr: OSDR_ALERT_CITATIONS['spo2'],
+        ntrs: NTRS_ALERT_CITATIONS['spo2'],
+      },
     }
   },
   (s) => {
@@ -99,6 +127,10 @@ const rules: Rule[] = [
         title: `Cabin CO2 is ${value} mmHg`,
         action: 'Put on a mask, move to the forward module, and start the backup scrubber.',
         to: '/ship',
+        sources: {
+          osdr: OSDR_ALERT_CITATIONS['co2'],
+          ntrs: NTRS_ALERT_CITATIONS['co2'],
+        },
       }
     }
     if (co2 > t.act) {
@@ -108,6 +140,10 @@ const rules: Rule[] = [
         title: `Cabin CO2 is ${value} mmHg and rising`,
         action: 'Swap the scrubber cartridge and turn the cabin fans to high. Tell the crew if you get a headache.',
         to: '/ship',
+        sources: {
+          osdr: OSDR_ALERT_CITATIONS['co2'],
+          ntrs: NTRS_ALERT_CITATIONS['co2'],
+        },
       }
     }
     return {
@@ -116,6 +152,10 @@ const rules: Rule[] = [
       title: `Cabin CO2 is ${value} mmHg, above the 3 mmHg target`,
       action: 'Check the scrubber status. Avoid hard exercise until it drops.',
       to: '/ship',
+      sources: {
+        osdr: OSDR_ALERT_CITATIONS['co2'],
+        ntrs: NTRS_ALERT_CITATIONS['co2'],
+      },
     }
   },
   (s) => {
@@ -130,6 +170,10 @@ const rules: Rule[] = [
         ? 'Put on an oxygen mask now, then check the oxygen supply valve.'
         : 'Check the oxygen generator status and watch your blood oxygen.',
       to: '/ship',
+      sources: {
+        osdr: OSDR_ALERT_CITATIONS['o2'],
+        ntrs: NTRS_ALERT_CITATIONS['o2'],
+      },
     }
   },
   (s) => {
@@ -142,6 +186,10 @@ const rules: Rule[] = [
       title: `Heart rate is ${heartRate} at rest`,
       action: 'Sit down, drink water, and breathe slowly for 5 minutes. Call the medical officer if it stays high.',
       to: '/body',
+      sources: {
+        osdr: OSDR_ALERT_CITATIONS['heart-rate'],
+        ntrs: NTRS_ALERT_CITATIONS['heart-rate'],
+      },
     }
   },
   (s) => {
@@ -153,8 +201,12 @@ const rules: Rule[] = [
           id: 'sleep',
           level: 'act',
           title: `You have averaged ${avg} of sleep this week`,
-          action: 'Ask the commander to move tomorrow’s critical tasks. Go to bed an hour early tonight.',
+          action: 'Ask the commander to move tomorrow\'s critical tasks. Go to bed an hour early tonight.',
           to: '/sleep',
+          sources: {
+            osdr: OSDR_ALERT_CITATIONS['sleep'],
+            ntrs: NTRS_ALERT_CITATIONS['sleep'],
+          },
         }
       : {
           id: 'sleep',
@@ -162,6 +214,10 @@ const rules: Rule[] = [
           title: `You have averaged ${avg} of sleep this week`,
           action: 'Dim your cabin lights two hours before bed and skip caffeine after midday.',
           to: '/sleep',
+          sources: {
+            osdr: OSDR_ALERT_CITATIONS['sleep'],
+            ntrs: NTRS_ALERT_CITATIONS['sleep'],
+          },
         }
   },
   (s) => {
@@ -173,9 +229,13 @@ const rules: Rule[] = [
       level: act ? 'act' : 'watch',
       title: `No full exercise session for ${s.missedExerciseDays} days`,
       action: act
-        ? 'Do today’s resistance session before anything else. Bone and muscle loss speeds up without it.'
-        : 'Fit in both of today’s sessions to stay on your plan.',
+        ? 'Do today\'s resistance session before anything else. Bone and muscle loss speeds up without it.'
+        : 'Fit in both of today\'s sessions to stay on your plan.',
       to: '/body',
+      sources: {
+        osdr: OSDR_ALERT_CITATIONS['exercise'],
+        ntrs: NTRS_ALERT_CITATIONS['exercise'],
+      },
     }
   },
   (s) => {
@@ -187,6 +247,10 @@ const rules: Rule[] = [
       title: `Your reactions are ${slower}% slower than before launch`,
       action: 'Avoid piloting and robotics tasks today if you can, and retest after a rest.',
       to: '/sleep',
+      sources: {
+        osdr: OSDR_ALERT_CITATIONS['reaction'],
+        ntrs: NTRS_ALERT_CITATIONS['reaction'],
+      },
     }
   },
   (s) => {
@@ -197,6 +261,11 @@ const rules: Rule[] = [
       title: `Career radiation dose is ${Math.round(s.careerDose)} of ${CAREER_LIMIT_MSV} mSv`,
       action: 'Sleep in the shielded bunk and keep spacewalk time to a minimum.',
       to: '/radiation',
+      sources: {
+        osdr: OSDR_ALERT_CITATIONS['career-dose'],
+        ntrs: NTRS_ALERT_CITATIONS['radiation'],
+        curiosityRad: { baseline: 0.64, transitRate: 1.8 },
+      },
     }
   },
 ]
